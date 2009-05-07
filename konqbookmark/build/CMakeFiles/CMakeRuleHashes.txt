@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+be48bd05ce9085149fda759342fb9586 CMakeFiles/akonadi_serializer_konqbookmark_automoc
+041f2224d5fd6e2fdd7890bceefc6337 CMakeFiles/uninstall

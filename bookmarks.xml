@@ -1,0 +1,272 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE xbel>
+<xbel xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks" xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info" xmlns:kdepriv="http://www.kde.org/kdepriv" dbusName="akonadi_localbookmarks_resource_0" >
+ <folder folded="no" >
+  <title>aa</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="bookmark_folder" />
+   </metadata>
+  </info>
+ </folder>
+ <bookmark href="https://wiki.ubuntu.com/DebuggingKernelSuspend" >
+  <title>DebuggingKernelSuspend - Ubuntu Wiki</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/wiki.ubuntu.com" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1226053629</time_added>
+    <time_visited>1226054274</time_visited>
+    <visit_count>3</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://lxr.linux.no/linux/Documentation/power/basic-pm-debugging.txt" >
+  <title>LXR linux/Documentation/power/basic-pm-debugging.txt</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/lxr.linux.no_.static_gfx_favicon" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1226053626</time_added>
+    <time_visited>1226057507</time_visited>
+    <visit_count>4</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://ubuntuforums.org/showthread.php?p=3066404" >
+  <title>HowTo: Debug Suspend, Resume, Hibernate issues - Ubuntu Forums</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/ubuntuforums.org" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://lxr.linux.no/linux/Documentation/power/s2ram.txt" >
+  <title>LXR linux/Documentation/power/s2ram.txt</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/lxr.linux.no_.static_gfx_favicon" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1226053626</time_added>
+    <time_visited>1226054286</time_visited>
+    <visit_count>3</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.archive.org/browse.php?field=subject&amp;mediatype=audio&amp;collection=opensource_audio" >
+  <title>Browse Top Level > Audio > Open Source Audio</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.archive.org_images_logo-16.jpg" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1226260430</time_added>
+    <time_visited>1228763553</time_visited>
+    <visit_count>6</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://s227106652.mialojamiento.es/index2.php?option=com_content&amp;do_pdf=1&amp;id=63" >
+  <title>La agricultura y ganadería inventadas por las hormigas</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="text-html" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.webmonkey.com/blog/Top_5_Favorite_Bookmarklets" >
+  <title>Top 5 Favorite Bookmarklets - Webmonkey</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.webmonkey.com" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://es.wikipedia.org/wiki/Alexander_von_Humboldt" >
+  <title>Alexander von Humboldt - Wikipedia, la enciclopedia libre</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/es.wikipedia.org" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.reuters.com/article/topNews/idUSTRE4AI11B20081119?rpc=64" >
+  <title>Texas grand jury indicts Cheney, Gonzales of crime | Reuters</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.reuters.com_resources_images_favicon" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.elpauer.org/stuff/learning_cmake.pdf" >
+  <title>http://www.elpauer.org/stuff/learning_cmake.pdf</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="text-html" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1227346110</time_added>
+    <time_visited>1227346126</time_visited>
+    <visit_count>2</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://news.slashdot.org/article.pl?sid=08/11/22/1514250&amp;from=rss" >
+  <title>Slashdot | Police Cars To Transmit Real-Time Video</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/news.slashdot.org" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1227463361</time_added>
+    <time_visited>1227463361</time_visited>
+    <visit_count>1</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.undefinedfire.com/kde/500-kwin-bounty/" >
+  <title>Undefined Fire :: $500 KWin bounty</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/static.undefinedfire.com_favicon" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1236027860</time_added>
+    <time_visited>1236027869</time_visited>
+    <visit_count>2</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.internautas.org/html/5275.html" >
+  <title>¿Qué hacer contra la 'piratería'?: NADA</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.internautas.org_graficos_v-logoaifav" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="https://uwc2.us.es/" >
+  <title>Buzónweb correo us.es universidad de Sevilla</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/buzonweb.us.es" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1228424646</time_added>
+    <time_visited>1229600704</time_visited>
+    <visit_count>22</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://it.slashdot.org/article.pl?sid=08/10/07/1827229&amp;tid=172" >
+  <title>Slashdot | Anti-Terrorist Data Mining Doesn't Work Very Well</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/it.slashdot.org" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.asus.com/products.aspx?l1=24&amp;l2=164&amp;l3=0&amp;l4=0&amp;model=2659&amp;modelmenu=2" >
+  <title>ASUSTeK Computer Inc.</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="text-html" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1228733163</time_added>
+    <time_visited>1229025508</time_visited>
+    <visit_count>8</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.20minutos.es/noticia/265793/0/philip/dick/cine/" >
+  <title>Philip K. Dick: androides, mutaciones y paranoias de cine - 20minutos.es</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.20minutos.es" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1228729121</time_added>
+    <time_visited>1228729121</time_visited>
+    <visit_count>2</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://macles.blogspot.com/2008/07/flashing-bios.html" >
+  <title>macles*: Flashing the BIOS</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.blogger.com" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="https://help.ubuntu.com/community/AspireOne" >
+  <title>AspireOne - Community Ubuntu Documentation</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/help.ubuntu.com" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1229244542</time_added>
+    <time_visited>1229286500</time_visited>
+    <visit_count>9</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://macles.blogspot.com/2008/10/acer-aspire-one-bios-v3305.html" >
+  <title>macles*: Acer Aspire One BIOS 3305</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.blogger.com" />
+   </metadata>
+   <metadata owner="http://www.kde.org" >
+    <time_added>1229245101</time_added>
+    <time_visited>1229279620</time_visited>
+    <visit_count>6</visit_count>
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.atheros.com/pt/AR5007EG.htm" >
+  <title>Atheros, Wireless LAN, WLAN, 2.4/5-GHz, 802.11a/b/g, 802.11b/g...Radio-on-a-Chip, Overview, Networking, Products and Technology</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="text-html" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://madwifi-project.org/wiki/About/ath5k" >
+  <title>About/ath5k - madwifi-project.org - Trac</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/madwifi-project.org_chrome_site_favicon" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://wireless.kernel.org/en/users/Download" >
+  <title>Download - Linux Wireless</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/wireless.kernel.org_favicon" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://news.slashdot.org/article.pl?sid=08/12/15/1851212&amp;from=rss" >
+  <title>Slashdot | Wiretap Whistleblower, a Life in Limbo?</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/news.slashdot.org" />
+   </metadata>
+  </info>
+ </bookmark>
+ <bookmark href="http://www.publico.es/ciencias/184626/biohackers/reventar/reinventar/biologia/garajes" >
+  <title>Público.es - Biohackers: reventar y reinventar la biología desde los garajes</title>
+  <info>
+   <metadata owner="http://freedesktop.org" >
+    <bookmark:icon name="favicons/www.publico.es_css_cssimg_apple-touch-icon" />
+   </metadata>
+  </info>
+ </bookmark>
+</xbel>

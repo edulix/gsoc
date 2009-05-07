@@ -1,0 +1,83 @@
+<ui version="4.0" >
+ <class>bookmarksview_base</class>
+ <widget class="QWidget" name="bookmarksview_base" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>674</width>
+    <height>437</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>kapp4_base</string>
+  </property>
+  <property name="autoFillBackground" >
+   <bool>true</bool>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" >
+   <item row="0" column="0" >
+    <widget class="QSplitter" name="splitter" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="Akonadi::CollectionView" name="collectionsView" >
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+     <widget class="QWidget" name="layoutWidget" >
+      <layout class="QVBoxLayout" name="verticalLayout" >
+       <item>
+        <widget class="QLineEdit" name="bookmarksFilterBox" />
+       </item>
+       <item>
+        <widget class="Akonadi::ItemView" name="bookmarksView" >
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+           <horstretch>0</horstretch>
+           <verstretch>4</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListView" name="bookmarkPropertiesView" >
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Akonadi::CollectionView</class>
+   <extends>QTreeView</extends>
+   <header location="global" >akonadi/collectionview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Akonadi::ItemView</class>
+   <extends>QTreeView</extends>
+   <header location="global" >akonadi/itemview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

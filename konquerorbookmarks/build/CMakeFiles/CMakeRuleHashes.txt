@@ -1,0 +1,7 @@
+# Hashes of file build rules.
+0054090f32994b1ff0086995b0a6171f CMakeFiles/akonadi_konquerorbookmarks_resource_automoc
+5ed15ddf9ecf53387b1d06f05084da36 CMakeFiles/uninstall
+e1470a4909f750642e13ca3c0fdbba06 org.kde.Akonadi.KonquerorBookmarks.Settings.xml
+6ab25c87de2c5538397b67823c807685 settings.h
+e4f3e08b35592f623baa9c408e1bca94 settingsadaptor.cpp
+6a5b57b0ac1deb5e64e05156e0104578 settingsadaptor.moc

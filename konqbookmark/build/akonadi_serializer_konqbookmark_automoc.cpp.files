@@ -1,0 +1,14 @@
+SOURCES:
+/home/edulix/proyectos/kde4/kdesvn/gsoc/konqbookmark/akonadi_serializer_konqbookmark.cpp;/home/edulix/proyectos/kde4/kdesvn/gsoc/konqbookmark/konqbookmark.cpp;/home/edulix/proyectos/kde4/kdesvn/gsoc/konqbookmark/konqbookmarkxmlio.cpp
+MOC_COMPILE_DEFINITIONS:
+_BSD_SOURCE
+MOC_DEFINITIONS:
+ -D_BSD_SOURCE
+MOC_INCLUDES:
+/home/edulix/proyectos/kde4/include;/home/edulix/proyectos/kde4/include/KDE;/home/edulix/proyectos/kde4/qt4/include/QtWebKit;/home/edulix/proyectos/kde4/qt4/include/QtHelp;/home/edulix/proyectos/kde4/qt4/include/QtAssistant;/home/edulix/proyectos/kde4/qt4/include/QtDBus;/home/edulix/proyectos/kde4/qt4/include/QtTest;/home/edulix/proyectos/kde4/qt4/include/QtUiTools;/home/edulix/proyectos/kde4/qt4/include/QtScript;/home/edulix/proyectos/kde4/qt4/include/QtSvg;/home/edulix/proyectos/kde4/qt4/include/QtXml;/home/edulix/proyectos/kde4/qt4/include/QtSql;/home/edulix/proyectos/kde4/qt4/include/QtOpenGL;/home/edulix/proyectos/kde4/qt4/include/QtNetwork;/home/edulix/proyectos/kde4/qt4/include/QtDesigner;/home/edulix/proyectos/kde4/qt4/include/Qt3Support;/home/edulix/proyectos/kde4/qt4/include/QtGui;/home/edulix/proyectos/kde4/qt4/include/QtCore;/home/edulix/proyectos/kde4/qt4/include/Qt;/home/edulix/proyectos/kde4/qt4/mkspecs/default;/home/edulix/proyectos/kde4/qt4/include;/usr/include
+CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE:
+ON
+CMAKE_BINARY_DIR:
+/home/edulix/proyectos/kde4/kdesvn/gsoc/konqbookmark/build
+CMAKE_SOURCE_DIR:
+/home/edulix/proyectos/kde4/kdesvn/gsoc/konqbookmark

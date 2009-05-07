@@ -1,0 +1,11 @@
+[Desktop Entry]
+Comment=Awesome bar
+Name=Awesome
+Open=false
+Icon=nepomuk
+Encoding=UTF-8
+Type=Link
+URL=
+X-KDE-KonqSidebarAddModule=konqsidebar_awesome
+X-KDE-KonqSidebarUniversal=true
+

@@ -1,0 +1,2 @@
+/home/edulix/proyectos/kde4/share/akonadi/agents/konquerorbookmarksresource.desktop
+/home/edulix/proyectos/kde4/bin/akonadi_konquerorbookmarks_resource

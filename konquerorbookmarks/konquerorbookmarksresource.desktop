@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Konqueror Bookmarks Resource
+Comment=Resource for accessing konqueror bookmarks stored in nepomuk
+Type=AkonadiResource
+Exec=akonadi_konquerorbookmarks_resource
+Icon=bookmark
+
+X-Akonadi-MimeTypes=application/x-vnd.kde.konqbookmark
+X-Akonadi-Capabilities=Resource
+X-Akonadi-Identifier=akonadi_konquerorbookmarks_resource

@@ -1,0 +1,32 @@
+[Misc]
+Name=KonqBookmark Serializer
+Name[de]=KonqBookmark-Serialisierer
+Name[en_GB]=KonqBookmark Serialiser
+Name[es]=Serializador para KonqBookmark
+Name[et]=KonqBookmark jadasti
+Name[ga]=Srathóir KonqBookmark
+Name[nds]=KonqBookmark-Reegmoduul
+Name[pt]=Serialização do KonqBookmark
+Name[pt_BR]=Serialização do KonqBookmark
+Name[sv]=Serialisering av KonqBookmark
+Name[uk]=Перетворювач у послідовну форму KonqBookmark
+Name[x-test]=xxKonqBookmark Serializerxx
+Name[zh_CN]=KonqBookmark 转换器
+Name[zh_TW]=KonqBookmark 序列器
+Comment=An Akonadi serializer plugin for konqbookmark
+Comment[de]=Ein Akonadi-Serialisierer für konqbookmark
+Comment[en_GB]=An Akonadi serialiser plugin for konqbookmark
+Comment[es]=Un complemento serializador de Akonadi para konqbookmark
+Comment[et]=Akonadi konqbookmark jadasti plugin
+Comment[nds]=En Akonadi-Reegmodul för konqbookmark
+Comment[pt]=Um 'plugin' de serialização do Akonadi para o konqbookmark
+Comment[pt_BR]=Um plugin de serialização do Akonadi para o konqbookmark
+Comment[sv]=Ett Akonadi insticksprogram för serialisering av konqbookmark
+Comment[uk]=Додаток перетворення у послідовну форму Akonadi для konqbookmark
+Comment[x-test]=xxAn Akonadi serializer plugin for konqbookmarkxx
+Comment[zh_CN]=konqbookmark 的 Akonadi 转换器插件
+Comment[zh_TW]=konqbookmark 的 Akonadi 序列器外掛程式
+
+[Plugin]
+Type=application/x-vnd.kde.konqbookmark
+X-KDE-Library=akonadi_serializer_konqbookmark
