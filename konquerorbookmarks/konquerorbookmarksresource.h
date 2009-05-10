@@ -23,7 +23,6 @@
 #include <QtCore/QSharedDataPointer>
 #include <akonadi/resourcebase.h>
 #include <nepomuk/queryserviceclient.h>
-#include <nepomuk/ontologies/bookmark.h>
 
 class KonquerorBookmarksResource : public Akonadi::ResourceBase,
                            public Akonadi::AgentBase::Observer
@@ -42,14 +41,14 @@ protected Q_SLOTS:
     void retrieveItems( const Akonadi::Collection &col );
     bool retrieveItem( const Akonadi::Item &item, const QSet<QByteArray> &parts );
     
-private Q_SLOTS:
+// private Q_SLOTS:
     /**
      * This function receives new entries from a search performed by the query
      * service client. For now, we only handle queries for the bookmarks menu
      * so all the results will be just added accordingly to the appropiate submenu
      * level.
      */
-    void slotNewEntries( const QList<Nepomuk::Search::Result>& results );
+//     void slotNewEntries( const QList<Nepomuk::Search::Result>& results );
 
 protected:
     virtual void aboutToQuit();
