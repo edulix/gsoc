@@ -1,4 +1,0 @@
-#!/bin/sh
-# created by cmake, don't edit, changes will be lost
-
-LD_LIBRARY_PATH=/home/edulix/proyectos/kde4/kdesvn/gsoc/konquerorbookmarks/build/lib/./:/home/edulix/proyectos/kde4/lib:/home/edulix/proyectos/kde4/lib:/home/edulix/proyectos/kde4/qt4/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} "/home/edulix/proyectos/kde4/kdesvn/gsoc/konquerorbookmarks/build/akonadi_konquerorbookmarks_resource" "$@"

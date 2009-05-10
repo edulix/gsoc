@@ -1,2 +1,0 @@
-/home/edulix/proyectos/kde4/lib/kde4/akonadi_serializer_konqbookmark.so
-/home/edulix/proyectos/kde4/share/apps/akonadi/plugins/serializer/akonadi_serializer_konqbookmark.desktop

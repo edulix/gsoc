@@ -1,8 +1,0 @@
-# Hashes of file build rules.
-93ab6dab022c3c35701ff65212b1f299 CMakeFiles/uninstall
-d41d8cd98f00b204e9800998ecf8427e doc/CMakeFiles/doc-handbook
-4496396b2484ac487554040f4dea6f01 doc/index.cache.bz2
-ee0129eac1560aef9b6c44cf8b1f01fb src/CMakeFiles/bookmarks_automoc
-a4ebba2bfb87850daa9bd6d399c9ad92 src/settings.h
-3b2c29cc9546c9431dfb82713c9a3448 src/ui_bookmarksview_base.h
-1846fcbc57bd366a94f13ac6a6d53f0e src/ui_prefs_base.h
