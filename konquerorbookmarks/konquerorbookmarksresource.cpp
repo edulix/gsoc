@@ -1,18 +1,51 @@
+/*
+    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
+
+    This library is free software; you can redistribute it and/or modify it
+    under the terms of the GNU Library General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    This library is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+    License for more details.
+
+    You should have received a copy of the GNU Library General Public License
+    along with this library; see the file COPYING.LIB.  If not, write to the
+    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
+*/
+
 #include "konquerorbookmarksresource.h"
 
 #include "settings.h"
 #include "settingsadaptor.h"
 
+#include <konqbookmark/konqbookmark.h>
+
 #include <QtDBus/QDBusConnection>
+#include <QObject>
+
+#include <nepomuk/result.h>
+#include <Nepomuk/Resource>
+#include <Nepomuk/Types/Class>
+#include <Nepomuk/ResourceManager>
+#include <Nepomuk/Variant>
+#include <Soprano/Vocabulary/Xesam>
+#include <Soprano/Vocabulary/NAO>
+// #include <Soprano/Vocabulary/NFO>
+#include <Soprano/Vocabulary/XMLSchema>
+#include <Soprano/Model>
+#include <Soprano/QueryResultIterator>
 
 using namespace Akonadi;
-
 
 class KonquerorBookmarksResource::Private : public QSharedData
 {
 public:
-    Private() {}
-
+    Private(KonquerorBookmarksResource *parent);
+    
 public:
     Collection mBookmarksRootCollection;
     Collection mMenuCollection;
@@ -23,10 +56,31 @@ public:
     Collection mMostVisitedCollection;
     Collection mUnclasifiedCollection;
     Collection::List mList;
+    QUrl mNFOBookmark;
+    QUrl mNFOBookmarkFolder;
+    
+    /**
+     * We use this to query the nepomuk database everytime we need to fetch
+     * nfo:Bookmark's belonging to a nfo:BookmarksFolder.
+     */
+    Nepomuk::Search::QueryServiceClient *mQueryServiceClient;
+
+private:
+    KonquerorBookmarksResource *mParent;
 };
 
+KonquerorBookmarksResource::Private::Private(KonquerorBookmarksResource *parent) :
+        mNFOBookmark( QUrl::fromEncoded( "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Bookmark", QUrl::StrictMode ) ),
+        mNFOBookmarkFolder( QUrl::fromEncoded( "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#BookmarkFolder", QUrl::StrictMode ) ),
+        mParent( parent )
+{
+    mQueryServiceClient = new Nepomuk::Search::QueryServiceClient( parent );
+    connect( mQueryServiceClient, SIGNAL(newEntries( const QList<Nepomuk::Search::Result>& )),
+             parent, SLOT(slotNewEntries( const QList<Nepomuk::Search::Result>& )) );
+}
+
 KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
-  : ResourceBase( id ),  d( new Private )
+  : ResourceBase( id ),  d( new Private ( this ) )
 {
   new SettingsAdaptor( Settings::self() );
   QDBusConnection::sessionBus().registerObject( QLatin1String( "/Settings" ),
@@ -92,7 +146,7 @@ KonquerorBookmarksResource::~KonquerorBookmarksResource()
 
 void KonquerorBookmarksResource::retrieveCollections()
 {
-    collectionsRetrieved( d->mList );
+    collectionsRetrievedIncremental( d->mList, Collection::List() );
 }
 
 void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &collection )
@@ -164,6 +218,37 @@ void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
 
   // NOTE: There is an equivalent method for collections, but it isn't part
   // of this template code to keep it simple
+}
+
+
+void KonquerorBookmarksResource::collectionAdded( const Akonadi::Collection &collection, const Akonadi::Collection &parent )
+{
+    //TODO
+}
+
+void KonquerorBookmarksResource::collectionChanged( const Akonadi::Collection &collection )
+{
+    //TODO
+}
+
+void KonquerorBookmarksResource::collectionRemoved( const Akonadi::Collection &collection )
+{
+    //TODO
+}
+
+
+void KonquerorBookmarksResource::slotNewEntries( const QList<Nepomuk::Search::Result>& results )
+{
+    foreach( const Nepomuk::Search::Result& result, results )
+    {
+        Nepomuk::Resource res( result.resourceUri() );
+
+        if( res.hasType( d->mNFOBookmark ) )
+        {
+            KonqBookmark konqBookmark;
+            Nepomuk::Bookmark bookmark( result.resourceUri() );
+        }
+    }
 }
 
 AKONADI_RESOURCE_MAIN( KonquerorBookmarksResource )

@@ -7,6 +7,7 @@ include(MacroLibrary)
 include(MacroOptionalAddSubdirectory)
 include(CheckIncludeFiles)
 find_package (KdepimLibs REQUIRED)
+find_package (Nepomuk REQUIRED)
 
 find_program(XSLTPROC_EXECUTABLE xsltproc)
 macro_log_feature(XSLTPROC_EXECUTABLE "xsltproc" "The command line XSLT processor from libxslt" "http://xmlsoft.org/XSLT/" FALSE "" "Needed for building Akonadi resources. Recommended.")
@@ -37,6 +38,8 @@ set(KDE4_ICON_DIR ${KDE4_INSTALL_DIR}/share/icons)
 
 include_directories(
     ${KDE4_INCLUDES}
+    ${SOPRANO_INCLUDE_DIRS}
+    ${NEPOMUK_INCLUDE_DIRS}
     ${KDEPIMLIBS_INCLUDE_DIRS}
 )
 
@@ -59,6 +62,16 @@ qt4_add_dbus_adaptor(konquerorbookmarksresource_SRCS
 
 kde4_add_executable(akonadi_konquerorbookmarks_resource RUN_UNINSTALLED ${konquerorbookmarksresource_SRCS})
 
-target_link_libraries(akonadi_konquerorbookmarks_resource ${KDE4_AKONADI_LIBS} ${QT_QTCORE_LIBRARY} ${QT_QTDBUS_LIBRARY} ${KDE4_KDECORE_LIBS})
+target_link_libraries(akonadi_konquerorbookmarks_resource
+    konqbookmark
+    nepomukquery
+    nepomukqueryclient
+    ontologies
+    ${KDE4_AKONADI_LIBS}
+    ${QT_QTCORE_LIBRARY}
+    ${QT_QTDBUS_LIBRARY}
+    ${KDE4_KDECORE_LIBS}
+    ${NEPOMUK_LIBRARIES}
+    ${SOPRANO_LIBRARIES})
 
 install(TARGETS akonadi_konquerorbookmarks_resource ${INSTALL_TARGETS_DEFAULT_ARGS})
