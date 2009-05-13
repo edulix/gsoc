@@ -28,6 +28,8 @@
 #include <nepomuk/variant.h>
 #include <nepomuk/tools.h>
 #include <nepomuk/class.h>
+#include <nepomuk/ontologies/bookmark.h>
+#include <nepomuk/ontologies/bookmarkfolder.h>
 
 #include <iostream>
 #include <cstring>
@@ -42,7 +44,7 @@ int showResources();
 
 int main(int argc, char **argv)
 {
-    QApplication app(argc, argv);
+//     QApplication app(argc, argv);
     Nepomuk::ResourceManager::instance()->init();
     
     return processArgs(argc, argv);
@@ -123,14 +125,12 @@ int showResource(int argc, char **argv)
 
 int showResources()
 {
-    kDebug()  << "All your bookmarks:";
-    QList<Nepomuk::Resource> bookmarks = Nepomuk::ResourceManager::instance()->allResourcesOfType( QUrl("http://www.konqueror.com/#Bookmark") );
-    QList<Nepomuk::Resource>::const_iterator it2 = bookmarks.constBegin();
+    QList<Nepomuk::Bookmark> bookmarks = Nepomuk::Bookmark::allBookmarks();
+    kDebug()  << "There are " << bookmarks.count() << " bookmarks";
     
-    for(; it2 != bookmarks.constEnd(); ++it2)
+    foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
-        Nepomuk::Resource res = *it2;
-        kDebug() << res.resourceUri();
+        kDebug() << "YEAHHHH: " << bookmark.resourceUri();
     }
     return 0;
 }

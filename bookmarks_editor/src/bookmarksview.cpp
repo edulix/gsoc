@@ -22,13 +22,25 @@
 #include "settings.h"
 
 #include <QtGui/QLabel>
+#include <QString>
  
 #include <klocale.h>
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
+#include <konqbookmark/konqbookmark.h>
 #include <konqbookmark/konqbookmarkmodel.h>
+#include <konqbookmark/konqbookmarkdelegate.h>
+
+class BookmarksView::Private : public QSharedData
+{
+public:
+    Private(BookmarksView */*parent*/) {}
+    
+    Akonadi::KonqBookmarkModel *mItemModel;
+};
 
 BookmarksView::BookmarksView(QWidget *)
+    : d( new Private ( this ) )
 {
     ui_bookmarksview_base.setupUi(this);
     settingsChanged();
@@ -48,14 +60,25 @@ void BookmarksView::createModels()
     filterModel->setSourceModel( collectionModel );
     filterModel->addMimeTypeFilter( QLatin1String( "application/x-vnd.kde.konqbookmark" ) );
  
-    Akonadi::ItemModel *itemModel = new Akonadi::KonqBookmarkModel( this );
+    d->mItemModel = new Akonadi::KonqBookmarkModel( this );
+    Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
  
     ui_bookmarksview_base.collectionsView->setModel( filterModel );
-    ui_bookmarksview_base.bookmarksView->setModel( itemModel );
+    ui_bookmarksview_base.bookmarksView->setModel( d->mItemModel );
+    ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
  
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
-        itemModel, SLOT( setCollection( Akonadi::Collection ) ) );
+        d->mItemModel, SLOT( setCollection( Akonadi::Collection ) ) );
+     connect(ui_bookmarksview_base.locationComboBox,SIGNAL(returnPressed(const QString&)),
+        this, SLOT(addBookmark(const QString&)));
 
+}
+
+void BookmarksView::addBookmark(const QString& bookmarkUrl)
+{
+    KonqBookmark bookmark;
+    bookmark.setUrl(bookmarkUrl);
+    d->mItemModel->addBookmark(bookmark);
 }
 
 void BookmarksView::switchColors()

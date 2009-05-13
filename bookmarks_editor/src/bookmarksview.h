@@ -21,12 +21,13 @@
 #define BOOKMARKSVIEW_H
 
 #include <QtGui/QWidget>
+#include <QtCore/QSharedDataPointer>
 
 #include "ui_bookmarksview_base.h"
 
 class QPainter;
+class QString;
 class KUrl;
-
 /**
  * This is the main view class for bookmarks.  Most of the non-menu,
  * non-toolbar, and non-statusbar (e.g., non frame) GUI code should go
@@ -55,6 +56,8 @@ public:
     void createModels();
 private:
     Ui::bookmarksview_base ui_bookmarksview_base;
+    class Private;
+    QSharedDataPointer<Private> d;
 
 signals:
     /**
@@ -70,6 +73,7 @@ signals:
 private slots:
     void switchColors();
     void settingsChanged();
+    void addBookmark(const QString&);
 };
 
 #endif // BOOKMARSVIEW_H

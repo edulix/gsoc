@@ -20,8 +20,10 @@
 #include "konqbookmarkmodel.h"
 #include "konqbookmark.h"
 
+#include <akonadi/collection.h>
 #include <akonadi/item.h>
 #include <akonadi/itemfetchjob.h>
+#include <akonadi/itemcreatejob.h>
 #include <akonadi/itemfetchscope.h>
 
 #include <klocale.h>
@@ -138,4 +140,16 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
         return true;
     }
     return false;
+}
+
+bool KonqBookmarkModel::addBookmark( const KonqBookmark &value )
+{
+    Item item;
+    beginInsertRows(QModelIndex(), rowCount()-1, rowCount()-1);
+    item.setMimeType( "application/x-vnd.kde.konqbookmark" );
+    item.setPayload<KonqBookmark>( value );
+    ItemCreateJob *job = new ItemCreateJob( item, collection() );
+    bool ret = job->exec();
+    endInsertRows();
+    return ret;
 }

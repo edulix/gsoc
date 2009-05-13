@@ -18,6 +18,8 @@ kde4_add_executable(nepotest ${nepotest_SRCS})
 target_link_libraries(nepotest
     ontologies
     ${NEPOMUK_LIBRARIES}
+    ${QT_QTCORE_LIBRARY}
+    ${KDE4_KDECORE_LIBS}
     ${SOPRANO_LIBRARIES})
 
 install(TARGETS nepotest ${INSTALL_TARGETS_DEFAULT_ARGS})

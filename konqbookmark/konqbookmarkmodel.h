@@ -23,6 +23,8 @@
 #include "konqbookmark_export.h"
 #include <akonadi/itemmodel.h>
 
+class KonqBookmark;
+
 namespace Akonadi
 {
 
@@ -48,7 +50,8 @@ namespace Akonadi
         
         // With this function we make the model editable
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
-
+        
+        bool addBookmark( const KonqBookmark &value );
     private:
         class Private;
         Private* const d;

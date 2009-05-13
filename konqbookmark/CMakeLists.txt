@@ -27,6 +27,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 set(konqbookmark_LIB_SRCS
   konqbookmark.cpp
   konqbookmarkmodel.cpp
+  konqbookmarkdelegate.cpp
 )
 
 kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
@@ -40,6 +41,7 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 set(konqbookmark_LIB_HDRS
   konqbookmark.h
   konqbookmarkmodel.h
+  konqbookmarkdelegate.h
   konqbookmark_export.h
 )
 

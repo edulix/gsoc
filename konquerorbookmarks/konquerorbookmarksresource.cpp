@@ -29,6 +29,7 @@
 
 #include <QtDBus/QDBusConnection>
 #include <QObject>
+#include <QtGlobal>
 #include <QUrl>
 
 #include <nepomuk/result.h>
@@ -243,6 +244,9 @@ void KonquerorBookmarksResource::configure( WId windowId )
 
 void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Akonadi::Collection &collection )
 {
+    if(!item.hasPayload<KonqBookmark>())
+        qFatal("!item.hasPayload<KonqBookmark>()");
+    
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.url() );
     bookmark.setTitles( QStringList(konqBookmark.title()) );
