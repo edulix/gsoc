@@ -25,6 +25,7 @@
 #include <konqbookmark/konqbookmark.h>
 #include <akonadi/changerecorder.h>
 #include <akonadi/itemfetchscope.h>
+#include <KUrl>
 
 #include <nepomuk/ontologies/bookmark.h>
 #include <nepomuk/ontologies/bookmarkfolder.h>
@@ -44,7 +45,7 @@
 #include <QObject>
 #include <QtGlobal>
 #include <QUrl>
-
+#include <QLatin1String>
 
 using namespace Akonadi;
 
@@ -205,7 +206,7 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
     {
         KonqBookmark konqBookmark;
         Item item;
-        item.setRemoteId( bookmark.resourceUri().toString() );
+        item.setRemoteId( bookmark.resourceUri().toString());
         item.setMimeType( "application/x-vnd.kde.konqbookmark" );
         konqBookmark.setUrl( bookmark.resourceUri() );
         
@@ -251,22 +252,46 @@ void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Ako
         qFatal("!item.hasPayload<KonqBookmark>()");
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-    Nepomuk::Bookmark bookmark( konqBookmark.url() );
+    Nepomuk::Bookmark bookmark( konqBookmark.url().toString() );
     bookmark.setTitles( QStringList(konqBookmark.title()) );
     
     Nepomuk::BookmarkFolder folder( collection.remoteId() );
     folder.addContainsBookmark(bookmark);
+    
+    // Set the remote Id (as suggested by vkrause)
+    Akonadi::Item itemCopy = item;
+    itemCopy.setRemoteId( konqBookmark.url().toString() );
+    changeCommitted(itemCopy);
 }
 
 void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const QSet<QByteArray> &parts )
 {
-    Q_UNUSED( item );
     Q_UNUSED( parts );
-    // TODO
+    if(!item.hasPayload<KonqBookmark>())
+        qFatal("!item.hasPayload<KonqBookmark>()");
+    
+    KonqBookmark konqBookmark = item.payload<KonqBookmark>();
+    Nepomuk::Bookmark bookmark( konqBookmark.url().toString() );
+    bookmark.setTitles( QStringList(konqBookmark.title()) );
+    
+    // If the url changed, we need to do some fancy stuff
+    if(item.remoteId() != konqBookmark.url().toString())
+    {
+        Nepomuk::Bookmark bookmarkOld( item.remoteId() );
+        bookmarkOld.remove();
+        
+        // Set the remote Id (as suggested by vkrause)
+        Akonadi::Item itemCopy(item);
+        itemCopy.setRemoteId( konqBookmark.url().toString() );
+        changeCommitted(itemCopy);
+    }
 }
 
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
 {
+    if(!item.hasPayload<KonqBookmark>())
+        qFatal("!item.hasPayload<KonqBookmark>()");
+    
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.url() );
     bookmark.remove();

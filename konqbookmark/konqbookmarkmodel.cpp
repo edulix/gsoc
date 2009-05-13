@@ -24,10 +24,13 @@
 #include <akonadi/item.h>
 #include <akonadi/itemfetchjob.h>
 #include <akonadi/itemcreatejob.h>
+#include <akonadi/itemmodifyjob.h>
 #include <akonadi/itemfetchscope.h>
 
 #include <klocale.h>
 #include <kiconloader.h>
+#include <kdebug.h>
+#include <KUrl>
 
 #include <QtGui/QPixmap>
 #include <QUrl>
@@ -82,6 +85,7 @@ QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
         break;
         
     case Qt::DisplayRole:
+    case Qt::EditRole:
         switch( index.column() )
         {
         case Title:
@@ -133,21 +137,40 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
     if (index.isValid() && role == Qt::EditRole)
     {
         Item item = itemForIndex( index );
-        KonqBookmark konqBookmark = value.value<KonqBookmark>();
-        item.setPayload<KonqBookmark>( konqBookmark );
+        if(!item.hasPayload<KonqBookmark>())
+            return false;
         
+        KonqBookmark konqBookmark = item.payload<KonqBookmark>();
+        switch( index.column() )
+        {
+        case Title:
+            konqBookmark.setTitle(value.toString());
+            break;
+        case Url:
+            konqBookmark.setUrl(QUrl(value.toString()));
+            break;
+        default:
+            break;
+        }
+        item.setPayload<KonqBookmark>( konqBookmark );
+ 
+        ItemModifyJob *modifyJob = new ItemModifyJob( item, this );
+        if ( !modifyJob->exec() ) {
+            kDebug() << modifyJob->errorString();
+            return false;
+        }
         emit dataChanged(index, index);
         return true;
     }
     return false;
 }
 
-bool KonqBookmarkModel::addBookmark( const KonqBookmark &value )
+bool KonqBookmarkModel::addBookmark( const KonqBookmark &konqBookmark )
 {
     Item item;
     beginInsertRows(QModelIndex(), rowCount()-1, rowCount()-1);
     item.setMimeType( "application/x-vnd.kde.konqbookmark" );
-    item.setPayload<KonqBookmark>( value );
+    item.setPayload<KonqBookmark>( konqBookmark );
     ItemCreateJob *job = new ItemCreateJob( item, collection() );
     bool ret = job->exec();
     endInsertRows();

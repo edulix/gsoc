@@ -51,7 +51,7 @@ namespace Akonadi
         // With this function we make the model editable
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
         
-        bool addBookmark( const KonqBookmark &value );
+        bool addBookmark( const KonqBookmark &konqBookmark );
     private:
         class Private;
         Private* const d;
