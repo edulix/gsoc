@@ -81,6 +81,7 @@ KonquerorBookmarksResource::Private::Private(KonquerorBookmarksResource *parent)
 KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
   : ResourceBase( id ),  d( new Private ( this ) )
 {
+    Nepomuk::ResourceManager::instance()->init();
     new SettingsAdaptor( Settings::self() );
     QDBusConnection::sessionBus().registerObject( QLatin1String( "/Settings" ),
         Settings::self(), QDBusConnection::ExportAdaptors );
@@ -148,8 +149,14 @@ Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Col
 {
     Collection::List list;
     QStringList mimeTypes;
-    mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
+    
+    
+    if(!parent.hasProperty(Nepomuk::BookmarkFolder::containsBookmarkFolderUri()))
+        return list;
+    
     QList<Nepomuk::BookmarkFolder> bookmarkFolders = parent.containsBookmarkFolders();
+    
+    mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
 
     foreach( const Nepomuk::BookmarkFolder& bookmarkFolder, bookmarkFolders )
     {

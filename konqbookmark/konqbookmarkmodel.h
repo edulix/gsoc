@@ -42,6 +42,12 @@ namespace Akonadi
         virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
         virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
         virtual QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+        
+        // We let the delegate know that we are editable
+        Qt::ItemFlags flags(const QModelIndex &index) const;
+        
+        // With this function we make the model editable
+        bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
     private:
         class Private;

@@ -15,6 +15,9 @@ set(nepotest_SRCS
 
 kde4_add_executable(nepotest ${nepotest_SRCS})
 
-target_link_libraries(nepotest ${NEPOMUK_LIBRARIES} ${SOPRANO_LIBRARIES})
+target_link_libraries(nepotest
+    ontologies
+    ${NEPOMUK_LIBRARIES}
+    ${SOPRANO_LIBRARIES})
 
 install(TARGETS nepotest ${INSTALL_TARGETS_DEFAULT_ARGS})

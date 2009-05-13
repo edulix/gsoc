@@ -24,6 +24,7 @@
 #include "konqbookmark_export.h"
 
 #include <QtCore/QSharedDataPointer>
+#include <QMetaType>
 
 class QDateTime;
 class QString;
@@ -55,5 +56,7 @@ private:
   class Private;
   QSharedDataPointer<Private> d;
 };
+
+Q_DECLARE_METATYPE(KonqBookmark);
 
 #endif /* KONQBOOKMARK_H */

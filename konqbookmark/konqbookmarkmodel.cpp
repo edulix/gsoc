@@ -70,15 +70,18 @@ QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
     const KonqBookmark konqBookmark = item.payload<KonqBookmark>();
 
     // Icon for the model entry
-    switch( role ) {
+    switch( role )
+    {
     case Qt::DecorationRole:
-        if ( index.column() == 0 ) {
+        if ( index.column() == 0 )
+        {
             return SmallIcon( QLatin1String( "bookmark" ) );
         }
         break;
         
     case Qt::DisplayRole:
-        switch( index.column() ) {
+        switch( index.column() )
+        {
         case Title:
             return konqBookmark.title();
         case Url:
@@ -98,8 +101,10 @@ QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
 
 QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation, int role ) const
 {
-    if ( role == Qt::DisplayRole && orientation == Qt::Horizontal ) {
-        switch( section ) {
+    if ( role == Qt::DisplayRole && orientation == Qt::Horizontal )
+    {
+        switch( section )
+        {
         case Title:
             return i18nc( "@title:column, bookmark title", "Title" );
         case Url:
@@ -110,4 +115,27 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
     }
 
     return ItemModel::headerData( section, orientation, role );
+}
+
+
+Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::ItemIsEnabled;
+
+    return ItemModel::flags(index) | Qt::ItemIsEditable;
+}
+ 
+bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (index.isValid() && role == Qt::EditRole)
+    {
+        Item item = itemForIndex( index );
+        KonqBookmark konqBookmark = value.value<KonqBookmark>();
+        item.setPayload<KonqBookmark>( konqBookmark );
+        
+        emit dataChanged(index, index);
+        return true;
+    }
+    return false;
 }

@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>bookmarksview_base</class>
- <widget class="QWidget" name="bookmarksview_base" >
-  <property name="geometry" >
+ <widget class="QWidget" name="bookmarksview_base">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,41 +10,41 @@
     <height>437</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>kapp4_base</string>
   </property>
-  <property name="autoFillBackground" >
+  <property name="autoFillBackground">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout" >
-   <item row="0" column="0" >
-    <widget class="QSplitter" name="splitter" >
-     <property name="sizePolicy" >
-      <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <widget class="QSplitter" name="splitter">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="orientation" >
+     <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="Akonadi::CollectionView" name="collectionsView" >
-      <property name="sizePolicy" >
-       <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+     <widget class="Akonadi::CollectionView" name="collectionsView">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
      </widget>
-     <widget class="QWidget" name="layoutWidget" >
-      <layout class="QVBoxLayout" name="verticalLayout" >
+     <widget class="QWidget" name="layoutWidget">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QLineEdit" name="bookmarksFilterBox" />
+        <widget class="QLineEdit" name="bookmarksFilterBox"/>
        </item>
        <item>
-        <widget class="Akonadi::ItemView" name="bookmarksView" >
-         <property name="sizePolicy" >
-          <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+        <widget class="Akonadi::ItemView" name="bookmarksView">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>4</verstretch>
           </sizepolicy>
@@ -51,9 +52,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QListView" name="bookmarkPropertiesView" >
-         <property name="sizePolicy" >
-          <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+        <widget class="QListView" name="bookmarkPropertiesView">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>1</verstretch>
           </sizepolicy>
@@ -64,18 +65,36 @@
      </widget>
     </widget>
    </item>
+   <item row="0" column="0">
+    <widget class="KComboBox" name="locationComboBox">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+     <property name="autoCompletion">
+      <bool>false</bool>
+     </property>
+     <property name="trapReturnKey">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
+   <class>KComboBox</class>
+   <extends>QComboBox</extends>
+   <header>kcombobox.h</header>
+  </customwidget>
+  <customwidget>
    <class>Akonadi::CollectionView</class>
    <extends>QTreeView</extends>
-   <header location="global" >akonadi/collectionview.h</header>
+   <header location="global">akonadi/collectionview.h</header>
   </customwidget>
   <customwidget>
    <class>Akonadi::ItemView</class>
    <extends>QTreeView</extends>
-   <header location="global" >akonadi/itemview.h</header>
+   <header location="global">akonadi/itemview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
