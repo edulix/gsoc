@@ -23,15 +23,12 @@
 #include "settingsadaptor.h"
 
 #include <konqbookmark/konqbookmark.h>
+#include <akonadi/changerecorder.h>
+#include <akonadi/itemfetchscope.h>
+
 #include <nepomuk/ontologies/bookmark.h>
 #include <nepomuk/ontologies/bookmarkfolder.h>
 #include <nepomuk/ontologies/dataobject.h>
-
-#include <QtDBus/QDBusConnection>
-#include <QObject>
-#include <QtGlobal>
-#include <QUrl>
-
 #include <nepomuk/result.h>
 #include <Nepomuk/Resource>
 #include <Nepomuk/Types/Class>
@@ -42,6 +39,12 @@
 #include <Soprano/Vocabulary/XMLSchema>
 #include <Soprano/Model>
 #include <Soprano/QueryResultIterator>
+
+#include <QtDBus/QDBusConnection>
+#include <QObject>
+#include <QtGlobal>
+#include <QUrl>
+
 
 using namespace Akonadi;
 
@@ -85,8 +88,8 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     Nepomuk::ResourceManager::instance()->init();
     new SettingsAdaptor( Settings::self() );
     QDBusConnection::sessionBus().registerObject( QLatin1String( "/Settings" ),
-        Settings::self(), QDBusConnection::ExportAdaptors );
-
+        Settings::self(), QDBusConnection::ExportAdaptors ); 
+    changeRecorder()->itemFetchScope().fetchFullPayload();
 
     QStringList mimeTypes;
     mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
