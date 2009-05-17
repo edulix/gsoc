@@ -249,7 +249,10 @@ void KonquerorBookmarksResource::configure( WId windowId )
 void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Akonadi::Collection &collection )
 {
     if(!item.hasPayload<KonqBookmark>())
-        qFatal("!item.hasPayload<KonqBookmark>()");
+    {
+        kDebug() << "!item.hasPayload<KonqBookmark>()";
+        return;
+    }
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.url().toString() );
@@ -268,7 +271,10 @@ void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const Q
 {
     Q_UNUSED( parts );
     if(!item.hasPayload<KonqBookmark>())
-        qFatal("!item.hasPayload<KonqBookmark>()");
+    {
+        kDebug() << "!item.hasPayload<KonqBookmark>()";
+        return;
+    }
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.url().toString() );
@@ -290,7 +296,10 @@ void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const Q
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
 {
     if(!item.hasPayload<KonqBookmark>())
-        qFatal("!item.hasPayload<KonqBookmark>()");
+    {
+        kDebug() << "!item.hasPayload<KonqBookmark>()";
+        return;
+    }
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.url() );
