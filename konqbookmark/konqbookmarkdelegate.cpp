@@ -21,7 +21,8 @@
 
 #include <QtGui>
 #include <QString>
-#include <klineedit.h> 
+#include <klineedit.h>
+#include <kdebug.h> 
 
 using namespace Akonadi;
 
@@ -34,7 +35,6 @@ QWidget *KonqBookmarkDelegate::createEditor(QWidget *parent, const QStyleOptionV
     const QModelIndex &/* index */) const
 {
     KLineEdit *editor = new KLineEdit(parent);
-
     return editor;
 }
 
@@ -59,5 +59,6 @@ void KonqBookmarkDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
 void KonqBookmarkDelegate::updateEditorGeometry(QWidget *editor,
     const QStyleOptionViewItem &option, const QModelIndex &/* index */) const
 {
-    editor->setGeometry(option.rect);
+    QRect geometry(option.rect.x()-2, option.rect.y()-2, option.rect.width()+4, option.rect.height()+4);
+    editor->setGeometry(geometry);
 }
