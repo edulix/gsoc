@@ -33,6 +33,7 @@ static void writeHeader( const KonqBookmark &konqBookmark, QXmlStreamWriter & wr
     writer.writeStartElement( QLatin1String( "header" ) );
     writer.writeAttribute( QLatin1String( "url" ), konqBookmark.url().toString() );
     writer.writeAttribute( QLatin1String( "title" ), konqBookmark.title() );
+    writer.writeAttribute( QLatin1String( "uniqueUri" ), konqBookmark.uniqueUri() );
     writer.writeEndElement();
 }
 
@@ -71,6 +72,9 @@ static bool readHeader( QXmlStreamReader &reader, KonqBookmark &konqBookmark )
                 
                 const QStringRef title = attributes.value( QLatin1String( "title" ) );
                 konqBookmark.setTitle( title.toString() );
+                
+                const QStringRef uniqueUri = attributes.value( QLatin1String( "uniqueUri" ) );
+                konqBookmark.setUniqueUri( uniqueUri.toString() );
                 return true;
             } else {
                 return false;

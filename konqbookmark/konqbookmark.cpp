@@ -22,6 +22,7 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
+#include <krandom.h>
 
 #include "konqbookmark.h"
 
@@ -34,15 +35,24 @@ public:
     {
         mUrl = other.mUrl;
         mTitle = other.mTitle;
+        mUniqueUri = other.mUniqueUri;
     }
 
 public:
     QUrl mUrl;
     QString mTitle;
+    QString mUniqueUri;
 };
+
+
+KonqBookmark::KonqBookmark(const QString& uniqueUri) : d( new Private )
+{
+    d->mUniqueUri = uniqueUri; 
+}
 
 KonqBookmark::KonqBookmark() : d( new Private )
 {
+    d->mUniqueUri = generateUniqueUri(); 
 }
 
 KonqBookmark::KonqBookmark( const KonqBookmark &other ) : d( other.d )
@@ -71,7 +81,6 @@ QUrl KonqBookmark::url() const
     return d->mUrl;
 }
 
-
 void KonqBookmark::setTitle( const QString &title )
 {
     d->mTitle = title;
@@ -80,4 +89,20 @@ void KonqBookmark::setTitle( const QString &title )
 QString KonqBookmark::title() const
 {
     return d->mTitle;
+}
+
+void KonqBookmark::setUniqueUri( const QString &uniqueUri )
+{
+    d->mUniqueUri = uniqueUri;
+}
+
+QString KonqBookmark::uniqueUri() const
+{
+    return d->mUniqueUri;
+}
+
+QString KonqBookmark::generateUniqueUri() const
+{
+    // if you get two equal random strings.. go buy a lottery ticket afterwards
+    return "konqbookmark:/" + KRandom::randomString( 40 ); 
 }

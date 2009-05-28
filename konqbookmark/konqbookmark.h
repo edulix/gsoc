@@ -38,6 +38,8 @@ public:
 
   KonqBookmark();
 
+  KonqBookmark(const QString& uniqueUri);
+  
   KonqBookmark( const KonqBookmark &other );
 
   ~KonqBookmark();
@@ -51,6 +53,12 @@ public:
   void setTitle( const QString &title );
 
   QString title() const;
+  
+  QString uniqueUri() const;
+  
+  void setUniqueUri(const QString &uniqueUri);
+  
+  QString generateUniqueUri() const;
 
 private:
   class Private;

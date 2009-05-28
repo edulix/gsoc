@@ -26,6 +26,7 @@
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemmodifyjob.h>
 #include <akonadi/itemfetchscope.h>
+#include <Nepomuk/ResourceManager>
 
 #include <klocale.h>
 #include <kiconloader.h>
