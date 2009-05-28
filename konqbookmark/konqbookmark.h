@@ -58,7 +58,7 @@ public:
   
   void setUniqueUri(const QString &uniqueUri);
   
-  QString generateUniqueUri() const;
+  static QString generateUniqueUri();
 
 private:
   class Private;

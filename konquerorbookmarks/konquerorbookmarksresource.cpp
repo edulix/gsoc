@@ -208,7 +208,7 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
         Item item;
         item.setRemoteId( bookmark.resourceUri().toString());
         item.setMimeType( "application/x-vnd.kde.konqbookmark" );
-        konqBookmark.setUrl( "" );
+        konqBookmark.setUrl( QUrl("") );
         
         if(!bookmark.titles().empty())
             konqBookmark.setTitle( bookmark.titles().first() );
@@ -257,7 +257,8 @@ void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Ako
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.uniqueUri() );
     bookmark.setTitles( QStringList(konqBookmark.title()) );
-    bookmark.setBookmarkses( QStringList(konqBookmark.url().toString()) );
+    Nepomuk::DataObject url(konqBookmark.url().toString());
+    bookmark.setBookmarkses( QList<Nepomuk::DataObject>() << url );
     
     Nepomuk::BookmarkFolder folder( collection.remoteId() );
     folder.addContainsBookmark(bookmark);
@@ -280,7 +281,8 @@ void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const Q
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.uniqueUri() );
     bookmark.setTitles( QStringList(konqBookmark.title()) );
-    bookmark.setBookmarkses( QStringList(konqBookmark.url().toString()) );
+    Nepomuk::DataObject url(konqBookmark.url().toString());
+    bookmark.setBookmarkses( QList<Nepomuk::DataObject>() << url );
 }
 
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )

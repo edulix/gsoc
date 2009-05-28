@@ -101,7 +101,7 @@ QString KonqBookmark::uniqueUri() const
     return d->mUniqueUri;
 }
 
-QString KonqBookmark::generateUniqueUri() const
+QString KonqBookmark::generateUniqueUri()
 {
     // if you get two equal random strings.. go buy a lottery ticket afterwards
     return "konqbookmark:/" + KRandom::randomString( 40 ); 
