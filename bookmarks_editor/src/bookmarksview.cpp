@@ -43,7 +43,6 @@ BookmarksView::BookmarksView(QWidget *)
     : d( new Private ( this ) )
 {
     ui_bookmarksview_base.setupUi(this);
-    settingsChanged();
     setAutoFillBackground(true);
 }
 
@@ -81,24 +80,5 @@ void BookmarksView::addBookmark(const QString& bookmarkUrl)
     d->mItemModel->addBookmark(bookmark);
 }
 
-void BookmarksView::switchColors()
-{
-    // switch the foreground/background colors of the label
-    QColor color = Settings::col_background();
-    Settings::setCol_background( Settings::col_foreground() );
-    Settings::setCol_foreground( color );
-
-    settingsChanged();
-}
-
-void BookmarksView::settingsChanged()
-{
-    QPalette pal;
-    pal.setColor( QPalette::Window, Settings::col_background());
-    pal.setColor( QPalette::WindowText, Settings::col_foreground());
-
-    // i18n : internationalization
-    emit signalChangeStatusbar( i18n("Settings changed") );
-}
 
 #include "bookmarksview.moc"

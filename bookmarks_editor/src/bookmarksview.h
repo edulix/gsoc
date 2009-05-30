@@ -65,14 +65,7 @@ signals:
      */
     void signalChangeStatusbar(const QString& text);
 
-    /**
-     * Use this signal to change the content of the caption
-     */
-    void signalChangeCaption(const QString& text);
-
 private slots:
-    void switchColors();
-    void settingsChanged();
     void addBookmark(const QString&);
 };
 

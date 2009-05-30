@@ -1,5 +1,5 @@
-How To Build This Template
--=-=-=-=-=-=-=-=-=-=-=-=-=
+How To Build
+-=-=-=-=-=-=
 
 cd <project_name_path>
 mkdir build
@@ -32,23 +32,3 @@ serialzer's code, i.e. in the serializer's .desktop file:
 - Comment field
 
 - Type field: MIME type of your data type
-
-Documentation
--=-=-=-=-=-=-
-
-The Akonadi-KDE API documentation can be found here:
-http://api.kde.org/4.x-api/kdepimlibs-apidocs/akonadi/html/index.html
-
-General developer information, e.g. tutorials can be found here:
-http://techbase.kde.org/Projects/PIM/Akonadi
-
-Project homepage is http://www.akonadi-project.org/
-
-IRC: #akonadi on freenode network
-
-----------------------------
-Please send all comments to:
-Kevin Krammer
-kevin@akonadi-project.org
-
-Last update: January 2009

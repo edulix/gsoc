@@ -9,7 +9,7 @@ include_directories(
     ${KDEPIMLIBS_INCLUDE_DIRS}
 )
 
-kde4_add_ui_files(bookmarks_SRCS bookmarksview_base.ui prefs_base.ui)
+kde4_add_ui_files(bookmarks_SRCS bookmarksview_base.ui)
 
 kde4_add_kcfg_files(bookmarks_SRCS settings.kcfgc )
 

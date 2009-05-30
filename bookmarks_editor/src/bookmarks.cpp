@@ -37,8 +37,7 @@
 
 Bookmarks::Bookmarks()
     : KXmlGuiWindow(),
-      m_view(new BookmarksView(this)),
-      m_printer(0)
+      m_view(new BookmarksView(this))
 {
     // accept dnd
     setAcceptDrops(true);
@@ -72,8 +71,6 @@ void Bookmarks::setupActions()
     KStandardAction::openNew(this, SLOT(fileNew()), actionCollection());
     KStandardAction::quit(qApp, SLOT(closeAllWindows()), actionCollection());
 
-    KStandardAction::preferences(this, SLOT(optionsPreferences()), actionCollection());
-
     // custom menu and menu item - the slot is in the class BookmarksView
     KAction *custom = new KAction(KIcon("colorize"), i18n("Swi&tch Colors"), this);
     actionCollection()->addAction( QLatin1String("switch_action"), custom );
@@ -86,27 +83,7 @@ void Bookmarks::fileNew()
     // the New shortcut is pressed (usually CTRL+N) or the New toolbar
     // button is clicked
 
-    // create a new window
-    (new Bookmarks)->show();
-}
-
-void Bookmarks::optionsPreferences()
-{
-    // The preference dialog is derived from prefs_base.ui
-    //
-    // compare the names of the widgets in the .ui file
-    // to the names of the variables in the .kcfg file
-    //avoid to have 2 dialogs shown
-    if ( KConfigDialog::showDialog( "settings" ) )  {
-        return;
-    }
-    KConfigDialog *dialog = new KConfigDialog(this, "settings", Settings::self());
-    QWidget *generalSettingsDlg = new QWidget;
-    ui_prefs_base.setupUi(generalSettingsDlg);
-    dialog->addPage(generalSettingsDlg, i18n("General"), "package_setting");
-    connect(dialog, SIGNAL(settingsChanged(QString)), m_view, SLOT(settingsChanged()));
-    dialog->setAttribute( Qt::WA_DeleteOnClose );
-    dialog->show();
+    // TODO: Add new bookmark
 }
 
 void Bookmarks::delayedInit()

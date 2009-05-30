@@ -24,19 +24,18 @@
 #include <KDE/KLocale>
 
 static const char description[] =
-    I18N_NOOP("A KDE 4 Application");
+    I18N_NOOP("Konqueror Bookmarks Editor");
 
 static const char version[] = "0.1";
 
 int main(int argc, char **argv)
 {
     KAboutData about("bookmarks", 0, ki18n("bookmarks"), version, ki18n(description),
-                     KAboutData::License_GPL, ki18n("(C) 2007 Eduardo Robles Elvira"), KLocalizedString(), 0, "edulix@gmail.com");
+                     KAboutData::License_GPL, ki18n("(C) 2009 Eduardo Robles Elvira"), KLocalizedString(), 0, "edulix@gmail.com");
     about.addAuthor( ki18n("Eduardo Robles Elvira"), KLocalizedString(), "edulix@gmail.com" );
     KCmdLineArgs::init(argc, argv, &about);
 
     KCmdLineOptions options;
-    options.add("+[URL]", ki18n( "Document to open" ));
     KCmdLineArgs::addCmdLineOptions(options);
     KApplication app;
 

@@ -54,17 +54,14 @@ public:
 
 private slots:
     void fileNew();
-    void optionsPreferences();
     void delayedInit();
 
 private:
     void setupActions();
 
 private:
-    Ui::prefs_base ui_prefs_base ;
     BookmarksView *m_view;
 
-    QPrinter   *m_printer;
     KToggleAction *m_toolbarAction;
     KToggleAction *m_statusbarAction;
 };
