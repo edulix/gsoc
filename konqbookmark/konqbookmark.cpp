@@ -36,12 +36,24 @@ public:
         mUrl = other.mUrl;
         mTitle = other.mTitle;
         mUniqueUri = other.mUniqueUri;
+        mTags = other.mTags;
+        mDescription = other.mDescription;
+        mNumVisits = other.mNumVisits;
+        mCreated = other.mCreated;
+        mLastModified = other.mLastModified;
+        mLastVisited = other.mLastVisited;
     }
 
 public:
     QUrl mUrl;
     QString mTitle;
     QString mUniqueUri;
+    QStringList mTags;
+    QString mDescription;
+    long mNumVisits;
+    QDateTime mCreated;
+    QDateTime mLastModified;
+    QDateTime mLastVisited;
 };
 
 
@@ -105,4 +117,86 @@ QString KonqBookmark::generateUniqueUri()
 {
     // if you get two equal random strings.. go buy a lottery ticket afterwards
     return "konqbookmark:/" + KRandom::randomString( 40 ); 
+}
+
+
+QStringList KonqBookmark::tags() const
+{
+    return d->mTags;
+}
+
+void KonqBookmark::addTag(const QString& tag)
+{
+    if(!d->mTags.contains(tag))
+        d->mTags.append(tag);
+}
+
+void KonqBookmark::removeTag(const QString& tag)
+{
+    d->mTags.removeOne(tag);
+}
+
+void KonqBookmark::setTags(const QStringList& tags)
+{
+    d->mTags = tags;
+}
+
+bool KonqBookmark::hasTag(const QString& tag) const
+{
+    return d->mTags.contains(tag);
+}
+
+QString KonqBookmark::description() const
+{
+    return d->mDescription;
+}
+
+void KonqBookmark::setDescription(const QString& description)
+{
+    d->mDescription = description;
+}
+
+long KonqBookmark::numVisits() const
+{
+    return d->mNumVisits;
+}
+
+void KonqBookmark::incrementVisits()
+{
+    d->mNumVisits++;
+}
+
+void KonqBookmark::setNumVisits(const long visits)
+{
+    d->mNumVisits = visits;
+}
+
+QDateTime KonqBookmark::created() const
+{
+    return d->mCreated;
+}
+
+void KonqBookmark::setCreated(const QDateTime& created)
+{
+    d->mCreated = created;
+}
+
+QDateTime KonqBookmark::lastModified() const
+{
+    return d->mLastModified;
+}
+
+void KonqBookmark::setLastModified(const QDateTime& lastModified)
+{
+    d->mLastModified = lastModified;
+}
+
+QDateTime KonqBookmark::lastVisited() const
+{
+    return d->mLastVisited;
+}
+
+void KonqBookmark::setLastVisited(const QDateTime& lastVisited)
+{
+    d->mLastVisited = lastVisited;
 }

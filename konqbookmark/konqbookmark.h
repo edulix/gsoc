@@ -25,6 +25,8 @@
 
 #include <QtCore/QSharedDataPointer>
 #include <QMetaType>
+#include <QDateTime>
+#include <QStringList>
 
 class QDateTime;
 class QString;
@@ -35,34 +37,65 @@ template <class T> class QList;
 class KONQBOOKMARK_EXPORT KonqBookmark
 {
 public:
+    KonqBookmark();
 
-  KonqBookmark();
+    KonqBookmark(const QString& uniqueUri);
+    
+    KonqBookmark( const KonqBookmark &other );
 
-  KonqBookmark(const QString& uniqueUri);
-  
-  KonqBookmark( const KonqBookmark &other );
+    ~KonqBookmark();
 
-  ~KonqBookmark();
+    KonqBookmark &operator=( const KonqBookmark &other );
 
-  KonqBookmark &operator=( const KonqBookmark &other );
+    void setUrl( const QUrl &url );
 
-  void setUrl( const QUrl &url );
+    QUrl url() const;
 
-  QUrl url() const;
+    void setTitle( const QString &title );
 
-  void setTitle( const QString &title );
+    QString title() const;
+    
+    QString uniqueUri() const;
+    
+    void setUniqueUri(const QString &uniqueUri);
+    
+    static QString generateUniqueUri();
 
-  QString title() const;
-  
-  QString uniqueUri() const;
-  
-  void setUniqueUri(const QString &uniqueUri);
-  
-  static QString generateUniqueUri();
-
+    QStringList tags() const;
+    
+    void addTag(const QString& tag);
+    
+    void removeTag(const QString& tag);
+    
+    void setTags(const QStringList& tags);
+    
+    bool hasTag(const QString& tag) const;
+    
+    QString description() const;
+    
+    void setDescription(const QString& description);
+    
+    long numVisits() const;
+    
+    void incrementVisits();
+    
+    void setNumVisits(const long visits);
+    
+    QDateTime created() const;
+    
+    void setCreated(const QDateTime& created);
+    
+    QDateTime lastModified() const;
+    
+    void setLastModified(const QDateTime& lastModified);
+    
+    QDateTime lastVisited() const;
+    
+    void setLastVisited(const QDateTime& lastVisited);
+    
 private:
-  class Private;
-  QSharedDataPointer<Private> d;
+    class Private;
+    QSharedDataPointer<Private> d;
 };
 
 Q_DECLARE_METATYPE(KonqBookmark);
