@@ -23,6 +23,7 @@
 
 #include <QDateTime>
 #include <QIODevice>
+#include <QString>
 #include <QList>
 #include <QUrl>
 #include <QXmlStreamReader>
@@ -34,7 +35,13 @@ static void writeHeader( const KonqBookmark &konqBookmark, QXmlStreamWriter & wr
     writer.writeAttribute( QLatin1String( "url" ), konqBookmark.url().toString() );
     writer.writeAttribute( QLatin1String( "title" ), konqBookmark.title() );
     writer.writeAttribute( QLatin1String( "uniqueUri" ), konqBookmark.uniqueUri() );
-    writer.writeEndElement();
+    // split tags using "," so a tag can't contain a ',' character inside!
+    writer.writeAttribute( QLatin1String( "tags" ), konqBookmark.tags().join(",") );
+    writer.writeAttribute( QLatin1String( "description" ), konqBookmark.description() );
+    writer.writeAttribute( QLatin1String( "numVisits" ), QString::number(konqBookmark.numVisits()) );
+    writer.writeAttribute( QLatin1String( "created" ), konqBookmark.created().toString() );
+    writer.writeAttribute( QLatin1String( "lastModified" ), konqBookmark.lastModified().toString() );
+    writer.writeAttribute( QLatin1String( "lastVisited" ), konqBookmark.lastVisited().toString() );
 }
 
 bool KonqBookmarkXmlIo::writeBookmarkToXml( const KonqBookmark &konqBookmark, QIODevice *device )
@@ -67,14 +74,33 @@ static bool readHeader( QXmlStreamReader &reader, KonqBookmark &konqBookmark )
             if ( reader.name() == QLatin1String( "header" ) ) {
                 const QXmlStreamAttributes attributes = reader.attributes();
                 
-                const QStringRef url = attributes.value( QLatin1String( "url" ) );
-                konqBookmark.setUrl( QUrl( url.toString() ) );
+                QStringRef stringRef = attributes.value( QLatin1String( "url" ) );
+                konqBookmark.setUrl( QUrl( stringRef.toString() ) );
                 
-                const QStringRef title = attributes.value( QLatin1String( "title" ) );
-                konqBookmark.setTitle( title.toString() );
+                stringRef = attributes.value( QLatin1String( "title" ) );
+                konqBookmark.setTitle( stringRef.toString() );
                 
-                const QStringRef uniqueUri = attributes.value( QLatin1String( "uniqueUri" ) );
-                konqBookmark.setUniqueUri( uniqueUri.toString() );
+                stringRef = attributes.value( QLatin1String( "uniqueUri" ) );
+                konqBookmark.setUniqueUri( stringRef.toString() );
+                
+                stringRef = attributes.value( QLatin1String( "tags" ) );
+                konqBookmark.setTags( stringRef.toString().split(",") );
+                
+                stringRef = attributes.value( QLatin1String( "description" ) );
+                konqBookmark.setDescription( stringRef.toString() );
+                
+                stringRef = attributes.value( QLatin1String( "numVisits" ) );
+                konqBookmark.setNumVisits( stringRef.toString().toLong() );
+                
+                stringRef = attributes.value( QLatin1String( "created" ) );
+                konqBookmark.setCreated( QDateTime::fromString(stringRef.toString()) );
+                
+                stringRef = attributes.value( QLatin1String( "lastModified" ) );
+                konqBookmark.setLastModified( QDateTime::fromString(stringRef.toString()) );
+                
+                stringRef = attributes.value( QLatin1String( "lastVisited" ) );
+                konqBookmark.setLastVisited( QDateTime::fromString(stringRef.toString()) );
+
                 return true;
             } else {
                 return false;

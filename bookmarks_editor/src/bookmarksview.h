@@ -21,6 +21,7 @@
 #define BOOKMARKSVIEW_H
 
 #include <QtGui/QWidget>
+#include <QPoint>
 #include <QtCore/QSharedDataPointer>
 
 #include "ui_bookmarksview_base.h"
@@ -38,6 +39,7 @@ class KUrl;
  * @version 0.1
  */
 
+//TODO reimplement resizeColumns() as dolphindetailsview.cpp does for speedup
 class BookmarksView : public QWidget, public Ui::bookmarksview_base
 {
     Q_OBJECT
@@ -51,8 +53,7 @@ public:
      * Destructor
      */
     virtual ~BookmarksView();
-
-     
+    
     void createModels();
 private:
     Ui::bookmarksview_base ui_bookmarksview_base;
@@ -67,6 +68,13 @@ signals:
 
 private slots:
     void addBookmark(const QString&);
+
+    /**
+     * Opens a context menu at the position \a pos and allows to
+     * configure the visibility of the header columns and whether
+     * expandable folders should be shown.
+     */
+    void configureSettings(const QPoint& pos);
 };
 
 #endif // BOOKMARSVIEW_H

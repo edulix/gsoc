@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Konqueror Bookmarks Resource
-Comment=Resource for accessing konqueror bookmarks stored in nepomuk
+Comment=Resource for accessing konqueror bookmarks stored in Nepomuk
 Type=AkonadiResource
 Exec=akonadi_konquerorbookmarks_resource
 Icon=bookmark

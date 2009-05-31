@@ -21,10 +21,13 @@
 #include "bookmarksview.h"
 #include "settings.h"
 
-#include <QtGui/QLabel>
+#include <QLabel>
+#include <QHeaderView>
 #include <QString>
+#include <QAction>
  
 #include <klocale.h>
+#include <kmenu.h>
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
 #include <konqbookmark/konqbookmark.h>
@@ -44,15 +47,20 @@ BookmarksView::BookmarksView(QWidget *)
 {
     ui_bookmarksview_base.setupUi(this);
     setAutoFillBackground(true);
+    
+    QHeaderView* headerView = ui_bookmarksview_base.bookmarksView->header();
+    headerView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(headerView, SIGNAL(customContextMenuRequested(const QPoint&)),
+        this, SLOT(configureSettings(const QPoint&)));
 }
 
 BookmarksView::~BookmarksView()
 {
-
+    Settings::self()->writeConfig();
 }
 
 void BookmarksView::createModels()
-{
+    {
     Akonadi::CollectionModel *collectionModel = new Akonadi::CollectionModel( this );
  
     Akonadi::CollectionFilterProxyModel *filterModel = new Akonadi::CollectionFilterProxyModel( this );
@@ -71,6 +79,54 @@ void BookmarksView::createModels()
      connect(ui_bookmarksview_base.locationComboBox,SIGNAL(returnPressed(const QString&)),
         this, SLOT(addBookmark(const QString&)));
 
+    QStringList shownColumns = Settings::shownColumns();
+        
+    for (int i = Akonadi::KonqBookmarkModel::Url;
+        i <= Akonadi::KonqBookmarkModel::LastVisited; ++i)
+    {
+        const QString columnName = ui_bookmarksview_base.bookmarksView->model()->headerData(i, Qt::Horizontal).toString();
+        bool show = shownColumns.contains(columnName);
+        ui_bookmarksview_base.bookmarksView->setColumnHidden(i, !show);
+    }
+}
+
+
+void BookmarksView::configureSettings(const QPoint& pos)
+{
+    KMenu popup(this);
+    popup.addTitle(i18nc("@title:menu", "Columns"));
+
+    // add checkbox items for each column
+    QHeaderView* headerView = ui_bookmarksview_base.bookmarksView->header();
+    
+    for (int i = Akonadi::KonqBookmarkModel::Url;
+        i <= Akonadi::KonqBookmarkModel::LastVisited; ++i)
+    {
+        const QString text = ui_bookmarksview_base.bookmarksView->model()->headerData(i, Qt::Horizontal).toString();
+        QAction* action = popup.addAction(text);
+        action->setCheckable(true);
+        action->setChecked(!headerView->isSectionHidden(i));
+        action->setData(i);
+    }
+    popup.addSeparator();
+
+    QAction* activatedAction = popup.exec(ui_bookmarksview_base.bookmarksView->header()->mapToGlobal(pos));
+    if (activatedAction != 0) {
+        const bool show = activatedAction->isChecked();
+        const int columnIndex = activatedAction->data().toInt();
+
+        QStringList shownColumns = Settings::shownColumns();
+        QString colName = activatedAction->text().remove(QChar('&'));
+        if(show)
+            shownColumns.append(colName);
+        else
+            shownColumns.removeOne(colName);
+        
+        kDebug() << "Settings::setShownColumns " << shownColumns;
+        Settings::setShownColumns(shownColumns);
+        
+        ui_bookmarksview_base.bookmarksView->setColumnHidden(columnIndex, !show);
+    }
 }
 
 void BookmarksView::addBookmark(const QString& bookmarkUrl)

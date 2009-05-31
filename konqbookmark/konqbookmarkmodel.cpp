@@ -57,7 +57,7 @@ KonqBookmarkModel::~KonqBookmarkModel()
 
 int KonqBookmarkModel::columnCount( const QModelIndex& ) const
 {
-    return 2;
+    return 9;
 }
 
 QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
@@ -93,6 +93,20 @@ QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
             return konqBookmark.title();
         case Url:
             return konqBookmark.url().toString();
+        case UniqueUri:
+            return konqBookmark.uniqueUri();
+        case Tags:
+            return konqBookmark.tags();
+        case Description:
+            return konqBookmark.description();
+        case NumVisits:
+            return QString::number(konqBookmark.numVisits());
+        case Created:
+            return konqBookmark.created();
+        case LastModified:
+            return konqBookmark.lastModified();
+        case LastVisited:
+            return konqBookmark.lastVisited();
         default:
             break;
         }
@@ -116,6 +130,20 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
             return i18nc( "@title:column, bookmark title", "Title" );
         case Url:
             return i18nc( "@title:column, bookmark url", "Url" );
+        case UniqueUri:
+            return i18nc( "@title:column, unique uri", "Uri" );
+        case Tags:
+            return i18nc( "@title:column, tags", "Tags" );
+        case Description:
+            return i18nc( "@title:column, description", "Description" );
+        case NumVisits:
+            return i18nc( "@title:column, number of visits", "Number of Visits" );
+        case Created:
+            return i18nc( "@title:column, created", "Created" );
+        case LastModified:
+            return i18nc( "@title:column, last modified", "Last Modified" );
+        case LastVisited:
+            return i18nc( "@title:column, last visited", "Last Visited" );
         default:
             return QString();
         }
@@ -149,6 +177,27 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             break;
         case Url:
             konqBookmark.setUrl(QUrl(value.toString()));
+            break;
+        case UniqueUri:
+            konqBookmark.setUniqueUri(value.toString());
+            break;
+        case Tags:
+            konqBookmark.setTags(value.toStringList());
+            break;
+        case Description:
+            konqBookmark.setDescription(value.toString());
+            break;
+        case NumVisits:
+            konqBookmark.setNumVisits(value.toString().toLong());
+            break;
+        case Created:
+            konqBookmark.setCreated(value.toDateTime());
+            break;
+        case LastModified:
+            konqBookmark.setLastModified(value.toDateTime());
+            break;
+        case LastVisited:
+            konqBookmark.setLastVisited(value.toDateTime());
             break;
         default:
             break;

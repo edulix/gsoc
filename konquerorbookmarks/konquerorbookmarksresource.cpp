@@ -169,7 +169,7 @@ Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Col
         if(!bookmarkFolder.titles().empty())
             col.setName( bookmarkFolder.titles().first() );
         else  // shouldn't happen
-            col.setName( bookmarkFolder.titles().first() );
+            col.setName( "" );
         
         col.setRemoteId( bookmarkFolder.resourceUri().toString() );
         col.setParent( parentCol );
@@ -206,9 +206,10 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
     {
         KonqBookmark konqBookmark;
         Item item;
-        item.setRemoteId( bookmark.resourceUri().toString());
+        item.setRemoteId( bookmark.resourceUri().toString() );
         item.setMimeType( "application/x-vnd.kde.konqbookmark" );
-        konqBookmark.setUrl( QUrl("") );
+        if(!bookmark.bookmarkses().empty())
+            konqBookmark.setUrl( bookmark.bookmarkses().first().resourceUri() );
         
         if(!bookmark.titles().empty())
             konqBookmark.setTitle( bookmark.titles().first() );

@@ -34,7 +34,14 @@ namespace Akonadi
         enum Column
         {
             Title,
-            Url
+            Url,
+            UniqueUri,
+            Tags,
+            Description,
+            NumVisits,
+            Created,
+            LastModified,
+            LastVisited
         };
 
         KonqBookmarkModel( QObject *parent = 0 );
