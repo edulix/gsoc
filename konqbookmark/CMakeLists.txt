@@ -27,9 +27,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 set(konqbookmark_LIB_SRCS
   konqbookmark.cpp
   konqbookmarkmodel.cpp
+  konqbookmarkview.cpp
   konqbookmarkdelegate.cpp
 )
 
+kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
 kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
 
 target_link_libraries(konqbookmark ${KDE4_AKONADI_LIBS} ${QT_QTCORE_LIBRARY} ${KDE4_KDECORE_LIBS} ${KDE4_KDEUI_LIBS})
@@ -41,6 +43,7 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 set(konqbookmark_LIB_HDRS
   konqbookmark.h
   konqbookmarkmodel.h
+  konqbookmarkview.h
   konqbookmarkdelegate.h
   konqbookmark_export.h
 )
@@ -49,6 +52,7 @@ install( FILES ${konqbookmark_LIB_HDRS}
   DESTINATION ${INCLUDE_INSTALL_DIR}/konqbookmark
   COMPONENT Devel
 )
+install( FILES konqbookmarksettings.kcfg  DESTINATION  ${KCFG_INSTALL_DIR} )
 
 ########### serializer ###############
 

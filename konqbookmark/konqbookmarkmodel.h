@@ -17,8 +17,8 @@
     02110-1301, USA.
 */
 
-#ifndef KONQBOOKMARKMODEL_H
-#define KONQBOOKMARKMODEL_H
+#ifndef KONQBOOKMARK_MODEL_H
+#define KONQBOOKMARK_MODEL_H
 
 #include "konqbookmark_export.h"
 #include <akonadi/itemmodel.h>

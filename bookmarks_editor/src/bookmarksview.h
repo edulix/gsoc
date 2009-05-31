@@ -21,7 +21,6 @@
 #define BOOKMARKSVIEW_H
 
 #include <QtGui/QWidget>
-#include <QPoint>
 #include <QtCore/QSharedDataPointer>
 
 #include "ui_bookmarksview_base.h"
@@ -68,13 +67,6 @@ signals:
 
 private slots:
     void addBookmark(const QString&);
-
-    /**
-     * Opens a context menu at the position \a pos and allows to
-     * configure the visibility of the header columns and whether
-     * expandable folders should be shown.
-     */
-    void configureSettings(const QPoint& pos);
 };
 
 #endif // BOOKMARSVIEW_H

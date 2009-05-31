@@ -70,11 +70,6 @@ void Bookmarks::setupActions()
 {
     KStandardAction::openNew(this, SLOT(fileNew()), actionCollection());
     KStandardAction::quit(qApp, SLOT(closeAllWindows()), actionCollection());
-
-    // custom menu and menu item - the slot is in the class BookmarksView
-    KAction *custom = new KAction(KIcon("colorize"), i18n("Swi&tch Colors"), this);
-    actionCollection()->addAction( QLatin1String("switch_action"), custom );
-    connect(custom, SIGNAL(triggered(bool)), m_view, SLOT(switchColors()));
 }
 
 void Bookmarks::fileNew()
