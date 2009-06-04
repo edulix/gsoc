@@ -23,13 +23,18 @@
 #include <QString>
 #include <QUrl>
 #include <krandom.h>
+#include <kdebug.h>
 
 #include "konqbookmark.h"
 
 class KonqBookmark::Private : public QSharedData
 {
 public:
-    Private() {}
+    Private()
+    {
+        mNumVisits = 0;
+        mCreated = mLastModified = mLastVisited = QDateTime::currentDateTime();
+    }
 
     Private( const Private& other ) : QSharedData( other )
     {

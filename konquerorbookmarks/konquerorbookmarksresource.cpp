@@ -24,6 +24,8 @@
 
 #include <konqbookmark/konqbookmark.h>
 #include <akonadi/changerecorder.h>
+#include <akonadi/collectiondeletejob.h>
+#include <akonadi/itemdeletejob.h>
 #include <akonadi/itemfetchscope.h>
 #include <KUrl>
 
@@ -96,7 +98,7 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
     
     d->mBookmarksRootCollection.setParent( Collection::root() );
-    d->mBookmarksRootCollection.setRemoteId( "/" );
+    d->mBookmarksRootCollection.setRemoteId( "konqbookmark:/" );
     d->mBookmarksRootCollection.setName( "Konqueror Bookmarks" );
     d->mBookmarksRootCollection.setContentMimeTypes( mimeTypes );
     
@@ -249,6 +251,7 @@ void KonquerorBookmarksResource::configure( WId windowId )
 
 void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Akonadi::Collection &collection )
 {
+    kDebug();
     if(!item.hasPayload<KonqBookmark>())
     {
         kDebug() << "!item.hasPayload<KonqBookmark>()";
@@ -299,27 +302,66 @@ void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
     bookmark.remove();
 }
 
-
 void KonquerorBookmarksResource::collectionAdded( const Akonadi::Collection &collection, const Akonadi::Collection &parent )
 {
-    Q_UNUSED( collection );
-    Q_UNUSED( parent );
-
-    //TODO
+    QString uniqueUri = KonqBookmark::generateUniqueUri();
+    
+    // Create bookmark folder
+    Nepomuk::BookmarkFolder bookmarkFolder( uniqueUri );
+    bookmarkFolder.setTitles( QStringList(collection.name()) );
+    
+    // Set parent folder
+    Nepomuk::BookmarkFolder parentBookmarkFolder( parent.remoteId() );
+    if(!parentBookmarkFolder.containsBookmarkFolders().contains(bookmarkFolder))
+        parentBookmarkFolder.addContainsBookmarkFolder( bookmarkFolder );
+    
+    // Set the remote Id (as suggested by vkrause)
+    Akonadi::Collection collectionCopy = collection;
+    collectionCopy.setRemoteId( uniqueUri );
+    changeCommitted(collectionCopy);
 }
 
 void KonquerorBookmarksResource::collectionChanged( const Akonadi::Collection &collection )
 {
-    Q_UNUSED( collection );
+    // At the moment, the only thing a collection can change is it's name
+    Nepomuk::BookmarkFolder bookmarkFolder( collection.remoteId() );
     
-    //TODO
+    // Set parent folder;
+    if(bookmarkFolder.titles() != QStringList(collection.name()))
+        bookmarkFolder.setTitles( QStringList(collection.name()) );
 }
 
 void KonquerorBookmarksResource::collectionRemoved( const Akonadi::Collection &collection )
 {
-    Q_UNUSED( collection );
+    // Root collection cannot be removed
+    if(collection.remoteId() == "konqbookmark:/")
+        return;
     
-    //TODO
+    // Remove all the bookmarks inside this folder
+    Nepomuk::BookmarkFolder bookmarkFolder( collection.remoteId() );
+    QList<Nepomuk::Bookmark> bookmarks = bookmarkFolder.containsBookmarks();
+    foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
+    {
+        Item item;
+        item.setRemoteId( bookmark.resourceUri().toString() );
+        Akonadi::ItemDeleteJob *job = new Akonadi::ItemDeleteJob( item );
+        if ( !job->exec() )
+            kDebug() << "Error deleting an bookmark item";
+    }
+    
+    // Remove recursively all the subfolders
+    QList<Nepomuk::BookmarkFolder> bookmarkFolders = bookmarkFolder.containsBookmarkFolders();
+    foreach( const Nepomuk::BookmarkFolder& subFolder, bookmarkFolders )
+    {
+        Collection subCollection;
+        subCollection.setRemoteId( subFolder.resourceUri().toString() );
+        
+        Akonadi::CollectionDeleteJob *job = new Akonadi::CollectionDeleteJob( subCollection );
+        if ( !job->exec() )
+            kDebug() << "Error deleting a bookmark folder";
+    }
+    bookmarkFolder.remove();
+    changeCommitted(collection);
 }
 
 AKONADI_RESOURCE_MAIN( KonquerorBookmarksResource )
