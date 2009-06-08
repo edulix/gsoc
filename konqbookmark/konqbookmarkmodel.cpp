@@ -35,6 +35,7 @@
 
 #include <QtGui/QPixmap>
 #include <QUrl>
+#include <QMimeData>
 
 using namespace Akonadi;
 
@@ -226,3 +227,83 @@ bool KonqBookmarkModel::addBookmark( const KonqBookmark &konqBookmark )
     endInsertRows();
     return ret;
 }
+
+QString KonqBookmarkModel::mimeType() const
+{
+    return QString("application/x-vnd.kde.konqbookmark");
+}
+
+QStringList KonqBookmarkModel::mimeTypes() const
+{
+    QStringList types;
+    types << mimeType();
+    return types;
+}
+
+QMimeData *KonqBookmarkModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData *mimeData = new QMimeData();
+    QByteArray encodedData;
+
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+
+    foreach (QModelIndex index, indexes) {
+        if (index.isValid()) {
+            //TODO
+//             QPixmap pixmap = qVariantValue<QPixmap>(data(index, Qt::UserRole));
+//             QPoint location = data(index, Qt::UserRole + 1).toPoint();
+//             stream << pixmap << location;
+        }
+    }
+
+    mimeData->setData(mimeType(), encodedData);
+    return mimeData;
+}
+
+bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+                            int row, int column, const QModelIndex &parent)
+{
+    if (!data->hasFormat(mimeType()))
+        return false;
+
+    if (action == Qt::IgnoreAction)
+        return true;
+
+    if (column > 0)
+        return false;
+
+    int endRow;
+
+    if (!parent.isValid()) {
+//         TODO
+//         if (row < 0)
+//             endRow = pixmaps.size();
+//         else
+//             endRow = qMin(row, pixmaps.size());
+    } else
+        endRow = parent.row();
+
+    QByteArray encodedData = data->data(mimeType());
+    QDataStream stream(&encodedData, QIODevice::ReadOnly);
+
+    while (!stream.atEnd()) {
+//         QPixmap pixmap;
+//         QPoint location;
+//         stream >> pixmap >> location;
+
+        beginInsertRows(QModelIndex(), endRow, endRow);
+//         pixmaps.insert(endRow, pixmap);
+//         locations.insert(endRow, location);
+        endInsertRows();
+
+        ++endRow;
+    }
+
+    return true;
+}
+
+Qt::DropActions KonqBookmarkModel::supportedDropActions() const
+{
+    return Qt::CopyAction | Qt::MoveAction;
+}
+ 

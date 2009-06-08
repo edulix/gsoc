@@ -59,6 +59,14 @@ namespace Akonadi
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
         
         bool addBookmark( const KonqBookmark &konqBookmark );
+        
+        // Drag & drop related functions
+        bool dropMimeData(const QMimeData *data, Qt::DropAction action,
+            int row, int column, const QModelIndex &parent);
+        QMimeData *mimeData(const QModelIndexList &indexes) const;
+        QStringList mimeTypes() const;
+        QString mimeType() const;
+        Qt::DropActions supportedDropActions() const;
     private:
         class Private;
         Private* const d;

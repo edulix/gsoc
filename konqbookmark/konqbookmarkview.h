@@ -45,6 +45,17 @@ namespace Akonadi
          * expandable folders should be shown.
          */
         void configureSettings(const QPoint& pos);
+        
+    protected:
+        void dragEnterEvent(QDragEnterEvent *event) {}
+        void dragLeaveEvent(QDragLeaveEvent *event) {}
+        void dragMoveEvent(QDragMoveEvent *event) {}
+        void dropEvent(QDropEvent *event) {}
+        void mousePressEvent(QMouseEvent *event) {}
+        void paintEvent(QPaintEvent *event) {}
+        
+    private:
+        QRect highlightedRect;
     };
 
 }
