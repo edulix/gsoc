@@ -40,11 +40,13 @@ using namespace std;
 int processArgs(int argc, char **argv);
 int addResource(int argc, char **argv);
 int showResource(int argc, char **argv);
+int clearResources(int argc, char **argv);
 int showResources();
 
 int main(int argc, char **argv)
-{
-//     QApplication app(argc, argv);
+{    
+    QApplication app(argc, argv);
+    
     Nepomuk::ResourceManager::instance()->init();
     
     return processArgs(argc, argv);
@@ -60,7 +62,7 @@ int processArgs(int argc, char **argv)
     
     if(strcmp(argv[1], "list") == 0)
     {
-        printf("Available commands: add, show\n");
+        printf("Available commands: add, show, clear\n");
         return 0;
     } else if(strcmp(argv[1], "add") == 0)
     {
@@ -68,6 +70,9 @@ int processArgs(int argc, char **argv)
     } else if(strcmp(argv[1], "show") == 0)
     {
         return showResource(argc, argv);
+    } else if(strcmp(argv[1], "clear") == 0)
+    {
+        return clearResources(argc, argv);
     }
     
     return 1;
@@ -109,7 +114,6 @@ int showResource(int argc, char **argv)
     QHash<QUrl, Nepomuk::Variant> properties = res.properties();
     QHash<QUrl, Nepomuk::Variant>::const_iterator it = properties.constBegin();
     
-    
     for(; it != properties.constEnd(); ++it)
     {
         QUrl propertyUri = it.key();
@@ -130,7 +134,22 @@ int showResources()
     
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
-        kDebug() << "YEAHHHH: " << bookmark.resourceUri();
+        kDebug() << bookmark.resourceUri();
+    }
+    return 0;
+}
+
+int clearResources(int argc, char **argv)
+{
+    kDebug() << "Removing all existing resources";
+    QList<Nepomuk::Bookmark> bookmarks = Nepomuk::Bookmark::allBookmarks();
+    kDebug()  << "There are " << bookmarks.count() << " bookmarks";
+    
+    foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
+    {
+        kDebug() << "Removing: " << bookmark.resourceUri();
+        Nepomuk::Bookmark copy(bookmark);
+        copy.remove();
     }
     return 0;
 }

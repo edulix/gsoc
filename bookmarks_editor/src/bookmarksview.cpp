@@ -67,7 +67,7 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.collectionsView->setModel( filterModel );
     ui_bookmarksview_base.bookmarksView->setModel( d->mItemModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
- 
+    
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
         d->mItemModel, SLOT( setCollection( Akonadi::Collection ) ) );
      connect(ui_bookmarksview_base.locationComboBox,SIGNAL(returnPressed(const QString&)),

@@ -38,7 +38,6 @@ class KUrl;
  * @version 0.1
  */
 
-//TODO reimplement resizeColumns() as dolphindetailsview.cpp does for speedup
 class BookmarksView : public QWidget, public Ui::bookmarksview_base
 {
     Q_OBJECT
