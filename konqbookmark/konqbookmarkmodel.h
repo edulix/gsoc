@@ -43,6 +43,7 @@ namespace Akonadi
             LastModified,
             LastVisited
         };
+        enum { ColumnCount =  9 };
 
         KonqBookmarkModel( QObject *parent = 0 );
 

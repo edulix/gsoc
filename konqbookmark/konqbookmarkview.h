@@ -34,7 +34,7 @@ namespace Akonadi
     public:
         KonqBookmarkView(QWidget *parent);
         
-        ~KonqBookmarkView();
+        virtual ~KonqBookmarkView();
         
         virtual void setModel (QAbstractItemModel *model);
         
@@ -46,7 +46,21 @@ namespace Akonadi
          */
         void configureSettings(const QPoint& pos);
         
+    private Q_SLOTS:
+        /**
+        * Disables the automatical resizing of columns, if the user has resized the columns
+        * with the mouse.
+        */
+        void slotHeaderSectionResized(int logicalIndex, int oldSize, int newSize);
+        
+        /**
+         * Disables the automatical resizing of the columns. Per default all columns
+         * are resized to use the maximum available width of the view as good as possible.
+         */
+        void disableAutoResizing();
+        
     protected:
+        void resizeEvent(QResizeEvent* event);
 //         void dragEnterEvent(QDragEnterEvent *event) {}
 //         void dragLeaveEvent(QDragLeaveEvent *event) {}
 //         void dragMoveEvent(QDragMoveEvent *event) {}
@@ -55,7 +69,13 @@ namespace Akonadi
 //         void paintEvent(QPaintEvent *event);
         
     private:
-        QRect highlightedRect;
+        /**
+         * Resizes all columns in a way to use the whole available width of the view.
+         */
+        void resizeColumns();
+        
+        class Private;
+        Private* const d;
     };
 
 }

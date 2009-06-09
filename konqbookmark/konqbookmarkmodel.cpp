@@ -138,7 +138,7 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
         case Description:
             return i18nc( "@title:column, description", "Description" );
         case NumVisits:
-            return i18nc( "@title:column, number of visits", "Number of Visits" );
+            return i18nc( "@title:column, visits counter", "Visits Counter" );
         case Created:
             return i18nc( "@title:column, created", "Created" );
         case LastModified:
