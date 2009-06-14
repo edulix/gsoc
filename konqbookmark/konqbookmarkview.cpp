@@ -62,6 +62,8 @@ KonqBookmarkView::KonqBookmarkView( QWidget *parent )
         this, SLOT(slotHeaderSectionResized(int, int, int)));
     connect(headerView, SIGNAL(sectionHandleDoubleClicked(int)),
         this, SLOT(disableAutoResizing()));
+    connect(this, SIGNAL(currentChanged(const Akonadi::Item &)),
+        this, SLOT(slotCurrentChanged(void)));
 }
 
 KonqBookmarkView::~KonqBookmarkView()
@@ -211,16 +213,32 @@ void KonqBookmarkView::resizeColumns()
         }
     }
     
-    if (columnWidth[KonqBookmarkModel::Title] < minTitleWidth) {
+    if (columnWidth[KonqBookmarkModel::Title] < minTitleWidth)
         columnWidth[KonqBookmarkModel::Title] = minTitleWidth;
-        
-        // If title width is too short, Url too
-        if(!isColumnHidden(KonqBookmarkModel::Url) && columnWidth[KonqBookmarkModel::Url] < minUrlWidth)
-            columnWidth[KonqBookmarkModel::Url] = minUrlWidth;
-    }
-
+    
+    if(!isColumnHidden(KonqBookmarkModel::Url) && columnWidth[KonqBookmarkModel::Url] < minUrlWidth)
+        columnWidth[KonqBookmarkModel::Url] = minUrlWidth;
+    
     headerView->resizeSection(KonqBookmarkModel::Title, columnWidth[KonqBookmarkModel::Title]);
     
     if(!isColumnHidden(KonqBookmarkModel::Url))
         headerView->resizeSection(KonqBookmarkModel::Url, columnWidth[KonqBookmarkModel::Url]);
+}
+
+void KonqBookmarkView::slotCurrentChanged()
+{
+    if(!model())
+        return;
+    
+    Akonadi::Item itemCopy(static_cast<Akonadi::ItemModel*>(model())->itemForIndex( currentIndex() ));
+    if ( !itemCopy.hasPayload<KonqBookmark>() )
+    {
+        kDebug() << "!itemCopy.hasPayload<KonqBookmark>()";
+        return;
+    }
+    
+    const KonqBookmark konqBookmark = itemCopy.payload<KonqBookmark>();
+    
+    kDebug() << "emit currentChanged(konqBookmark);";
+    emit currentChanged(konqBookmark);
 }

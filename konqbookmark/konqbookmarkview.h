@@ -21,9 +21,8 @@
 #define KONQBOOKMARK_VIEW_H
 
 #include "konqbookmark_export.h"
+#include "konqbookmark.h"
 #include <akonadi/itemview.h>
-
-class KonqBookmark;
 
 namespace Akonadi
 {
@@ -37,6 +36,9 @@ namespace Akonadi
         virtual ~KonqBookmarkView();
         
         virtual void setModel (QAbstractItemModel *model);
+        
+    Q_SIGNALS:
+        void currentChanged(const KonqBookmark& item);
         
     public Q_SLOTS:
         /**
@@ -58,6 +60,8 @@ namespace Akonadi
          * are resized to use the maximum available width of the view as good as possible.
          */
         void disableAutoResizing();
+        
+        void slotCurrentChanged();
         
     protected:
         void resizeEvent(QResizeEvent* event);

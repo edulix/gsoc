@@ -22,6 +22,7 @@
 
 #include <QtGui/QWidget>
 #include <QtCore/QSharedDataPointer>
+#include <konqbookmark/konqbookmark.h>
 
 #include "ui_bookmarksview_base.h"
 
@@ -66,6 +67,7 @@ signals:
 
 private slots:
     void addBookmark(const QString&);
+    void setCurrentBookmark( const KonqBookmark& );
 };
 
 #endif // BOOKMARSVIEW_H

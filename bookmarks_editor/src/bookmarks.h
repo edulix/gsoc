@@ -53,7 +53,6 @@ public:
     virtual ~Bookmarks();
 
 private slots:
-    void fileNew();
     void delayedInit();
 
 private:
@@ -66,4 +65,4 @@ private:
     KToggleAction *m_statusbarAction;
 };
 
-#endif // _BOOKMARKS_H_
+#endif // BOOKMARKS_H

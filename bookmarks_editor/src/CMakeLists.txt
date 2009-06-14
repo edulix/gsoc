@@ -2,6 +2,7 @@ set(bookmarks_SRCS
     bookmarks.cpp
     main.cpp
     bookmarksview.cpp
+    actionsimpl.cpp
 )
  
 include_directories(

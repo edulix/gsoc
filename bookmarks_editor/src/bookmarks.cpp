@@ -19,6 +19,7 @@
 #include "bookmarks.h"
 #include "bookmarksview.h"
 #include "settings.h"
+#include "actionsimpl.h"
 
 #include <QtGui/QDropEvent>
 #include <QtGui/QPainter>
@@ -68,17 +69,153 @@ Bookmarks::~Bookmarks()
 
 void Bookmarks::setupActions()
 {
-    KStandardAction::openNew(this, SLOT(fileNew()), actionCollection());
+    ActionsImpl *actn = ActionsImpl::self();
+    
+    (void) KStandardAction::open(
+        actn, SLOT( slotLoad() ), actionCollection());
+    (void) KStandardAction::saveAs(
+        actn, SLOT( slotSaveAs() ), actionCollection());
+
+    (void) KStandardAction::cut(actn, SLOT( slotCut() ), actionCollection());
+    (void) KStandardAction::copy(actn, SLOT( slotCopy() ), actionCollection());
+    (void) KStandardAction::paste(actn, SLOT( slotPaste() ), actionCollection());
+
+    // actions
+    KAction* actnDelete = actionCollection()->addAction("delete");
+    actnDelete->setIcon(KIcon("edit-delete"));
+    actnDelete->setText(i18n("&Delete"));
+    actnDelete->setShortcut(Qt::Key_Delete);
+    connect(actnDelete, SIGNAL( triggered() ), actn, SLOT( slotDelete() ));
+
+    KAction* actnRename = actionCollection()->addAction("rename");
+    actnRename->setIcon(KIcon("edit-rename"));
+    actnRename->setText(i18n("Rename"));
+    actnRename->setShortcut(Qt::Key_F2);
+    connect(actnRename, SIGNAL( triggered() ), actn, SLOT( slotRename() ));
+
+    KAction* actnChangeURL = actionCollection()->addAction("changeurl");
+    actnChangeURL->setIcon(KIcon("edit-rename"));
+    actnChangeURL->setText(i18n("C&hange URL"));
+    actnChangeURL->setShortcut(Qt::Key_F3);
+    connect(actnChangeURL, SIGNAL( triggered() ), actn, SLOT( slotChangeURL() ));
+
+    KAction* actnChangeComment = actionCollection()->addAction("changecomment");
+    actnChangeComment->setIcon(KIcon("edit-rename"));
+    actnChangeComment->setText(i18n("C&hange Comment"));
+    actnChangeComment->setShortcut(Qt::Key_F4);
+    connect(actnChangeComment, SIGNAL( triggered() ), actn, SLOT( slotChangeComment() ));
+
+    KAction* actnChangeIcon = actionCollection()->addAction("changeicon");
+    actnChangeIcon->setIcon(KIcon("preferences-desktop-icons"));
+    actnChangeIcon->setText(i18n("Chan&ge Icon..."));
+    connect(actnChangeIcon, SIGNAL( triggered() ), actn, SLOT( slotChangeIcon() ));
+
+    KAction* actnRecursiveSort = actionCollection()->addAction("recursivesort");
+    actnRecursiveSort->setText(i18n("Recursive Sort"));
+    connect(actnRecursiveSort, SIGNAL( triggered() ), actn, SLOT( slotRecursiveSort() ));
+
+    KAction* actnNewFolder = actionCollection()->addAction("newfolder");
+    actnNewFolder->setIcon(KIcon("folder-new"));
+    actnNewFolder->setText(i18n("&New Folder..."));
+    actnNewFolder->setShortcut(Qt::CTRL+Qt::Key_N);
+    connect(actnNewFolder, SIGNAL( triggered() ), actn, SLOT( slotNewFolder() ));
+
+    KAction* actnNewBookmark = actionCollection()->addAction("newbookmark");
+    actnNewBookmark->setIcon(KIcon("bookmark-new"));
+    actnNewBookmark->setText(i18n("&New Bookmark"));
+    connect(actnNewBookmark, SIGNAL( triggered() ), actn, SLOT( slotNewBookmark() ));
+
+    KAction* actnInsertSeparator = actionCollection()->addAction("insertseparator");
+    actnInsertSeparator->setText(i18n("&Insert Separator"));
+    actnInsertSeparator->setShortcut(Qt::CTRL+Qt::Key_I);
+    connect(actnInsertSeparator, SIGNAL( triggered() ), actn, SLOT( slotInsertSeparator() ));
+
+    KAction* actnSort = actionCollection()->addAction("sort");
+    actnSort->setText(i18n("&Sort Alphabetically"));
+    connect(actnSort, SIGNAL( triggered() ), actn, SLOT( slotSort() ));
+
+    KAction* actnSetAsToolbar = actionCollection()->addAction("setastoolbar");
+    actnSetAsToolbar->setIcon(KIcon("bookmark-toolbar"));
+    actnSetAsToolbar->setText(i18n("Set as T&oolbar Folder"));
+    connect(actnSetAsToolbar, SIGNAL( triggered() ), actn, SLOT( slotSetAsToolbar() ));
+
+    KAction* actnExpandAll = actionCollection()->addAction("expandall");
+    actnExpandAll->setText(i18n("&Expand All Folders"));
+    connect(actnExpandAll, SIGNAL( triggered() ), actn, SLOT( slotExpandAll() ));
+
+    KAction* actnCollapseAll = actionCollection()->addAction("collapseall");
+    actnCollapseAll->setText(i18n("Collapse &All Folders"));
+    connect(actnCollapseAll, SIGNAL( triggered() ), actn, SLOT( slotCollapseAll() ));
+
+    KAction* actnOpenLink = actionCollection()->addAction("openinkonqueror");
+    actnOpenLink->setIcon(KIcon("document-open"));
+    actnOpenLink->setText(i18n("&Open in Konqueror"));
+    connect(actnOpenLink, SIGNAL( triggered() ), actn, SLOT( slotOpenInKonqueror() ));
+
+    KAction* actnImportNS = actionCollection()->addAction("importNS");
+    actnImportNS->setObjectName("NS");
+    actnImportNS->setIcon(KIcon("netscape"));
+    actnImportNS->setText(i18n("Import &Netscape Bookmarks..."));
+    connect(actnImportNS, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportOpera = actionCollection()->addAction("importOpera");
+    actnImportOpera->setObjectName("Opera");
+    actnImportOpera->setIcon(KIcon("opera"));
+    actnImportOpera->setText(i18n("Import &Opera Bookmarks..."));
+    connect(actnImportOpera, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportCrashes = actionCollection()->addAction("importCrashes");
+    actnImportCrashes->setObjectName("Crashes");
+    actnImportCrashes->setText(i18n("Import All &Crash Sessions as Bookmarks..."));
+    connect(actnImportCrashes, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportGaleon = actionCollection()->addAction("importGaleon");
+    actnImportGaleon->setObjectName("Galeon");
+    actnImportGaleon->setText(i18n("Import &Galeon Bookmarks..."));
+    connect(actnImportGaleon, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportKDE2 = actionCollection()->addAction("importKDE2");
+    actnImportKDE2->setObjectName("KDE2");
+    actnImportKDE2->setIcon(KIcon("kde"));
+    actnImportKDE2->setText(i18n("Import &KDE 2 or KDE 3 Bookmarks..."));
+
+    connect(actnImportKDE2, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportIE = actionCollection()->addAction("importIE");
+    actnImportIE->setObjectName("IE");
+    actnImportIE->setText(i18n("Import &Internet Explorer Bookmarks..."));
+    connect(actnImportIE, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnImportMoz = actionCollection()->addAction("importMoz");
+    actnImportMoz->setObjectName("Moz");
+    actnImportMoz->setIcon(KIcon("mozilla"));
+    actnImportMoz->setText(i18n("Import &Mozilla Bookmarks..."));
+    connect(actnImportMoz, SIGNAL( triggered() ), actn, SLOT( slotImport() ));
+
+    KAction* actnExportNS = actionCollection()->addAction("exportNS");
+    actnExportNS->setIcon(KIcon("netscape"));
+    actnExportNS->setText(i18n("Export &Netscape Bookmarks"));
+    connect(actnExportNS, SIGNAL( triggered() ), actn, SLOT( slotExportNS() ));
+
+    KAction* actnExportOpera = actionCollection()->addAction("exportOpera");
+    actnExportOpera->setIcon(KIcon("opera"));
+    actnExportOpera->setText(i18n("Export &Opera Bookmarks..."));
+    connect(actnExportOpera, SIGNAL( triggered() ), actn, SLOT( slotExportOpera() ));
+
+    KAction* actnExportHTML = actionCollection()->addAction("exportHTML");
+    actnExportHTML->setIcon(KIcon("text-html"));
+    actnExportHTML->setText(i18n("Export &HTML Bookmarks..."));
+    connect(actnExportHTML, SIGNAL( triggered() ), actn, SLOT( slotExportHTML() ));
+
+    KAction* actnExportIE = actionCollection()->addAction("exportIE");
+    actnExportIE->setText(i18n("Export &Internet Explorer Bookmarks..."));
+    connect(actnExportIE, SIGNAL( triggered() ), actn, SLOT( slotExportIE() ));
+
+    KAction* actnExportMoz = actionCollection()->addAction("exportMoz");
+    actnExportMoz->setIcon(KIcon("mozilla"));
+    actnExportMoz->setText(i18n("Export &Mozilla Bookmarks..."));
+    connect(actnExportMoz, SIGNAL( triggered() ), actn, SLOT( slotExportMoz() ));
     KStandardAction::quit(qApp, SLOT(closeAllWindows()), actionCollection());
-}
-
-void Bookmarks::fileNew()
-{
-    // this slot is called whenever the File->New menu is selected,
-    // the New shortcut is pressed (usually CTRL+N) or the New toolbar
-    // button is clicked
-
-    // TODO: Add new bookmark
 }
 
 void Bookmarks::delayedInit()

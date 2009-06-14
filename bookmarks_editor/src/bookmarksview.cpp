@@ -28,9 +28,10 @@
  
 #include <klocale.h>
 #include <kmenu.h>
+#include <klineedit.h>
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
-#include <konqbookmark/konqbookmark.h>
+#include <akonadi/item.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
 
@@ -70,6 +71,8 @@ void BookmarksView::createModels()
     
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
         d->mItemModel, SLOT( setCollection( Akonadi::Collection ) ) );
+    connect( ui_bookmarksview_base.bookmarksView, SIGNAL( currentChanged( const KonqBookmark& ) ),
+        this, SLOT( setCurrentBookmark( const KonqBookmark& ) ) );
      connect(ui_bookmarksview_base.locationComboBox,SIGNAL(returnPressed(const QString&)),
         this, SLOT(addBookmark(const QString&)));
 }
@@ -79,6 +82,16 @@ void BookmarksView::addBookmark(const QString& bookmarkUrl)
     KonqBookmark bookmark;
     bookmark.setUrl(bookmarkUrl);
     d->mItemModel->addBookmark(bookmark);
+}
+
+
+void BookmarksView::setCurrentBookmark( const KonqBookmark& item)
+{
+    kDebug();
+    ui_bookmarksview_base.titleBox->setText(item.title());
+    ui_bookmarksview_base.addressBox->setText(item.url().toString());
+    ui_bookmarksview_base.tagsBox->setText(item.tags().join(", "));
+    ui_bookmarksview_base.descriptionBox->setText(item.description());
 }
 
 
