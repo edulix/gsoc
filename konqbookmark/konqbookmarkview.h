@@ -38,7 +38,7 @@ namespace Akonadi
         virtual void setModel (QAbstractItemModel *model);
         
     Q_SIGNALS:
-        void currentChanged(const KonqBookmark& item);
+        void currentChanged(const KonqBookmark& item, const QModelIndex & index);
         
     public Q_SLOTS:
         /**

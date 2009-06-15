@@ -54,6 +54,7 @@ public:
     virtual ~BookmarksView();
     
     void createModels();
+    void addBookmark();
 private:
     Ui::bookmarksview_base ui_bookmarksview_base;
     class Private;
@@ -65,9 +66,11 @@ signals:
      */
     void signalChangeStatusbar(const QString& text);
 
+public slots:
+    void slotDelete();
+    
 private slots:
-    void addBookmark(const QString&);
-    void setCurrentBookmark( const KonqBookmark& );
+    void setCurrentBookmark( const KonqBookmark& bookmark, const QModelIndex& index);
 };
 
 #endif // BOOKMARSVIEW_H

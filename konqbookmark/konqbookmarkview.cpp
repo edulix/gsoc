@@ -230,7 +230,8 @@ void KonqBookmarkView::slotCurrentChanged()
     if(!model())
         return;
     
-    Akonadi::Item itemCopy(static_cast<Akonadi::ItemModel*>(model())->itemForIndex( currentIndex() ));
+    const QModelIndex & currentI = currentIndex();
+    Akonadi::Item itemCopy(static_cast<Akonadi::ItemModel*>(model())->itemForIndex( currentI ));
     if ( !itemCopy.hasPayload<KonqBookmark>() )
     {
         kDebug() << "!itemCopy.hasPayload<KonqBookmark>()";
@@ -240,5 +241,5 @@ void KonqBookmarkView::slotCurrentChanged()
     const KonqBookmark konqBookmark = itemCopy.payload<KonqBookmark>();
     
     kDebug() << "emit currentChanged(konqBookmark);";
-    emit currentChanged(konqBookmark);
+    emit currentChanged(konqBookmark, currentI);
 }

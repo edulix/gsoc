@@ -85,7 +85,7 @@ void Bookmarks::setupActions()
     actnDelete->setIcon(KIcon("edit-delete"));
     actnDelete->setText(i18n("&Delete"));
     actnDelete->setShortcut(Qt::Key_Delete);
-    connect(actnDelete, SIGNAL( triggered() ), actn, SLOT( slotDelete() ));
+    connect(actnDelete, SIGNAL( triggered() ), m_view, SLOT( slotDelete() ));
 
     KAction* actnRename = actionCollection()->addAction("rename");
     actnRename->setIcon(KIcon("edit-rename"));
@@ -226,6 +226,7 @@ void Bookmarks::delayedInit()
     }
     
     m_view->createModels();
+    ActionsImpl::self()->setBookmarksView(m_view);
 }
 
 #include "bookmarks.moc"

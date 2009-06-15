@@ -25,7 +25,8 @@
 #include <QHeaderView>
 #include <QString>
 #include <QAction>
- 
+#include <QDataWidgetMapper>
+     
 #include <klocale.h>
 #include <kmenu.h>
 #include <klineedit.h>
@@ -41,6 +42,8 @@ public:
     Private(BookmarksView */*parent*/) {}
     
     Akonadi::KonqBookmarkModel *mItemModel;
+    QModelIndex mCurrentIndex;
+    QDataWidgetMapper *mMapper;
 };
 
 BookmarksView::BookmarksView(QWidget *)
@@ -71,28 +74,35 @@ void BookmarksView::createModels()
     
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
         d->mItemModel, SLOT( setCollection( Akonadi::Collection ) ) );
-    connect( ui_bookmarksview_base.bookmarksView, SIGNAL( currentChanged( const KonqBookmark& ) ),
-        this, SLOT( setCurrentBookmark( const KonqBookmark& ) ) );
-     connect(ui_bookmarksview_base.locationComboBox,SIGNAL(returnPressed(const QString&)),
-        this, SLOT(addBookmark(const QString&)));
+    connect( ui_bookmarksview_base.bookmarksView, SIGNAL( currentChanged( const KonqBookmark&, const QModelIndex & ) ),
+        this, SLOT( setCurrentBookmark( const KonqBookmark&, const QModelIndex & ) ) );
+    
+    d->mMapper = new QDataWidgetMapper(this);
+    d->mMapper->setModel(d->mItemModel);
+    d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
+    d->mMapper->addMapping(ui_bookmarksview_base.addressBox, Akonadi::KonqBookmarkModel::Url);
+    d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
+    d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description);
+    d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
 }
 
-void BookmarksView::addBookmark(const QString& bookmarkUrl)
+void BookmarksView::addBookmark()
 {
     KonqBookmark bookmark;
-    bookmark.setUrl(bookmarkUrl);
-    d->mItemModel->addBookmark(bookmark);
+    const QModelIndex& currentIndex = d->mItemModel->addBookmark(bookmark);
+    setCurrentBookmark(bookmark, currentIndex);
+    ui_bookmarksview_base.bookmarksView->setCurrentIndex(currentIndex);
 }
 
-
-void BookmarksView::setCurrentBookmark( const KonqBookmark& item)
+void BookmarksView::slotDelete()
 {
-    kDebug();
-    ui_bookmarksview_base.titleBox->setText(item.title());
-    ui_bookmarksview_base.addressBox->setText(item.url().toString());
-    ui_bookmarksview_base.tagsBox->setText(item.tags().join(", "));
-    ui_bookmarksview_base.descriptionBox->setText(item.description());
+    d->mItemModel->removeRow(ui_bookmarksview_base.bookmarksView->currentIndex().row());
 }
 
+void BookmarksView::setCurrentBookmark( const KonqBookmark& item, const QModelIndex &currentIndex)
+{
+    d->mCurrentIndex = currentIndex;
+    d->mMapper->setCurrentIndex(currentIndex.row());
+}
 
 #include "bookmarksview.moc"

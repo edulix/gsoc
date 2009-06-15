@@ -22,6 +22,7 @@
 
 #include "konqbookmark_export.h"
 #include <akonadi/itemmodel.h>
+#include <QModelIndex>
 
 class KonqBookmark;
 
@@ -59,8 +60,8 @@ namespace Akonadi
         // With this function we make the model editable
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
         
-        bool addBookmark( const KonqBookmark &konqBookmark );
-        
+        const QModelIndex& addBookmark( const KonqBookmark &konqBookmark );
+        bool removeRows ( int row, int count, const QModelIndex & parent = QModelIndex() );
         // Drag & drop related functions
         bool dropMimeData(const QMimeData *data, Qt::DropAction action,
             int row, int column, const QModelIndex &parent);

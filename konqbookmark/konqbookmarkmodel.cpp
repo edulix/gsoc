@@ -23,7 +23,9 @@
 #include <akonadi/collection.h>
 #include <akonadi/item.h>
 #include <akonadi/itemfetchjob.h>
+#include <akonadi/transactionsequence.h>
 #include <akonadi/itemcreatejob.h>
+#include <akonadi/itemdeletejob.h>
 #include <akonadi/itemmodifyjob.h>
 #include <akonadi/itemfetchscope.h>
 #include <Nepomuk/ResourceManager>
@@ -97,7 +99,7 @@ QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
         case UniqueUri:
             return konqBookmark.uniqueUri();
         case Tags:
-            return konqBookmark.tags();
+            return konqBookmark.tags().join(",");
         case Description:
             return konqBookmark.description();
         case NumVisits:
@@ -167,6 +169,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
     if (index.isValid() && role == Qt::EditRole)
     {
         Item item = itemForIndex( index );
+        
         if(!item.hasPayload<KonqBookmark>())
             return false;
         
@@ -183,7 +186,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             konqBookmark.setUniqueUri(value.toString());
             break;
         case Tags:
-            konqBookmark.setTags(value.toStringList());
+            konqBookmark.setTags(value.toString().split(","));
             break;
         case Description:
             konqBookmark.setDescription(value.toString());
@@ -204,27 +207,55 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             break;
         }
         item.setPayload<KonqBookmark>( konqBookmark );
- 
+        
         ItemModifyJob *modifyJob = new ItemModifyJob( item, this );
+        // HACK: We should already have a fairly recent version of this bookmark,
+        // it's not like bookmark change so fast. So if we have an old revno it
+        // won't be *that* old and besides it's the one the user is using here.
+        // 
+        // Another approach would be to call to ItemFetchJob before every call
+        // to ItemModifyJob and then use the ItemModifyJob::item() with the
+        // updated revno, but that's overkill most of the time.
+        modifyJob->disableRevisionCheck();
         if ( !modifyJob->exec() ) {
-            kDebug() << modifyJob->errorString();
+            kDebug() << "ModifyJob: " << modifyJob->errorString();
             return false;
         }
+        
         emit dataChanged(index, index);
         return true;
     }
     return false;
 }
 
-bool KonqBookmarkModel::addBookmark( const KonqBookmark &konqBookmark )
+const QModelIndex& KonqBookmarkModel::addBookmark( const KonqBookmark &konqBookmark )
 {
     Item item;
-    beginInsertRows(QModelIndex(), rowCount()-1, rowCount()-1);
+    int row = rowCount()-1;
+    beginInsertRows(QModelIndex(), row, row);
     item.setMimeType( "application/x-vnd.kde.konqbookmark" );
     item.setPayload<KonqBookmark>( konqBookmark );
+    insertRow(row);
     ItemCreateJob *job = new ItemCreateJob( item, collection() );
-    bool ret = job->exec();
+    job->exec();
+    const QModelIndex& currentIndex = index(row, 0);
     endInsertRows();
+    return currentIndex;
+}
+
+bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
+{
+    beginRemoveRows(QModelIndex(), row, row+count-1);
+    Akonadi::TransactionSequence *transaction = new TransactionSequence;
+    for(int i = row; i < row + count; i++)
+    {
+        const QModelIndex& itemIndex = index(i, 0, parent);
+        Item item = itemForIndex( itemIndex );
+        new Akonadi::ItemDeleteJob( item, transaction );
+    }
+
+    bool ret = transaction->exec();
+    endRemoveRows();
     return ret;
 }
 
@@ -263,6 +294,7 @@ QMimeData *KonqBookmarkModel::mimeData(const QModelIndexList &indexes) const
 bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                             int row, int column, const QModelIndex &parent)
 {
+    Q_UNUSED(row);
     if (!data->hasFormat(mimeType()))
         return false;
 
