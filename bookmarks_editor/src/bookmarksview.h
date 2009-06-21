@@ -22,13 +22,16 @@
 
 #include <QtGui/QWidget>
 #include <QtCore/QSharedDataPointer>
+#include <akonadi/collection.h>
 #include <konqbookmark/konqbookmark.h>
+
 
 #include "ui_bookmarksview_base.h"
 
 class QPainter;
 class QString;
 class KUrl;
+class Job;
 /**
  * This is the main view class for bookmarks.  Most of the non-menu,
  * non-toolbar, and non-statusbar (e.g., non frame) GUI code should go
@@ -69,8 +72,9 @@ signals:
 public slots:
     void slotDelete();
     
-private slots:
-    void setCurrentBookmark( const KonqBookmark& bookmark, const QModelIndex& index);
+protected slots:
+    void slotBookmarkAdded(const QModelIndex &index);
+    void setRootCollection( const Akonadi::Collection& );
 };
 
 #endif // BOOKMARSVIEW_H

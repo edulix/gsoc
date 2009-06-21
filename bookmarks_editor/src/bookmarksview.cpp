@@ -19,7 +19,10 @@
 */
 
 #include "bookmarksview.h"
+#include "watchitemcreatejob.h"
 #include "settings.h"
+
+#include <konqbookmark/konqbookmark.h>
 
 #include <QLabel>
 #include <QHeaderView>
@@ -32,18 +35,27 @@
 #include <klineedit.h>
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
+#include <akonadi/itemcreatejob.h>
+#include <akonadi/itemfetchscope.h>
+#include <akonadi/monitor.h>
+#include <akonadi/session.h>
+#include <akonadi_next/entitytreemodel.h>
 #include <akonadi/item.h>
+#include <kjob.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
+
+using namespace Akonadi;
 
 class BookmarksView::Private : public QSharedData
 {
 public:
     Private(BookmarksView */*parent*/) {}
     
-    Akonadi::KonqBookmarkModel *mItemModel;
-    QModelIndex mCurrentIndex;
+    Akonadi::KonqBookmarkModel *mBookmarkModel;
     QDataWidgetMapper *mMapper;
+    ModelWatcher *mModelWatcher;
+    Akonadi::Monitor *mMonitor;
 };
 
 BookmarksView::BookmarksView(QWidget *)
@@ -63,46 +75,78 @@ void BookmarksView::createModels()
  
     Akonadi::CollectionFilterProxyModel *filterModel = new Akonadi::CollectionFilterProxyModel( this );
     filterModel->setSourceModel( collectionModel );
-    filterModel->addMimeTypeFilter( QLatin1String( "application/x-vnd.kde.konqbookmark" ) );
+    filterModel->addMimeTypeFilter( KonqBookmark::mimetype() );
  
-    d->mItemModel = new Akonadi::KonqBookmarkModel( this );
+    Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
+    
+    // Configure what should be shown in the model:
+    Akonadi::ItemFetchScope scope;
+    scope.fetchFullPayload( true );
+
+    d->mMonitor = new Monitor( this );
+    
+    d->mBookmarkModel = new Akonadi::KonqBookmarkModel( session, d->mMonitor, this );
+    
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
  
     ui_bookmarksview_base.collectionsView->setModel( filterModel );
-    ui_bookmarksview_base.bookmarksView->setModel( d->mItemModel );
+    ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
     
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
-        d->mItemModel, SLOT( setCollection( Akonadi::Collection ) ) );
-    connect( ui_bookmarksview_base.bookmarksView, SIGNAL( currentChanged( const KonqBookmark&, const QModelIndex & ) ),
-        this, SLOT( setCurrentBookmark( const KonqBookmark&, const QModelIndex & ) ) );
+        this, SLOT( setRootCollection( const Akonadi::Collection& ) ) );
     
     d->mMapper = new QDataWidgetMapper(this);
-    d->mMapper->setModel(d->mItemModel);
+    d->mMapper->setModel(d->mBookmarkModel);
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
     d->mMapper->addMapping(ui_bookmarksview_base.addressBox, Akonadi::KonqBookmarkModel::Url);
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
     d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description);
     d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
+
+     connect(ui_bookmarksview_base.bookmarksView->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
+         d->mMapper, SLOT(setCurrentModelIndex(QModelIndex)));
+    
+    d->mModelWatcher = 0;
+}
+
+void BookmarksView::setRootCollection( const Akonadi::Collection& collection)
+{
+    d->mBookmarkModel->setRootCollection(collection);
 }
 
 void BookmarksView::addBookmark()
 {
     KonqBookmark bookmark;
-    const QModelIndex& currentIndex = d->mItemModel->addBookmark(bookmark);
-    setCurrentBookmark(bookmark, currentIndex);
-    ui_bookmarksview_base.bookmarksView->setCurrentIndex(currentIndex);
+    
+    Item item;
+    item.setMimeType( KonqBookmark::mimetype() );
+    item.setPayload<KonqBookmark>( bookmark );
+    
+    ItemCreateJob *job = new ItemCreateJob(item, d->mBookmarkModel->rootCollection());
+    if( job->exec() )
+    {
+        delete d->mModelWatcher;
+        d->mModelWatcher = new ModelWatcher(job->item().id(), d->mBookmarkModel->rootCollection().id(), d->mBookmarkModel, this);
+        connect(d->mModelWatcher, SIGNAL(newItem(const QModelIndex &)), this, SLOT(slotBookmarkAdded(const QModelIndex &)));
+    } else
+        kWarning() << "job->exec() failed";
+}
+
+
+void BookmarksView::slotBookmarkAdded(const QModelIndex &newIndex)
+{
+    kDebug();
+    d->mMapper->setCurrentIndex(newIndex.row());
+    ui_bookmarksview_base.bookmarksView->setCurrentIndex(newIndex);
+    delete d->mModelWatcher;
+    d->mModelWatcher = 0;
 }
 
 void BookmarksView::slotDelete()
 {
-    d->mItemModel->removeRow(ui_bookmarksview_base.bookmarksView->currentIndex().row());
+    d->mBookmarkModel->removeRows(ui_bookmarksview_base.bookmarksView->currentIndex().row(), 1);
 }
 
-void BookmarksView::setCurrentBookmark( const KonqBookmark& item, const QModelIndex &currentIndex)
-{
-    d->mCurrentIndex = currentIndex;
-    d->mMapper->setCurrentIndex(currentIndex.row());
-}
 
 #include "bookmarksview.moc"
