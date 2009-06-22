@@ -22,12 +22,11 @@
 
 #include "konqbookmark_export.h"
 #include "konqbookmark.h"
-#include <akonadi/itemview.h>
+#include <akonadi_next/entitytreeview.h>
 
 namespace Akonadi
 {
-    //TODO reimplement resizeColumns() as dolphindetailsview.cpp does for speedup
-    class KONQBOOKMARK_EXPORT KonqBookmarkView : public ItemView
+    class KONQBOOKMARK_EXPORT KonqBookmarkView : public EntityTreeView
     {
     Q_OBJECT
     public:
@@ -36,9 +35,6 @@ namespace Akonadi
         virtual ~KonqBookmarkView();
         
         virtual void setModel (QAbstractItemModel *model);
-        
-    Q_SIGNALS:
-        void currentChanged(const KonqBookmark& item, const QModelIndex & index);
         
     public Q_SLOTS:
         /**
@@ -60,8 +56,6 @@ namespace Akonadi
          * are resized to use the maximum available width of the view as good as possible.
          */
         void disableAutoResizing();
-        
-        void slotCurrentChanged();
         
     protected:
         void resizeEvent(QResizeEvent* event);

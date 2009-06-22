@@ -27,6 +27,8 @@
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemmodifyjob.h>
+#include <akonadi/monitor.h>
+#include <akonadi/session.h>
 #include <akonadi/itemfetchscope.h>
 #include <Nepomuk/ResourceManager>
 
@@ -46,11 +48,16 @@ class KonqBookmarkModel::Private
     public:
 };
 
-KonqBookmarkModel::KonqBookmarkModel( QObject *parent )
-  : ItemModel( parent ),
+KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent )
+  : EntityTreeModel( session, monitor, parent ),
     d( new Private() )
 {
-    fetchScope().fetchFullPayload();
+    Akonadi::ItemFetchScope scope;
+    scope.fetchFullPayload( true );
+
+    monitor->fetchCollection( true );
+    monitor->setItemFetchScope( scope );
+    monitor->setMimeTypeMonitored( mimeType() );
 }
 
 KonqBookmarkModel::~KonqBookmarkModel()
@@ -61,66 +68,6 @@ KonqBookmarkModel::~KonqBookmarkModel()
 int KonqBookmarkModel::columnCount( const QModelIndex& ) const
 {
     return 9;
-}
-
-QVariant KonqBookmarkModel::data( const QModelIndex &index,  int role ) const
-{
-    if ( role == ItemModel::IdRole )
-        return ItemModel::data( index, role );
-
-    if ( !index.isValid() || index.row() >= rowCount() )
-        return QVariant();
-
-    const Item item = itemForIndex( index );
-
-    if ( !item.hasPayload<KonqBookmark>() )
-        return QVariant();
-
-    const KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-
-    // Icon for the model entry
-    switch( role )
-    {
-    case Qt::DecorationRole:
-        if ( index.column() == 0 )
-        {
-            return SmallIcon( QLatin1String( "bookmark" ) );
-        }
-        break;
-        
-    case Qt::DisplayRole:
-    case Qt::EditRole:
-        switch( index.column() )
-        {
-        case Title:
-            return konqBookmark.title();
-        case Url:
-            return konqBookmark.url().toString();
-        case UniqueUri:
-            return konqBookmark.uniqueUri();
-        case Tags:
-            return konqBookmark.tags().join(",");
-        case Description:
-            return konqBookmark.description();
-        case NumVisits:
-            return QString::number(konqBookmark.numVisits());
-        case Created:
-            return konqBookmark.created();
-        case LastModified:
-            return konqBookmark.lastModified();
-        case LastVisited:
-            return konqBookmark.lastVisited();
-        default:
-            break;
-        }
-        break;
-        
-    default:
-        return QVariant();
-        break;
-    }
-
-    return QVariant();
 }
 
 QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation, int role ) const
@@ -152,7 +99,7 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
         }
     }
 
-    return ItemModel::headerData( section, orientation, role );
+    return EntityTreeModel::headerData( section, orientation, role );
 }
 
 
@@ -161,86 +108,165 @@ Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    return ItemModel::flags(index) | Qt::ItemIsEditable;
+    return EntityTreeModel::flags(index) | Qt::ItemIsEditable;
 }
- 
+
+
+QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) const
+{
+    if ( item.mimeType() == mimeType() ) {
+        if ( !item.hasPayload<KonqBookmark>() ) {
+
+            // Pass modeltest
+            if ( role == Qt::DisplayRole )
+                return item.remoteId();
+
+            return QVariant();
+        }
+
+        const KonqBookmark konqBookmark = item.payload<KonqBookmark>();
+
+        // Icon for the model entry
+        switch( role )
+        {
+        case Qt::DecorationRole:
+            if ( column == 0 )
+            {
+                return SmallIcon( QLatin1String( "bookmarks" ) );
+            }
+            return QVariant();
+        case Qt::DisplayRole:
+        case Qt::EditRole:
+            switch( column )
+            {
+            case Title:
+                return konqBookmark.title();
+            case Url:
+                return konqBookmark.url().toString();
+            case UniqueUri:
+                return konqBookmark.uniqueUri();
+            case Tags:
+                return konqBookmark.tags().join(",");
+            case Description:
+                return konqBookmark.description();
+            case NumVisits:
+                return QString::number(konqBookmark.numVisits());
+            case Created:
+                return konqBookmark.created();
+            case LastModified:
+                return konqBookmark.lastModified();
+            case LastVisited:
+                return konqBookmark.lastVisited();
+            default:
+                break;
+            }
+            break;
+        }
+    }
+    return EntityTreeModel::getData( item, column, role );
+}
+
+QVariant KonqBookmarkModel::getData( const Collection &collection, int column, int role ) const
+{
+    // Icon for the model entry
+    switch( role )
+    {
+    case Qt::DecorationRole:
+        if ( column == 0 )
+        {
+            return SmallIcon( QLatin1String( "folder" ) );
+        }
+        return QVariant();
+    case Qt::DisplayRole:
+    case Qt::EditRole:
+        switch( column )
+        {
+        case Title:
+            return collection.name();
+        case UniqueUri:
+            return collection.url().url();
+        // TODO:
+        case Url:
+        case Tags:
+        case Description:
+        case NumVisits:
+        case Created:
+        case LastModified:
+        case LastVisited:
+            return QString("");
+        default:
+            break;
+        }
+        break;
+    }
+    return EntityTreeModel::getData( collection, column, role );
+}
+
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid() && role == Qt::EditRole)
     {
-        Item item = itemForIndex( index );
-        
-        if(!item.hasPayload<KonqBookmark>())
-            return false;
-        
-        KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-        switch( index.column() )
-        {
-        case Title:
-            konqBookmark.setTitle(value.toString());
-            break;
-        case Url:
-            konqBookmark.setUrl(QUrl(value.toString()));
-            break;
-        case UniqueUri:
-            konqBookmark.setUniqueUri(value.toString());
-            break;
-        case Tags:
-            konqBookmark.setTags(value.toString().split(","));
-            break;
-        case Description:
-            konqBookmark.setDescription(value.toString());
-            break;
-        case NumVisits:
-            konqBookmark.setNumVisits(value.toString().toLong());
-            break;
-        case Created:
-            konqBookmark.setCreated(value.toDateTime());
-            break;
-        case LastModified:
-            konqBookmark.setLastModified(value.toDateTime());
-            break;
-        case LastVisited:
-            konqBookmark.setLastVisited(value.toDateTime());
-            break;
-        default:
-            break;
+        QVariant var = index.data(EntityTreeModel::ItemRole);
+        Item item = var.value<Item>();
+        if ( item.isValid() )
+        {   
+            if(!item.hasPayload<KonqBookmark>())
+                return false;
+            
+            KonqBookmark konqBookmark = item.payload<KonqBookmark>();
+            switch( index.column() )
+            {
+            case Title:
+                konqBookmark.setTitle(value.toString());
+                break;
+            case Url:
+                konqBookmark.setUrl(QUrl(value.toString()));
+                break;
+            case UniqueUri:
+                konqBookmark.setUniqueUri(value.toString());
+                break;
+            case Tags:
+                konqBookmark.setTags(value.toString().split(","));
+                break;
+            case Description:
+                konqBookmark.setDescription(value.toString());
+                break;
+            case NumVisits:
+                konqBookmark.setNumVisits(value.toString().toLong());
+                break;
+            case Created:
+                konqBookmark.setCreated(value.toDateTime());
+                break;
+            case LastModified:
+                konqBookmark.setLastModified(value.toDateTime());
+                break;
+            case LastVisited:
+                konqBookmark.setLastVisited(value.toDateTime());
+                break;
+            default:
+                break;
+            }
+            item.setPayload<KonqBookmark>( konqBookmark );
+            
+            ItemModifyJob *modifyJob = new ItemModifyJob( item, this );
+            // HACK: We should already have a fairly recent version of this bookmark,
+            // it's not like bookmark change so fast. So if we have an old revno it
+            // won't be *that* old and besides it's the one the user is using here.
+            // 
+            // Another approach would be to call to ItemFetchJob before every call
+            // to ItemModifyJob and then use the ItemModifyJob::item() with the
+            // updated revno, but that's overkill most of the time.
+            modifyJob->disableRevisionCheck();
+            if ( !modifyJob->exec() ) {
+                kDebug() << "ModifyJob: " << modifyJob->errorString();
+                return false;
+            }
+            
+            emit dataChanged(index, index);
+            return true;
         }
-        item.setPayload<KonqBookmark>( konqBookmark );
-        
-        ItemModifyJob *modifyJob = new ItemModifyJob( item, this );
-        // HACK: We should already have a fairly recent version of this bookmark,
-        // it's not like bookmark change so fast. So if we have an old revno it
-        // won't be *that* old and besides it's the one the user is using here.
-        // 
-        // Another approach would be to call to ItemFetchJob before every call
-        // to ItemModifyJob and then use the ItemModifyJob::item() with the
-        // updated revno, but that's overkill most of the time.
-        modifyJob->disableRevisionCheck();
-        if ( !modifyJob->exec() ) {
-            kDebug() << "ModifyJob: " << modifyJob->errorString();
-            return false;
-        }
-        
-        emit dataChanged(index, index);
-        return true;
     }
     return false;
-}
-
-const QModelIndex& KonqBookmarkModel::addBookmark( const KonqBookmark &konqBookmark )
-{
-    Item item;
-    int row = rowCount()-1;
-    beginInsertRows(QModelIndex(), row, row);
-    item.setMimeType( "application/x-vnd.kde.konqbookmark" );
-    item.setPayload<KonqBookmark>( konqBookmark );
-    insertRow(row);
-    ItemCreateJob *job = new ItemCreateJob( item, collection() );
-    job->exec();
-    const QModelIndex& currentIndex = index(row, 0);
-    endInsertRows();
-    return currentIndex;
 }
 
 bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
@@ -250,6 +276,8 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
     for(int i = row; i < row + count; i++)
     {
         const QModelIndex& itemIndex = index(i, 0, parent);
+        if(!itemIndex.isValid())
+            continue;
         Item item = itemForIndex( itemIndex );
         new Akonadi::ItemDeleteJob( item, transaction );
     }

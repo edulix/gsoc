@@ -52,7 +52,7 @@ public:
 };
 
 KonqBookmarkView::KonqBookmarkView( QWidget *parent )
-  : ItemView( parent ), d( new Private() )
+  : EntityTreeView( parent ), d( new Private() )
 {
     QHeaderView* headerView = header();
     headerView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -62,8 +62,6 @@ KonqBookmarkView::KonqBookmarkView( QWidget *parent )
         this, SLOT(slotHeaderSectionResized(int, int, int)));
     connect(headerView, SIGNAL(sectionHandleDoubleClicked(int)),
         this, SLOT(disableAutoResizing()));
-    connect(this, SIGNAL(currentChanged(const Akonadi::Item &)),
-        this, SLOT(slotCurrentChanged(void)));
 }
 
 KonqBookmarkView::~KonqBookmarkView()
@@ -75,7 +73,7 @@ KonqBookmarkView::~KonqBookmarkView()
 
 void KonqBookmarkView::setModel(QAbstractItemModel *model)
 {
-    ItemView::setModel(model);
+    EntityTreeView::setModel(model);
     
     QStringList shownColumns = KonqBookmarkSettings::shownColumns();
         
@@ -128,7 +126,7 @@ void KonqBookmarkView::configureSettings(const QPoint& pos)
 
 void KonqBookmarkView::resizeEvent(QResizeEvent* event)
 {
-    ItemView::resizeEvent(event);
+    EntityTreeView::resizeEvent(event);
     if (d->mAutoResize) {
         resizeColumns();
     }
@@ -225,21 +223,3 @@ void KonqBookmarkView::resizeColumns()
         headerView->resizeSection(KonqBookmarkModel::Url, columnWidth[KonqBookmarkModel::Url]);
 }
 
-void KonqBookmarkView::slotCurrentChanged()
-{
-    if(!model())
-        return;
-    
-    const QModelIndex & currentI = currentIndex();
-    Akonadi::Item itemCopy(static_cast<Akonadi::ItemModel*>(model())->itemForIndex( currentI ));
-    if ( !itemCopy.hasPayload<KonqBookmark>() )
-    {
-        kDebug() << "!itemCopy.hasPayload<KonqBookmark>()";
-        return;
-    }
-    
-    const KonqBookmark konqBookmark = itemCopy.payload<KonqBookmark>();
-    
-    kDebug() << "emit currentChanged(konqBookmark);";
-    emit currentChanged(konqBookmark, currentI);
-}

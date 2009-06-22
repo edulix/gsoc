@@ -34,7 +34,14 @@ set(konqbookmark_LIB_SRCS
 kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
 kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
 
-target_link_libraries(konqbookmark ${KDE4_AKONADI_LIBS} ${QT_QTCORE_LIBRARY} ${KDE4_KDECORE_LIBS} ${KDE4_KDEUI_LIBS})
+target_link_libraries(konqbookmark
+    akonadi_next
+    ${KDE4_AKONADI_LIBS}
+    ${QT_QTCORE_LIBRARY}
+    ${KDE4_KDECORE_LIBS}
+    ${KDE4_KDEUI_LIBS}
+)
+
 set_target_properties(konqbookmark PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
 
 install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
@@ -63,7 +70,12 @@ set(akonadi_serializer_konqbookmark_SRCS
 
 kde4_add_plugin(akonadi_serializer_konqbookmark ${akonadi_serializer_konqbookmark_SRCS})
 
-target_link_libraries(akonadi_serializer_konqbookmark konqbookmark ${KDE4_AKONADI_LIBS} ${QT_QTCORE_LIBRARY} ${KDE4_KDECORE_LIBS})
+target_link_libraries(akonadi_serializer_konqbookmark
+    konqbookmark
+    akonadi_next
+    ${KDE4_AKONADI_LIBS}
+    ${QT_QTCORE_LIBRARY}
+    ${KDE4_KDECORE_LIBS})
 
 install(TARGETS akonadi_serializer_konqbookmark DESTINATION ${PLUGIN_INSTALL_DIR})
 

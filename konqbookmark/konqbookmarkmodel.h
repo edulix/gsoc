@@ -21,6 +21,7 @@
 #define KONQBOOKMARK_MODEL_H
 
 #include "konqbookmark_export.h"
+#include <akonadi_next/entitytreemodel.h>
 #include <akonadi/itemmodel.h>
 #include <QModelIndex>
 
@@ -28,8 +29,11 @@ class KonqBookmark;
 
 namespace Akonadi
 {
+    
+    class Monitor;
+    class Session;
 
-    class KONQBOOKMARK_EXPORT KonqBookmarkModel : public ItemModel
+    class KONQBOOKMARK_EXPORT KonqBookmarkModel : public EntityTreeModel
     {
     public:
         enum Column
@@ -46,12 +50,11 @@ namespace Akonadi
         };
         enum { ColumnCount =  9 };
 
-        KonqBookmarkModel( QObject *parent = 0 );
+        KonqBookmarkModel(Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent = 0 );
 
         virtual ~KonqBookmarkModel();
 
         virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
-        virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
         virtual QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
         
         // We let the delegate know that we are editable
@@ -60,7 +63,14 @@ namespace Akonadi
         // With this function we make the model editable
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
         
-        const QModelIndex& addBookmark( const KonqBookmark &konqBookmark );
+        /**
+         * Instead of reimplementing data() function, we reimplement getData() for items in this case,
+         * and also for collections in the next function. EntityTreeModel::data() will then call these
+         * functions.
+         */
+        virtual QVariant getData( const Item &item, int column, int role = Qt::DisplayRole ) const;
+        virtual QVariant getData( const Collection &collection, int column, int role = Qt::DisplayRole ) const;
+    
         bool removeRows ( int row, int count, const QModelIndex & parent = QModelIndex() );
         // Drag & drop related functions
         bool dropMimeData(const QMimeData *data, Qt::DropAction action,

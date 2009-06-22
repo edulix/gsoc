@@ -67,6 +67,7 @@ target_link_libraries(akonadi_konquerorbookmarks_resource
     nepomukquery
     nepomukqueryclient
     ontologies
+    akonadi_next
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
     ${QT_QTDBUS_LIBRARY}

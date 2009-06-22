@@ -27,6 +27,7 @@
 #include <QMetaType>
 #include <QDateTime>
 #include <QStringList>
+#include <QLatin1String>
 
 class QDateTime;
 class QString;
@@ -92,6 +93,11 @@ public:
     QDateTime lastVisited() const;
     
     void setLastVisited(const QDateTime& lastVisited);
+    
+    static QString mimetype()
+    {
+        return QLatin1String("application/x-vnd.kde.konqbookmark");
+    };
     
 private:
     class Private;
