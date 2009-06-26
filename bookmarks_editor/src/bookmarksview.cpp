@@ -35,6 +35,7 @@
 #include <klineedit.h>
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
+#include <akonadi/collectioncreatejob.h>
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemfetchscope.h>
 #include <akonadi/monitor.h>
@@ -104,8 +105,8 @@ void BookmarksView::createModels()
     d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description);
     d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
 
-     connect(ui_bookmarksview_base.bookmarksView->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-         d->mMapper, SLOT(setCurrentModelIndex(QModelIndex)));
+     connect(ui_bookmarksview_base.bookmarksView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+         this, SLOT(setCurrentModelIndex(QModelIndex, QModelIndex)));
     
     d->mModelWatcher = 0;
 }
@@ -146,6 +147,62 @@ void BookmarksView::slotBookmarkAdded(const QModelIndex &newIndex)
 void BookmarksView::slotDelete()
 {
     d->mBookmarkModel->removeRows(ui_bookmarksview_base.bookmarksView->currentIndex().row(), 1);
+}
+
+Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current)
+{
+    Collection defaultCollection = d->mBookmarkModel->rootCollection();
+    return getParentCollection(current, defaultCollection);
+}
+
+Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Collection defaultCollection)
+{
+    Akonadi::Collection parent = defaultCollection;
+    if(!current.isValid())
+        return parent;
+    
+    QVariant var = current.data(EntityTreeModel::ItemRole);
+    Akonadi::Item item = var.value<Akonadi::Item>();
+    // If current selection is an item, then the parent collection for our new
+    // collection will be the same parent collection as the current item. else
+    // ff current selection is a collection, that will be our new collection's parent
+    if ( item.isValid() )
+    {
+        current = current.parent();
+        if(!current.isValid())
+            return parent;
+    }
+    
+    var = current.data(EntityTreeModel::CollectionRole);
+    Akonadi::Collection collection = var.value<Akonadi::Collection>();
+    if(collection.isValid())
+        parent = collection;
+    
+    return parent;
+}
+
+void BookmarksView::slotAddFolder(const QString &folderName)
+{
+    QModelIndex current = ui_bookmarksview_base.bookmarksView->selectionModel()->currentIndex();
+    Collection parent = getParentCollection(current);
+    kDebug() << "parent name: " << parent.name();
+    if(parent == Collection::root())
+    {
+        kDebug() << "I won't create a new folder with paren == Collection::root();";
+        return;
+    }
+    Akonadi::Collection collection;
+    collection.setParent( parent );
+    collection.setName( folderName );
+    collection.setContentMimeTypes( QStringList( KonqBookmark::mimetype() ) );
+    
+    new Akonadi::CollectionCreateJob( collection );
+}
+
+void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelIndex &/*prev*/)
+{
+    d->mMapper->setRootIndex(index.parent());
+    d->mMapper->setCurrentModelIndex(index);
 }
 
 

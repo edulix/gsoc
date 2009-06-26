@@ -21,6 +21,7 @@
 */
 
 #include "actionsimpl.h"
+#include <kinputdialog.h>
 
 ActionsImpl* ActionsImpl::s_self = 0;
 
@@ -99,7 +100,23 @@ void ActionsImpl::slotDelete()
 
 void ActionsImpl::slotNewFolder()
 {
-    //TODO
+    
+    bool ok;
+    QString folderName;
+    while(!ok)
+    {
+         folderName = KInputDialog::getText( i18n( "Create New Bookmark Folder" ),
+            i18n( "New folder:" ), QString(), &ok, mBookmarksView );
+        if(!ok)
+            return;
+        
+        // Folder name can't be empty
+        if(folderName.isEmpty())
+            ok = false;
+    }
+    
+    mBookmarksView->slotAddFolder(folderName);
+        
 }
 
 

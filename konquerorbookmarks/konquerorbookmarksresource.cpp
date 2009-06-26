@@ -305,6 +305,7 @@ void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
 void KonquerorBookmarksResource::collectionAdded( const Akonadi::Collection &collection, const Akonadi::Collection &parent )
 {
     QString uniqueUri = KonqBookmark::generateUniqueUri();
+    kDebug() << "adding '" << collection.name() << "' with remoteId = " << uniqueUri;
     
     // Create bookmark folder
     Nepomuk::BookmarkFolder bookmarkFolder( uniqueUri );

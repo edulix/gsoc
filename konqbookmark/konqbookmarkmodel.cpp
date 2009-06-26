@@ -23,10 +23,12 @@
 #include <akonadi/collection.h>
 #include <akonadi/item.h>
 #include <akonadi/itemfetchjob.h>
-#include <akonadi/transactionsequence.h>
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemmodifyjob.h>
+#include <akonadi/collectiondeletejob.h>
+#include <akonadi/collectionmodifyjob.h>
+#include <akonadi/transactionsequence.h>
 #include <akonadi/monitor.h>
 #include <akonadi/session.h>
 #include <akonadi/itemfetchscope.h>
@@ -40,6 +42,7 @@
 #include <QtGui/QPixmap>
 #include <QUrl>
 #include <QMimeData>
+#include <QVariant>
 
 using namespace Akonadi;
 
@@ -65,7 +68,7 @@ KonqBookmarkModel::~KonqBookmarkModel()
     delete d;
 }
 
-int KonqBookmarkModel::columnCount( const QModelIndex& ) const
+int KonqBookmarkModel::columnCount( const QModelIndex& index) const
 {
     return 9;
 }
@@ -79,7 +82,7 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
         case Title:
             return i18nc( "@title:column, bookmark title", "Title" );
         case Url:
-            return i18nc( "@title:column, bookmark url", "Url" );
+            return i18nc( "@title:column, bookmark address", "Address" );
         case UniqueUri:
             return i18nc( "@title:column, unique uri", "Uri" );
         case Tags:
@@ -110,7 +113,6 @@ Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
 
     return EntityTreeModel::flags(index) | Qt::ItemIsEditable;
 }
-
 
 QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) const
 {
@@ -168,7 +170,6 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
 
 QVariant KonqBookmarkModel::getData( const Collection &collection, int column, int role ) const
 {
-    // Icon for the model entry
     switch( role )
     {
     case Qt::DecorationRole:
@@ -184,8 +185,6 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
         case Title:
             return collection.name();
         case UniqueUri:
-            return collection.url().url();
-        // TODO:
         case Url:
         case Tags:
         case Description:
@@ -199,36 +198,47 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
         }
         break;
     }
-    return EntityTreeModel::getData( collection, column, role );
+    return QVariant();
 }
 
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    kDebug() << "1";
     if (index.isValid() && role == Qt::EditRole)
     {
+        kDebug() << "index: " << index.row() << ", " << index.column();
+        kDebug() << "index.parent(): " << index.parent().row() << ", " << index.parent().column();
         QVariant var = index.data(EntityTreeModel::ItemRole);
+        QVariant var2 = index.data(EntityTreeModel::CollectionRole);
         Item item = var.value<Item>();
+        Collection collection = var2.value<Collection>();
         if ( item.isValid() )
-        {   
+        {  
+            kDebug() << "2";
             if(!item.hasPayload<KonqBookmark>())
                 return false;
             
+            kDebug() << "3";
             KonqBookmark konqBookmark = item.payload<KonqBookmark>();
             switch( index.column() )
             {
             case Title:
+                kDebug() << "3.title";
                 konqBookmark.setTitle(value.toString());
                 break;
             case Url:
+                kDebug() << "3.url";
                 konqBookmark.setUrl(QUrl(value.toString()));
                 break;
             case UniqueUri:
                 konqBookmark.setUniqueUri(value.toString());
                 break;
             case Tags:
+                kDebug() << "3.tags";
                 konqBookmark.setTags(value.toString().split(","));
                 break;
             case Description:
+                kDebug() << "3.desc";
                 konqBookmark.setDescription(value.toString());
                 break;
             case NumVisits:
@@ -248,21 +258,14 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             }
             item.setPayload<KonqBookmark>( konqBookmark );
             
-            ItemModifyJob *modifyJob = new ItemModifyJob( item, this );
-            // HACK: We should already have a fairly recent version of this bookmark,
-            // it's not like bookmark change so fast. So if we have an old revno it
-            // won't be *that* old and besides it's the one the user is using here.
-            // 
-            // Another approach would be to call to ItemFetchJob before every call
-            // to ItemModifyJob and then use the ItemModifyJob::item() with the
-            // updated revno, but that's overkill most of the time.
-            modifyJob->disableRevisionCheck();
-            if ( !modifyJob->exec() ) {
-                kDebug() << "ModifyJob: " << modifyJob->errorString();
-                return false;
-            }
-            
-            emit dataChanged(index, index);
+            QVariant vari;
+            vari.setValue<Item>(item);
+            EntityTreeModel::setData(index, vari, EntityTreeModel::ItemRole);
+            return true;
+        } else if ( collection.isValid() )
+        {
+            kDebug() << "4";
+            EntityTreeModel::setData(index, value, Qt::EditRole);
             return true;
         }
     }
@@ -275,11 +278,19 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
     Akonadi::TransactionSequence *transaction = new TransactionSequence;
     for(int i = row; i < row + count; i++)
     {
-        const QModelIndex& itemIndex = index(i, 0, parent);
-        if(!itemIndex.isValid())
+        const QModelIndex& entityIndex = index(i, 0, parent);
+        if(!entityIndex.isValid())
             continue;
-        Item item = itemForIndex( itemIndex );
-        new Akonadi::ItemDeleteJob( item, transaction );
+        
+        QVariant var = entityIndex.data(EntityTreeModel::ItemRole);
+        QVariant var2 = entityIndex.data(EntityTreeModel::CollectionRole);
+        Item item = var.value<Item>();
+        Collection collection = var2.value<Collection>();
+        if ( item.isValid() )
+            new Akonadi::ItemDeleteJob( item, transaction );
+        else
+            new Akonadi::CollectionDeleteJob( collection, transaction );
+            
     }
 
     bool ret = transaction->exec();

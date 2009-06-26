@@ -25,13 +25,13 @@
 #include <akonadi/collection.h>
 #include <konqbookmark/konqbookmark.h>
 
-
 #include "ui_bookmarksview_base.h"
 
 class QPainter;
 class QString;
 class KUrl;
 class Job;
+
 /**
  * This is the main view class for bookmarks.  Most of the non-menu,
  * non-toolbar, and non-statusbar (e.g., non frame) GUI code should go
@@ -58,10 +58,6 @@ public:
     
     void createModels();
     void addBookmark();
-private:
-    Ui::bookmarksview_base ui_bookmarksview_base;
-    class Private;
-    QSharedDataPointer<Private> d;
 
 signals:
     /**
@@ -71,10 +67,30 @@ signals:
 
 public slots:
     void slotDelete();
+    void slotAddFolder(const QString &folderName);
     
 protected slots:
     void slotBookmarkAdded(const QModelIndex &index);
     void setRootCollection( const Akonadi::Collection& );
+    void setCurrentModelIndex(const QModelIndex &parent, const QModelIndex &index); 
+
+private:
+    /**
+     * Returns the collection that should be used as a parent collection for new
+     * items being added (subcollection, bookmarks) taing into consideration
+     * current selection.
+     */
+    Akonadi::Collection getParentCollection(QModelIndex current);
+    
+    /**
+     * Helper function for the one above, you shouldn't use it.
+     */
+    Akonadi::Collection getParentCollection(QModelIndex current, Akonadi::Collection defaultCollection);
+
+private:
+    Ui::bookmarksview_base ui_bookmarksview_base;
+    class Private;
+    QSharedDataPointer<Private> d;
 };
 
 #endif // BOOKMARSVIEW_H
