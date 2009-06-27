@@ -68,7 +68,7 @@ KonqBookmarkModel::~KonqBookmarkModel()
     delete d;
 }
 
-int KonqBookmarkModel::columnCount( const QModelIndex& index) const
+int KonqBookmarkModel::columnCount( const QModelIndex& /*index*/) const
 {
     return 9;
 }
@@ -192,13 +192,14 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
         case Created:
         case LastModified:
         case LastVisited:
-            return QString("");
         default:
-            break;
+            return QString("");
         }
-        break;
+    // return QVariant for Qt::CheckState otherwise checkboxes are shown for most columns (except name)
+    case Qt::CheckStateRole:
+        return QVariant();
     }
-    return QVariant();
+    return EntityTreeModel::getData( collection, column, role );
 }
 
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -274,7 +275,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
 
 bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
 {
-    beginRemoveRows(QModelIndex(), row, row+count-1);
+    beginRemoveRows(parent, row, row+count-1);
     Akonadi::TransactionSequence *transaction = new TransactionSequence;
     for(int i = row; i < row + count; i++)
     {
@@ -286,16 +287,20 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         QVariant var2 = entityIndex.data(EntityTreeModel::CollectionRole);
         Item item = var.value<Item>();
         Collection collection = var2.value<Collection>();
-        if ( item.isValid() )
+        if ( item.isValid() ) {
+            kDebug() << "removing item remoteId = " << item.remoteId();
             new Akonadi::ItemDeleteJob( item, transaction );
-        else
+        } else {
+            kDebug() << "removing collection (name, remoteId) = " << collection.name() << collection.remoteId();
             new Akonadi::CollectionDeleteJob( collection, transaction );
-            
+        }
     }
 
-    bool ret = transaction->exec();
+    if(!transaction->exec())
+        kDebug() << transaction->errorString();
+    
     endRemoveRows();
-    return ret;
+    return true;
 }
 
 QString KonqBookmarkModel::mimeType() const

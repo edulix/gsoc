@@ -146,7 +146,7 @@ void BookmarksView::slotBookmarkAdded(const QModelIndex &newIndex)
 
 void BookmarksView::slotDelete()
 {
-    d->mBookmarkModel->removeRows(ui_bookmarksview_base.bookmarksView->currentIndex().row(), 1);
+    d->mBookmarkModel->removeRows(ui_bookmarksview_base.bookmarksView->currentIndex().row(), 1, ui_bookmarksview_base.bookmarksView->currentIndex().parent());
 }
 
 Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current)
@@ -185,10 +185,10 @@ void BookmarksView::slotAddFolder(const QString &folderName)
 {
     QModelIndex current = ui_bookmarksview_base.bookmarksView->selectionModel()->currentIndex();
     Collection parent = getParentCollection(current);
-    kDebug() << "parent name: " << parent.name();
+    kDebug() << "folder: " << folderName << ", parent name: " << parent.name();
     if(parent == Collection::root())
     {
-        kDebug() << "I won't create a new folder with paren == Collection::root();";
+        kDebug() << "I won't create a new folder with parent == Collection::root();";
         return;
     }
     Akonadi::Collection collection;
