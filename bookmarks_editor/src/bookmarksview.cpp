@@ -30,7 +30,8 @@
 #include <QString>
 #include <QAction>
 #include <QDataWidgetMapper>
-     
+#include <QItemDelegate>
+
 #include <kmessagebox.h>
 #include <klocale.h>
 #include <kmenu.h>
@@ -100,7 +101,7 @@ void BookmarksView::createModels()
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
     d->mMapper->addMapping(ui_bookmarksview_base.addressBox, Akonadi::KonqBookmarkModel::Url);
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
-    d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description);
+    d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description, "plainText");
     d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
 
      connect(ui_bookmarksview_base.bookmarksView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),

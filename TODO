@@ -7,4 +7,4 @@ Present bugs:
    EntityTreeModel because it would otherwise it wouldn't work.
    
 Planning:
- Fix #1 and #3, create own model
+ Fix #1, create own model

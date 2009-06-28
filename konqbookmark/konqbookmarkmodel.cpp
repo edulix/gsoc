@@ -60,8 +60,8 @@ KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monito
 
     monitor->fetchCollection( true );
     monitor->setItemFetchScope( scope );
-//     monitor->setMimeTypeMonitored( mimeType() );
-//     monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
+    monitor->setMimeTypeMonitored( mimeType() );
+    monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
     // FIXME Set all monitored because otherwise the model doesn't get updates 
     // from items/collections being removed.
     monitor->setAllMonitored(true);
@@ -227,30 +227,49 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             switch( index.column() )
             {
             case Title:
+                // We'll only commit real changes. same for all the other cases
+                if(konqBookmark.title() == value.toString())
+                    return false;
                 konqBookmark.setTitle(value.toString());
                 break;
             case Url:
+                if(konqBookmark.url() == value.toString())
+                    return false;
                 konqBookmark.setUrl(QUrl(value.toString()));
                 break;
             case UniqueUri:
+                if(konqBookmark.uniqueUri() == value.toString())
+                    return false;
                 konqBookmark.setUniqueUri(value.toString());
                 break;
             case Tags:
+                if(konqBookmark.tags() == value.toString().split(","))
+                    return false;
                 konqBookmark.setTags(value.toString().split(","));
                 break;
             case Description:
+                if(konqBookmark.description() == value.toString())
+                    return false;
                 konqBookmark.setDescription(value.toString());
                 break;
             case NumVisits:
+                if(konqBookmark.numVisits() == value.toString().toLong())
+                    return false;
                 konqBookmark.setNumVisits(value.toString().toLong());
                 break;
             case Created:
+                if(konqBookmark.created() == value.toDateTime())
+                    return false;
                 konqBookmark.setCreated(value.toDateTime());
                 break;
             case LastModified:
+                if(konqBookmark.lastModified() == value.toDateTime())
+                    return false;
                 konqBookmark.setLastModified(value.toDateTime());
                 break;
             case LastVisited:
+                if(konqBookmark.lastVisited() == value.toDateTime())
+                    return false;
                 konqBookmark.setLastVisited(value.toDateTime());
                 break;
             default:
