@@ -31,6 +31,7 @@
 #include <QAction>
 #include <QDataWidgetMapper>
      
+#include <kmessagebox.h>
 #include <klocale.h>
 #include <kmenu.h>
 #include <klineedit.h>
@@ -80,10 +81,6 @@ void BookmarksView::createModels()
     filterModel->addMimeTypeFilter( KonqBookmark::mimetype() );
  
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
-    
-    // Configure what should be shown in the model:
-    Akonadi::ItemFetchScope scope;
-    scope.fetchFullPayload( true );
 
     d->mMonitor = new Monitor( this );
     
@@ -115,17 +112,39 @@ void BookmarksView::createModels()
 void BookmarksView::setRootCollection( const Akonadi::Collection& collection)
 {
     d->mBookmarkModel->setRootCollection(collection);
+    
+    // Set an invalid current model index
+    setCurrentModelIndex(QModelIndex(), QModelIndex());
+}
+
+
+void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelIndex &/*prev*/)
+{
+    d->mMapper->setRootIndex(index.parent());
+    d->mMapper->setCurrentModelIndex(index);
 }
 
 void BookmarksView::addBookmark()
 {
+    //TODO: disable newbookmark and some other actions when needed, connecting to the 
+    // appropiate konqbookmarkmodel signals (which don't exist yet)
+    
+    QModelIndex current = ui_bookmarksview_base.bookmarksView->selectionModel()->currentIndex();
+    Collection parent = getParentCollection(current);
+    if(parent == Collection::root())
+    {
+        KMessageBox::sorry(this, i18n("Please select first a valid parent folder in which to insert the new bookmark"),
+            i18n("Can't create new bookmark"));
+        return;
+    }
+    
     KonqBookmark bookmark;
     
     Item item;
     item.setMimeType( KonqBookmark::mimetype() );
     item.setPayload<KonqBookmark>( bookmark );
     
-    ItemCreateJob *job = new ItemCreateJob(item, d->mBookmarkModel->rootCollection());
+    ItemCreateJob *job = new ItemCreateJob(item, parent);
     if( job->exec() )
     {
         delete d->mModelWatcher;
@@ -184,12 +203,13 @@ Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Coll
 
 void BookmarksView::slotAddFolder(const QString &folderName)
 {
+    // TODO see addBookmark()
     QModelIndex current = ui_bookmarksview_base.bookmarksView->selectionModel()->currentIndex();
     Collection parent = getParentCollection(current);
-    kDebug() << "folder: " << folderName << ", parent name: " << parent.name();
     if(parent == Collection::root())
     {
-        kDebug() << "I won't create a new folder with parent == Collection::root();";
+        KMessageBox::sorry(this, i18n("Please select first a valid parent folder in which to insert the new folder"),
+            i18n("Can't create new folder"));
         return;
     }
     Akonadi::Collection collection;
@@ -198,12 +218,6 @@ void BookmarksView::slotAddFolder(const QString &folderName)
     collection.setContentMimeTypes( QStringList( KonqBookmark::mimetype() ) );
     
     new Akonadi::CollectionCreateJob( collection );
-}
-
-void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelIndex &/*prev*/)
-{
-    d->mMapper->setRootIndex(index.parent());
-    d->mMapper->setCurrentModelIndex(index);
 }
 
 

@@ -204,45 +204,37 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
 
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    kDebug() << "1";
     // For EntityTree::getData(... EntityTreeModel::ItemRole) column's index must be 0,
     // same with EntityTree::setData(... EntityTreeModel::ItemRole), etc
     QModelIndex indexZero = EntityTreeModel::index(index.row(), 0, index.parent());
+    
     if (index.isValid() && role == Qt::EditRole)
     {
-        kDebug() << "index: " << index.row() << ", " << index.column();
-        kDebug() << "index.parent(): " << index.parent().row() << ", " << index.parent().column();
         QVariant var = indexZero.data(EntityTreeModel::ItemRole);
         QVariant var2 = indexZero.data(EntityTreeModel::CollectionRole);
         Item item = var.value<Item>();
         Collection collection = var2.value<Collection>();
         if ( item.isValid() )
         {  
-            kDebug() << "2";
             if(!item.hasPayload<KonqBookmark>())
                 return false;
             
-            kDebug() << "3";
             KonqBookmark konqBookmark = item.payload<KonqBookmark>();
             switch( index.column() )
             {
             case Title:
-                kDebug() << "3.title";
                 konqBookmark.setTitle(value.toString());
                 break;
             case Url:
-                kDebug() << "3.url " << value.toString();
                 konqBookmark.setUrl(QUrl(value.toString()));
                 break;
             case UniqueUri:
                 konqBookmark.setUniqueUri(value.toString());
                 break;
             case Tags:
-                kDebug() << "3.tags";
                 konqBookmark.setTags(value.toString().split(","));
                 break;
             case Description:
-                kDebug() << "3.desc";
                 konqBookmark.setDescription(value.toString());
                 break;
             case NumVisits:
