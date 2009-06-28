@@ -205,12 +205,15 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     kDebug() << "1";
+    // For EntityTree::getData(... EntityTreeModel::ItemRole) column's index must be 0,
+    // same with EntityTree::setData(... EntityTreeModel::ItemRole), etc
+    QModelIndex indexZero = EntityTreeModel::index(index.row(), 0, index.parent());
     if (index.isValid() && role == Qt::EditRole)
     {
         kDebug() << "index: " << index.row() << ", " << index.column();
         kDebug() << "index.parent(): " << index.parent().row() << ", " << index.parent().column();
-        QVariant var = index.data(EntityTreeModel::ItemRole);
-        QVariant var2 = index.data(EntityTreeModel::CollectionRole);
+        QVariant var = indexZero.data(EntityTreeModel::ItemRole);
+        QVariant var2 = indexZero.data(EntityTreeModel::CollectionRole);
         Item item = var.value<Item>();
         Collection collection = var2.value<Collection>();
         if ( item.isValid() )
@@ -228,7 +231,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
                 konqBookmark.setTitle(value.toString());
                 break;
             case Url:
-                kDebug() << "3.url";
+                kDebug() << "3.url " << value.toString();
                 konqBookmark.setUrl(QUrl(value.toString()));
                 break;
             case UniqueUri:
@@ -259,14 +262,12 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             }
             item.setPayload<KonqBookmark>( konqBookmark );
             
-            QVariant vari;
-            vari.setValue<Item>(item);
-            EntityTreeModel::setData(index, vari, EntityTreeModel::ItemRole);
+            EntityTreeModel::setData(indexZero, QVariant::fromValue(item), EntityTreeModel::ItemRole);
             return true;
         } else if ( collection.isValid() )
         {
             kDebug() << "4";
-            EntityTreeModel::setData(index, value, Qt::EditRole);
+            EntityTreeModel::setData(indexZero, value, Qt::EditRole);
             return true;
         }
     }
@@ -275,7 +276,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
 
 bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
 {
-    beginRemoveRows(parent, row, row+count-1);
+//     beginRemoveRows(parent, row, row+count-1);
     Akonadi::TransactionSequence *transaction = new TransactionSequence;
     for(int i = row; i < row + count; i++)
     {
@@ -299,7 +300,7 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
     if(!transaction->exec())
         kDebug() << transaction->errorString();
     
-    endRemoveRows();
+//     endRemoveRows();
     return true;
 }
 

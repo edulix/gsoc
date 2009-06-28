@@ -1,0 +1,10 @@
+Present bugs:
+
+ * The KonqBookmarkView delegate is not being triggered for some reason when
+   trying to edit an item.
+    
+ * I've needed to add a disableRevisionCheck() call to the update of items in
+   EntityTreeModel because it would otherwise it wouldn't work.
+   
+ * When an item or a folder is added or removed, the KonqBookmarkView doesn't
+   get updated.

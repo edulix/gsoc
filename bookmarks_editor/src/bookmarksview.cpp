@@ -24,6 +24,7 @@
 
 #include <konqbookmark/konqbookmark.h>
 
+#include <QTimer>
 #include <QLabel>
 #include <QHeaderView>
 #include <QString>
