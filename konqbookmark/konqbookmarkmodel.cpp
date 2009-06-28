@@ -60,7 +60,11 @@ KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monito
 
     monitor->fetchCollection( true );
     monitor->setItemFetchScope( scope );
-    monitor->setMimeTypeMonitored( mimeType() );
+//     monitor->setMimeTypeMonitored( mimeType() );
+//     monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
+    // FIXME Set all monitored because otherwise the model doesn't get updates 
+    // from items/collections being removed.
+    monitor->setAllMonitored(true);
 }
 
 KonqBookmarkModel::~KonqBookmarkModel()
