@@ -8,7 +8,12 @@ find_package(Nepomuk REQUIRED)
 include (KDE4Defaults)
 include (MacroLibrary)
 
-include_directories( ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} ${SOPRANO_INCLUDE_DIR} ${NEPOMUK_INCLUDE_DIR} )
+include_directories(
+    ${KDE4_INCLUDES}
+    ${SOPRANO_INCLUDE_DIRS}
+    ${NEPOMUK_INCLUDE_DIRS}
+    ${KDEPIMLIBS_INCLUDE_DIRS}
+)
 
 set(nepotest_SRCS
     nepotest.cpp)
@@ -16,10 +21,11 @@ set(nepotest_SRCS
 kde4_add_executable(nepotest ${nepotest_SRCS})
 
 target_link_libraries(nepotest
+    konqbookmark
     ontologies
-    ${NEPOMUK_LIBRARIES}
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}
+    ${NEPOMUK_LIBRARIES}
     ${SOPRANO_LIBRARIES})
 
 install(TARGETS nepotest ${INSTALL_TARGETS_DEFAULT_ARGS})

@@ -79,7 +79,7 @@ void BookmarksView::createModels()
  
     Akonadi::CollectionFilterProxyModel *filterModel = new Akonadi::CollectionFilterProxyModel( this );
     filterModel->setSourceModel( collectionModel );
-    filterModel->addMimeTypeFilter( KonqBookmark::mimetype() );
+    filterModel->addMimeTypeFilter( KonqBookmark::mimeType() );
  
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
 
@@ -142,7 +142,7 @@ void BookmarksView::addBookmark()
     KonqBookmark bookmark;
     
     Item item;
-    item.setMimeType( KonqBookmark::mimetype() );
+    item.setMimeType( KonqBookmark::mimeType() );
     item.setPayload<KonqBookmark>( bookmark );
     
     ItemCreateJob *job = new ItemCreateJob(item, parent);
@@ -216,7 +216,7 @@ void BookmarksView::slotAddFolder(const QString &folderName)
     Akonadi::Collection collection;
     collection.setParent( parent );
     collection.setName( folderName );
-    collection.setContentMimeTypes( QStringList( KonqBookmark::mimetype() ) );
+    collection.setContentMimeTypes( QStringList( KonqBookmark::mimeType() ) );
     
     new Akonadi::CollectionCreateJob( collection );
 }

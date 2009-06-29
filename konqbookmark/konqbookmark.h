@@ -35,19 +35,63 @@ class QUrl;
 
 template <class T> class QList;
 
+
+/**
+ *  @short KonqBookmark stores information about a konqueror bookmark.
+ *  
+ *  It's used for:
+ * - move the information about a bookmark from akonadi server to akonadi 
+ *   clients (thanks to the XmlIO serilization/deserialization utilities)
+ * - Simply the storage, modification and retrieval of konqueror bookmarks in
+ *   Nepomuk.
+ *   
+ *  @author Eduardo Robles Elvira <edulix@gmail.com>
+ */
 class KONQBOOKMARK_EXPORT KonqBookmark
 {
 public:
+    /**
+     * Default constructor.
+     */
     KonqBookmark();
 
+    /**
+     * Given the URI of the bookmark, reads the bookmark related data from the
+     * backend (Nepomuk).
+     */
     KonqBookmark(const QString& uniqueUri);
     
+    
+    /**
+     * Given the URI of the bookmark, reads the bookmark related data from the
+     * backend (Nepomuk).
+     * @overload
+     */
+    KonqBookmark(const QUrl& uniqueUri);
+    
+    /**
+     * Copy constructor.
+     * @overload
+     */
     KonqBookmark( const KonqBookmark &other );
 
+    /**
+     * Destructor.
+     */
     ~KonqBookmark();
 
     KonqBookmark &operator=( const KonqBookmark &other );
+    
+    /**
+     * Stores the bookmark into the backend. At the moment, this means storing
+     * it into Nepomuk, in the future we might add support for storing bookmarks
+     * in other backends.
+     * @returns if the storing procedure was sucessful
+     */
+    bool store();
 
+// Properties
+    
     void setUrl( const QUrl &url );
 
     QUrl url() const;
@@ -94,7 +138,7 @@ public:
     
     void setLastVisited(const QDateTime& lastVisited);
     
-    static QString mimetype()
+    static QString mimeType()
     {
         return QLatin1String("application/x-vnd.kde.konqbookmark");
     };

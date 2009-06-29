@@ -313,8 +313,10 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
     }
 
     if(!transaction->exec())
+    {
         kDebug() << transaction->errorString();
-    
+        return false;
+    }
 //     endRemoveRows();
     return true;
 }

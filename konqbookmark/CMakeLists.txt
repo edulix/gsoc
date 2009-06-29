@@ -1,12 +1,16 @@
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
 project(konqbookmark)
 
 # search packages used by KDE
+set(KDE_MIN_VERSION "4.2.68")  # for the < 4.2 macro
 find_package (KDE4 REQUIRED)
+find_package(ZLIB REQUIRED)
 include(KDE4Defaults)
 include(MacroLibrary)
 include(MacroOptionalAddSubdirectory)
 include(CheckIncludeFiles)
 find_package (KdepimLibs REQUIRED)
+find_package(Nepomuk REQUIRED)
 
 if(WIN32)
     set(LIB_INSTALL_DIR ${LIB_INSTALL_DIR}
@@ -17,7 +21,10 @@ endif(WIN32)
 
 include_directories(
     ${KDE4_INCLUDES}
+    ${QT_INCLUDES}
     ${KDEPIMLIBS_INCLUDE_DIRS}
+    ${SOPRANO_INCLUDE_DIRS}
+    ${NEPOMUK_INCLUDE_DIRS}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
@@ -36,10 +43,13 @@ kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
 
 target_link_libraries(konqbookmark
     akonadi_next
+    ontologies
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}
     ${KDE4_KDEUI_LIBS}
+    ${NEPOMUK_LIBRARIES}
+    ${SOPRANO_LIBRARIES}
 )
 
 set_target_properties(konqbookmark PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
@@ -75,7 +85,8 @@ target_link_libraries(akonadi_serializer_konqbookmark
     akonadi_next
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
-    ${KDE4_KDECORE_LIBS})
+    ${KDE4_KDECORE_LIBS}
+)
 
 install(TARGETS akonadi_serializer_konqbookmark DESTINATION ${PLUGIN_INSTALL_DIR})
 

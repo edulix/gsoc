@@ -20,7 +20,9 @@
 #include <QHash>
 #include <QList>
 #include <QUrl>
+
 #include <kdebug.h>
+#include <konqbookmark/konqbookmark.h>
 
 #include <nepomuk/tag.h>
 #include <nepomuk/resource.h>
@@ -108,7 +110,7 @@ int showResource(int argc, char **argv)
         return 1;
     }
     
-    Nepomuk::Resource res(argv[2], QUrl("http://www.konqueror.com/#Bookmark"));
+    Nepomuk::Resource res(argv[2]/*, QUrl("http://www.konqueror.com/#Bookmark")*/);
     kDebug() << "resource " << res.resourceUri() << ":";
     
     QHash<QUrl, Nepomuk::Variant> properties = res.properties();
@@ -120,7 +122,6 @@ int showResource(int argc, char **argv)
         Nepomuk::Variant value = it.value();
         Nepomuk::Types::Class propertyType( propertyUri );
         
-        // Nepomuk BUG: if we do here propertyType.name() it segfaults
         kDebug() << "label: " << propertyType.name() << ": " << value.toString();
     }
         
@@ -134,7 +135,18 @@ int showResources()
     
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
-        kDebug() << bookmark.resourceUri();
+        kDebug() << "\nresource " << bookmark.resourceUri() << ":";
+        QHash<QUrl, Nepomuk::Variant> properties = bookmark.properties();
+        QHash<QUrl, Nepomuk::Variant>::const_iterator it = properties.constBegin();
+        
+        for(; it != properties.constEnd(); ++it)
+        {
+            QUrl propertyUri = it.key();
+            Nepomuk::Variant value = it.value();
+            Nepomuk::Types::Class propertyType( propertyUri );
+            
+            kDebug() << propertyType.name() << ": " << value.toString();
+        }
     }
     return 0;
 }

@@ -39,6 +39,8 @@ static void writeHeader( const KonqBookmark &konqBookmark, QXmlStreamWriter & wr
     writer.writeAttribute( QLatin1String( "title" ), konqBookmark.title() );
     writer.writeAttribute( QLatin1String( "uniqueUri" ), konqBookmark.uniqueUri() );
     // split tags using "," so a tag can't contain a ',' character inside!
+    kDebug() << "TAGS" << konqBookmark.tags();
+    kDebug() << "TAGS joined" << konqBookmark.tags().join(",");
     writer.writeAttribute( QLatin1String( "tags" ), konqBookmark.tags().join(",") );
     writer.writeAttribute( QLatin1String( "description" ), konqBookmark.description() );
     writer.writeAttribute( QLatin1String( "numVisits" ), QString::number(konqBookmark.numVisits()) );
@@ -89,7 +91,11 @@ static bool readHeader( QXmlStreamReader &reader, KonqBookmark &konqBookmark )
                 konqBookmark.setUniqueUri( stringRef.toString() );
                 
                 stringRef = attributes.value( QLatin1String( "tags" ) );
+                
+                kDebug() << "TAGS" << stringRef.toString();
+                kDebug() << "TAGS joined" << stringRef.toString().split(",");
                 konqBookmark.setTags( stringRef.toString().split(",") );
+                kDebug() << "konqbookmark TAGS: " << konqBookmark.tags();
                 
                 stringRef = attributes.value( QLatin1String( "description" ) );
                 konqBookmark.setDescription( stringRef.toString() );

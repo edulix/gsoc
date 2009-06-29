@@ -100,7 +100,7 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     changeRecorder()->fetchCollection( true );
 
     QStringList mimeTypes;
-    mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
+    mimeTypes << KonqBookmark::mimeType() << Collection::mimeType();
     
     d->mBookmarksRootCollection.setParent( Collection::root() );
     d->mBookmarksRootCollection.setRemoteId( "konqbookmark:/" );
@@ -168,7 +168,7 @@ Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Col
     
     QList<Nepomuk::BookmarkFolder> bookmarkFolders = parent.containsBookmarkFolders();
     
-    mimeTypes << "application/x-vnd.kde.konqbookmark" << Collection::mimeType();
+    mimeTypes << KonqBookmark::mimeType() << Collection::mimeType();
 
     foreach( const Nepomuk::BookmarkFolder& bookmarkFolder, bookmarkFolders )
     {
@@ -212,15 +212,10 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
     Item::List items;
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
-        KonqBookmark konqBookmark;
+        KonqBookmark konqBookmark(bookmark.resourceUri());
         Item item;
         item.setRemoteId( bookmark.resourceUri().toString() );
-        item.setMimeType( "application/x-vnd.kde.konqbookmark" );
-        if(!bookmark.bookmarkses().empty())
-            konqBookmark.setUrl( bookmark.bookmarkses().first().resourceUri() );
-        
-        if(!bookmark.titles().empty())
-            konqBookmark.setTitle( bookmark.titles().first() );
+        item.setMimeType( KonqBookmark::mimeType() );
         
         item.setPayload<KonqBookmark>( konqBookmark );
         items << item;
@@ -278,9 +273,6 @@ void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Ako
     kDebug() << "Setting item's remote id to " << bookmark.resourceUri().toString();
     Akonadi::Item itemCopy = item;
     itemCopy.setRemoteId( bookmark.resourceUri().toString() );
-//     Akonadi::ItemModifyJob *itemModifyJob = new Akonadi::ItemModifyJob(itemCopy);
-//     if(!itemModifyJob->exec())
-//         kDebug() << "Error setting the remote id: " << itemModifyJob->errorString();
     
     changeCommitted(itemCopy);
 }
@@ -296,10 +288,7 @@ void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const Q
     }
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-    Nepomuk::Bookmark bookmark( konqBookmark.uniqueUri() );
-    bookmark.setTitles( QStringList(konqBookmark.title()) );
-    Nepomuk::DataObject url(konqBookmark.url().toString());
-    bookmark.setBookmarkses( QList<Nepomuk::DataObject>() << url );
+    konqBookmark.store();
 }
 
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
@@ -312,7 +301,8 @@ void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
     Nepomuk::Bookmark bookmark( konqBookmark.uniqueUri() );
-    bookmark.remove();
+    if(bookmark.isValid())
+        bookmark.remove();
 }
 
 void KonquerorBookmarksResource::collectionAdded( const Akonadi::Collection &collection, const Akonadi::Collection &parent )
@@ -337,11 +327,6 @@ void KonquerorBookmarksResource::collectionAdded( const Akonadi::Collection &col
     Akonadi::Collection collectionCopy = collection;
     collectionCopy.setRemoteId( uniqueUri );
     collectionCopy.setParent( parentCollection );
-    
-//     Akonadi::CollectionModifyJob *collectionModifyJob = new Akonadi::CollectionModifyJob(collectionCopy);
-//     if(!collectionModifyJob->exec())
-//         kDebug() << "Error setting the remote id: " << collectionModifyJob->errorString();
-    
     changeCommitted(collectionCopy);
 }
 
