@@ -108,6 +108,17 @@ void BookmarksView::createModels()
          this, SLOT(setCurrentModelIndex(QModelIndex, QModelIndex)));
     
     d->mModelWatcher = 0;
+    
+    // Setup drag & drop
+    ui_bookmarksview_base.bookmarksView->setDragEnabled(true);
+    ui_bookmarksview_base.bookmarksView->viewport()->setAcceptDrops(true);
+    ui_bookmarksview_base.bookmarksView->setDropIndicatorShown(true);
+    ui_bookmarksview_base.bookmarksView->setDragDropMode(QAbstractItemView::InternalMove);
+    
+    ui_bookmarksview_base.collectionsView->setDragEnabled(true);
+    ui_bookmarksview_base.collectionsView->viewport()->setAcceptDrops(true);
+    ui_bookmarksview_base.collectionsView->setDropIndicatorShown(true);
+    ui_bookmarksview_base.collectionsView->setDragDropMode(QAbstractItemView::InternalMove);
 }
 
 void BookmarksView::setRootCollection( const Akonadi::Collection& collection)

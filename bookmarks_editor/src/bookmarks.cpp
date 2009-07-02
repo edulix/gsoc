@@ -25,7 +25,8 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPrinter>
 #include <QtCore/QTimer>
- 
+
+#include <Nepomuk/ResourceManager> 
 #include <akonadi/control.h>
 #include <kconfigdialog.h>
 #include <kstatusbar.h>
@@ -40,6 +41,7 @@ Bookmarks::Bookmarks()
     : KXmlGuiWindow(),
       m_view(new BookmarksView(this))
 {
+    Nepomuk::ResourceManager::instance()->init();
     // accept dnd
     setAcceptDrops(true);
 

@@ -23,6 +23,7 @@
 
 #include "konqbookmark_export.h"
 
+#include <nepomuk/ontologies/bookmark.h>
 #include <QtCore/QSharedDataPointer>
 #include <QMetaType>
 #include <QDateTime>
@@ -37,13 +38,7 @@ template <class T> class QList;
 
 
 /**
- *  @short KonqBookmark stores information about a konqueror bookmark.
- *  
- *  It's used for:
- * - move the information about a bookmark from akonadi server to akonadi 
- *   clients (thanks to the XmlIO serilization/deserialization utilities)
- * - Simply the storage, modification and retrieval of konqueror bookmarks in
- *   Nepomuk.
+ *  @short KonqBookmark is a wrapper class that stores information about a konqueror bookmark in Nepomuk.
  *   
  *  @author Eduardo Robles Elvira <edulix@gmail.com>
  */
@@ -78,19 +73,13 @@ public:
     /**
      * Destructor.
      */
-    ~KonqBookmark();
+    virtual ~KonqBookmark();
 
     KonqBookmark &operator=( const KonqBookmark &other );
-    
-    /**
-     * Stores the bookmark into the backend. At the moment, this means storing
-     * it into Nepomuk, in the future we might add support for storing bookmarks
-     * in other backends.
-     * @returns if the storing procedure was sucessful
-     */
-    bool store();
 
 // Properties
+    
+    Nepomuk::Bookmark bookmark() const;
     
     void setUrl( const QUrl &url );
 
@@ -102,6 +91,10 @@ public:
     
     QString uniqueUri() const;
     
+    /**
+     * Be careful, this creates a new instance of Private class and deletes the
+     * old one. This is useful for complete delayed intialization.
+     */
     void setUniqueUri(const QString &uniqueUri);
     
     static QString generateUniqueUri();

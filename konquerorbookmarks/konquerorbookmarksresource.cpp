@@ -91,7 +91,7 @@ KonquerorBookmarksResource::Private::Private(KonquerorBookmarksResource *parent)
 KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
   : ResourceBase( id ),  d( new Private ( this ) )
 {
-    kDebug() << "Weeeeeeee";
+    kDebug();
     Nepomuk::ResourceManager::instance()->init();
     new SettingsAdaptor( Settings::self() );
     QDBusConnection::sessionBus().registerObject( QLatin1String( "/Settings" ),
@@ -159,7 +159,7 @@ KonquerorBookmarksResource::~KonquerorBookmarksResource()
 
 Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Collection& parentCol )
 {
-    kDebug() << "Weeeeeeee";
+    kDebug();
     Collection::List list;
     QStringList mimeTypes;
         
@@ -190,7 +190,7 @@ Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Col
 
 void KonquerorBookmarksResource::retrieveCollections()
 {
-    kDebug() << "Weeeeeeee";
+    kDebug();
     Nepomuk::BookmarkFolder bookmarkFolder( d->mBookmarksRootCollection.remoteId() );
     Collection::List list;
     list << d->mBookmarksRootCollection;
@@ -212,11 +212,10 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
     Item::List items;
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
-        KonqBookmark konqBookmark(bookmark.resourceUri());
         Item item;
+        KonqBookmark konqBookmark(bookmark.resourceUri().toString() );
         item.setRemoteId( bookmark.resourceUri().toString() );
         item.setMimeType( KonqBookmark::mimeType() );
-        
         item.setPayload<KonqBookmark>( konqBookmark );
         items << item;
     }
@@ -260,20 +259,14 @@ void KonquerorBookmarksResource::itemAdded( const Akonadi::Item &item, const Ako
     }
     
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-    Nepomuk::Bookmark bookmark( konqBookmark.uniqueUri() );
-    bookmark.setTitles( QStringList(konqBookmark.title()) );
-    Nepomuk::DataObject url(konqBookmark.url().toString());
-    bookmark.setBookmarkses( QList<Nepomuk::DataObject>() << url );
     
     Nepomuk::BookmarkFolder folder( collection.remoteId() );
-    folder.addContainsBookmark(bookmark);
+    folder.addContainsBookmark(konqBookmark.bookmark());
     
     // Set the remote Id (as suggested by vkrause)
-    
-    kDebug() << "Setting item's remote id to " << bookmark.resourceUri().toString();
+    kDebug() << "Setting item's remote id to " << konqBookmark.uniqueUri();
     Akonadi::Item itemCopy = item;
-    itemCopy.setRemoteId( bookmark.resourceUri().toString() );
-    
+    itemCopy.setRemoteId( konqBookmark.uniqueUri() );
     changeCommitted(itemCopy);
 }
 
@@ -286,9 +279,16 @@ void KonquerorBookmarksResource::itemChanged( const Akonadi::Item &item, const Q
         kDebug() << "!item.hasPayload<KonqBookmark>()";
         return;
     }
-    
+   
     KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-    konqBookmark.store();
+    if(item.remoteId() != konqBookmark.uniqueUri())
+    {
+        // Set the remote Id (as suggested by vkrause)
+        kDebug() << "Setting item's remote id to " << konqBookmark.uniqueUri();
+        Akonadi::Item itemCopy = item;
+        itemCopy.setRemoteId( konqBookmark.uniqueUri() );
+        changeCommitted(itemCopy);
+    }
 }
 
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )

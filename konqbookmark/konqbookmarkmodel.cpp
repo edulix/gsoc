@@ -26,8 +26,11 @@
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemmodifyjob.h>
+#include <akonadi/itemmovejob.h>
+#include <akonadi/itemcopyjob.h>
 #include <akonadi/collectiondeletejob.h>
 #include <akonadi/collectionmodifyjob.h>
+#include <akonadi/collectioncopyjob.h>
 #include <akonadi/transactionsequence.h>
 #include <akonadi/monitor.h>
 #include <akonadi/session.h>
@@ -131,6 +134,7 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
         }
 
         const KonqBookmark konqBookmark = item.payload<KonqBookmark>();
+        kDebug() << item.remoteId() << ", " << konqBookmark.uniqueUri();
 
         // Icon for the model entry
         switch( role )
@@ -214,15 +218,14 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
     
     if (index.isValid() && role == Qt::EditRole)
     {
-        QVariant var = indexZero.data(EntityTreeModel::ItemRole);
-        QVariant var2 = indexZero.data(EntityTreeModel::CollectionRole);
-        Item item = var.value<Item>();
-        Collection collection = var2.value<Collection>();
+        
+        Item item = qVariantValue<Item>(data(indexZero, EntityTreeModel::ItemRole));
+        Collection collection = qVariantValue<Collection>(data(indexZero, EntityTreeModel::CollectionRole));
         if ( item.isValid() )
-        {  
-            if(!item.hasPayload<KonqBookmark>())
+        {
+            if ( !item.hasPayload<KonqBookmark>() )
                 return false;
-            
+
             KonqBookmark konqBookmark = item.payload<KonqBookmark>();
             switch( index.column() )
             {
@@ -240,7 +243,6 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             case UniqueUri:
                 if(konqBookmark.uniqueUri() == value.toString())
                     return false;
-                konqBookmark.setUniqueUri(value.toString());
                 break;
             case Tags:
                 if(konqBookmark.tags() == value.toString().split(","))
@@ -275,9 +277,9 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             default:
                 break;
             }
-            item.setPayload<KonqBookmark>( konqBookmark );
             
-            EntityTreeModel::setData(indexZero, QVariant::fromValue(item), EntityTreeModel::ItemRole);
+            emit dataChanged(index, index);
+//             EntityTreeModel::setData(indexZero, QVariant::fromValue(item), EntityTreeModel::ItemRole);
             return true;
         } else if ( collection.isValid() )
         {
@@ -291,7 +293,6 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
 
 bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
 {
-//     beginRemoveRows(parent, row, row+count-1);
     Akonadi::TransactionSequence *transaction = new TransactionSequence;
     for(int i = row; i < row + count; i++)
     {
@@ -299,10 +300,8 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         if(!entityIndex.isValid())
             continue;
         
-        QVariant var = entityIndex.data(EntityTreeModel::ItemRole);
-        QVariant var2 = entityIndex.data(EntityTreeModel::CollectionRole);
-        Item item = var.value<Item>();
-        Collection collection = var2.value<Collection>();
+        Item item = qVariantValue<Item>(data(entityIndex, EntityTreeModel::ItemRole));
+        Collection collection = qVariantValue<Collection>(data(entityIndex, EntityTreeModel::CollectionRole));
         if ( item.isValid() ) {
             kDebug() << "removing item remoteId = " << item.remoteId();
             new Akonadi::ItemDeleteJob( item, transaction );
@@ -317,7 +316,6 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         kDebug() << transaction->errorString();
         return false;
     }
-//     endRemoveRows();
     return true;
 }
 
@@ -342,10 +340,15 @@ QMimeData *KonqBookmarkModel::mimeData(const QModelIndexList &indexes) const
 
     foreach (QModelIndex index, indexes) {
         if (index.isValid()) {
-            //TODO
-//             QPixmap pixmap = qVariantValue<QPixmap>(data(index, Qt::UserRole));
-//             QPoint location = data(index, Qt::UserRole + 1).toPoint();
-//             stream << pixmap << location;
+            Item item = qVariantValue<Item>(data(index, EntityTreeModel::ItemRole));
+            Collection collection = qVariantValue<Collection>(data(index, EntityTreeModel::CollectionRole));
+            if(item.isValid() && item.hasPayload<KonqBookmark>())
+            {
+                stream << EntityTreeModel::ItemRole << item.id();
+            } else if (collection.isValid())
+            {
+                stream << EntityTreeModel::CollectionRole << collection.id();
+            }
         }
     }
 
@@ -355,8 +358,9 @@ QMimeData *KonqBookmarkModel::mimeData(const QModelIndexList &indexes) const
 
 bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                             int row, int column, const QModelIndex &parent)
-{
-    Q_UNUSED(row);
+{   
+    kDebug() << "row, column = " << row << ", " << column;
+    
     if (!data->hasFormat(mimeType()))
         return false;
 
@@ -366,34 +370,70 @@ bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
     if (column > 0)
         return false;
 
-    int endRow;
+    int beginRow;
 
-    if (!parent.isValid()) {
-//         TODO
-//         if (row < 0)
-//             endRow = pixmaps.size();
-//         else
-//             endRow = qMin(row, pixmaps.size());
-    } else
-        endRow = parent.row();
+    
+     if (row != -1)
+         beginRow = row;
+     else if (parent.isValid())
+         beginRow = parent.row();
+     else
+         beginRow = rowCount(QModelIndex());
 
     QByteArray encodedData = data->data(mimeType());
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
-
+    Akonadi::TransactionSequence *transaction = new TransactionSequence;
+    Entity::Id id;
+    int role;
+    
     while (!stream.atEnd()) {
-//         QPixmap pixmap;
-//         QPoint location;
-//         stream >> pixmap >> location;
-
-        beginInsertRows(QModelIndex(), endRow, endRow);
-//         pixmaps.insert(endRow, pixmap);
-//         locations.insert(endRow, location);
-        endInsertRows();
-
-        ++endRow;
+        // Get the parent collection of the new item
+        const QModelIndex& entityIndex = index(beginRow, 0, parent);
+        if(!entityIndex.isValid())
+            continue;
+        
+        Item item = qVariantValue<Item>(this->data(entityIndex, EntityTreeModel::ItemRole));
+        Collection parentCollection = qVariantValue<Collection>(this->data(entityIndex, EntityTreeModel::CollectionRole));
+        if ( item.isValid() ) {
+            parentCollection = qVariantValue<Collection>(this->data(parent, EntityTreeModel::CollectionRole));
+        }
+        
+        
+        // Dropped a collection or an item?
+        stream >> role >> id;
+        if(role == EntityTreeModel::ItemRole)
+        {
+            Item item(id);
+            
+            //Move or copy?
+            if(action == Qt::MoveAction)
+            {
+                new Akonadi::ItemMoveJob(item, parentCollection, transaction);
+            } else if(action == Qt::CopyAction)
+            {
+                new Akonadi::ItemCopyJob(item, parentCollection, transaction);
+            }
+        } else if (role == EntityTreeModel::CollectionRole)
+        {
+            Collection collection(id);
+            
+            if(!collection.isValid())
+                continue;
+            
+            //Move or copy?
+            if(action == Qt::MoveAction)
+            {
+                collection.setParent(parentCollection);
+                new Akonadi::CollectionModifyJob(collection, transaction);
+            } else if(action == Qt::CopyAction)
+            {
+                new Akonadi::CollectionCopyJob(collection, parentCollection, transaction);
+            }
+        }
     }
-
-    return true;
+    // As this is an async way to drop data, we always return false. Akonadi will
+    // iupdate the model later on 
+    return false;
 }
 
 Qt::DropActions KonqBookmarkModel::supportedDropActions() const

@@ -17,6 +17,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA            *
  ***************************************************************************/
 #include <QApplication>
+#include <QString>
 #include <QHash>
 #include <QList>
 #include <QUrl>
@@ -44,6 +45,7 @@ int addResource(int argc, char **argv);
 int showResource(int argc, char **argv);
 int clearResources(int argc, char **argv);
 int showResources();
+void processCommand(QString command);
 
 int main(int argc, char **argv)
 {    
@@ -51,7 +53,32 @@ int main(int argc, char **argv)
     
     Nepomuk::ResourceManager::instance()->init();
     
-    return processArgs(argc, argv);
+    processArgs(argc, argv);
+    string command;
+    
+    while(1)
+    {
+        cout << "terminal > ";
+        cin >> command;
+        processCommand(QString(command.c_str()));
+    }
+}
+
+void processCommand(QString command)
+{
+    if(command == "set")
+    {
+        string desc;
+        cin >> desc;
+        Nepomuk::Bookmark bookmark("example:/");
+        bookmark.setDescription(QString(desc.c_str()));
+        kDebug() << "set description: " << bookmark.description();
+    } else if(command == "get")
+    {
+    
+        Nepomuk::Bookmark bookmark("example:/");
+        kDebug() << "description is: " << bookmark.description();
+    }
 }
 
 int processArgs(int argc, char **argv)

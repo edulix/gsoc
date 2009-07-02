@@ -6,5 +6,17 @@ Present bugs:
  #2 I've needed to add a disableRevisionCheck() call to the update of items in
    EntityTreeModel because it would otherwise it wouldn't work.
    
+ #3 Access always directly to Nepomuk in konqbookmark.
+ 
+ #4 Nepomuk needs to be able to get resource updates from other processes so that
+    our process' cache doesn't get outdated. See ResourceManager::resourceModified
+    TODO.
+   
 Planning:
  Fix #1, create own model
+ 
+ * Nepomuk is used by the wrapper class KonqBookmark for accessing to the data.
+ * Akonadi is used to administrate collections and virtual collections and to allow
+ in the future adding new types of bookmarks and bookmark sources in an easy way.
+ * The Akonadi resource is mostly decoupled from KonqBookmark (not completely but 
+ that can be done later), so it's reusable.
