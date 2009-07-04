@@ -39,18 +39,12 @@
 #include <Nepomuk/Types/Class>
 #include <Nepomuk/ResourceManager>
 #include <Nepomuk/Variant>
-#include <Soprano/Vocabulary/Xesam>
-#include <Soprano/Vocabulary/NAO>
-#include <Soprano/Vocabulary/XMLSchema>
-#include <Soprano/Model>
-#include <Soprano/QueryResultIterator>
 #include <kdebug.h>
 
 #include <QtDBus/QDBusConnection>
 #include <QObject>
 #include <QtGlobal>
 #include <QUrl>
-#include <QLatin1String>
 
 using namespace Akonadi;
 
@@ -69,12 +63,6 @@ public:
     Collection mMostVisitedCollection;
     Collection mUnclasifiedCollection;
     Collection::List mList;
-    
-    /**
-     * We use this to query the nepomuk database everytime we need to fetch
-     * nfo:Bookmark's belonging to a nfo:BookmarksFolder.
-     */
-//     Nepomuk::Search::QueryServiceClient *mQueryServiceClient;
 
 private:
     KonquerorBookmarksResource *mParent;
@@ -83,9 +71,6 @@ private:
 KonquerorBookmarksResource::Private::Private(KonquerorBookmarksResource *parent) :
     mParent( parent )
 {
-//     mQueryServiceClient = new Nepomuk::Search::QueryServiceClient( parent );
-//     connect( mQueryServiceClient, SIGNAL(newEntries( const QList<Nepomuk::Search::Result>& )),
-//              parent, SLOT(slotNewEntries( const QList<Nepomuk::Search::Result>& )) );
 }
 
 KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
@@ -238,8 +223,9 @@ bool KonquerorBookmarksResource::retrieveItem( const Akonadi::Item &item, const 
 
 void KonquerorBookmarksResource::aboutToQuit()
 {
-    // TODO: any cleanup you need to do while there is still an active
-    // event loop. The resource will terminate after this method returns
+    // any cleanup you need to do while there is still an active
+    // event loop. The resource will terminate after this method returns. nothing
+    // to do at the moment
 }
 
 void KonquerorBookmarksResource::configure( WId windowId )

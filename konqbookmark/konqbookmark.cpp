@@ -35,11 +35,6 @@
 #include <Nepomuk/Tag>
 #include <Nepomuk/ResourceManager>
 #include <Nepomuk/Variant>
-#include <Soprano/Vocabulary/Xesam>
-#include <Soprano/Vocabulary/NAO>
-#include <Soprano/Vocabulary/XMLSchema>
-#include <Soprano/Model>
-#include <Soprano/QueryResultIterator>
 
 #include "konqbookmark.h"
 
@@ -184,8 +179,7 @@ void KonqBookmark::setTags(const QStringList& tags)
         newTag.setLabel(tag);
         newTags.append(newTag);
     }
-    d->m_bookmark.setTags(newTags);
-    
+    d->m_bookmark.setTags(newTags);    
 }
 
 bool KonqBookmark::hasTag(const QString& tag) const
