@@ -113,12 +113,24 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.bookmarksView->setDragEnabled(true);
     ui_bookmarksview_base.bookmarksView->viewport()->setAcceptDrops(true);
     ui_bookmarksview_base.bookmarksView->setDropIndicatorShown(true);
-    ui_bookmarksview_base.bookmarksView->setDragDropMode(QAbstractItemView::InternalMove);
+//     ui_bookmarksview_base.bookmarksView->setDragDropMode(QAbstractItemView::InternalMove);
+    ui_bookmarksview_base.bookmarksView->setSortingEnabled(true);
+    ui_bookmarksview_base.bookmarksView->setAnimated(true);
     
+    ui_bookmarksview_base.collectionsView->setFocusPolicy(Qt::NoFocus);
+    ui_bookmarksview_base.collectionsView->header()->hide();
+    ui_bookmarksview_base.collectionsView->setSortingEnabled(false);
+    ui_bookmarksview_base.collectionsView->setAnimated(true);
     ui_bookmarksview_base.collectionsView->setDragEnabled(true);
     ui_bookmarksview_base.collectionsView->viewport()->setAcceptDrops(true);
     ui_bookmarksview_base.collectionsView->setDropIndicatorShown(true);
-    ui_bookmarksview_base.collectionsView->setDragDropMode(QAbstractItemView::InternalMove);
+//     ui_bookmarksview_base.collectionsView->setDragDropMode(QAbstractItemView::InternalMove);
+    ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
+    connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+            ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
+    connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+            ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
+    
 }
 
 void BookmarksView::setRootCollection( const Akonadi::Collection& collection)

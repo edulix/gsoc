@@ -33,6 +33,11 @@
 #include <nepomuk/class.h>
 #include <nepomuk/ontologies/bookmark.h>
 #include <nepomuk/ontologies/bookmarkfolder.h>
+#include <Soprano/Model>
+#include <Soprano/QueryResultIterator>
+#include <Soprano/Vocabulary/NAO>
+#include <Soprano/Global>
+#include <Soprano/LiteralValue>
 
 #include <iostream>
 #include <cstring>
@@ -78,6 +83,30 @@ void processCommand(QString command)
     
         Nepomuk::Bookmark bookmark("example:/");
         kDebug() << "description is: " << bookmark.description();
+    } else if(command == "query")
+    {
+        QString query = QString(
+            "PREFIX nao: <%1> "
+            "PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie> "
+            "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+            "prefix nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#> "
+            "select distinct ?r where { "
+            "?r rdf:type nfo:Bookmark . "
+            "?r nao:created ?time . } "
+            "ORDER BY DESC(?time) "
+            "LIMIT 20")
+            .arg( Soprano::Vocabulary::NAO::naoNamespace().toString() );
+            
+        Soprano::QueryResultIterator it = Nepomuk::ResourceManager::instance()->mainModel()->executeQuery( query,
+            Soprano::Query::QueryLanguageSparql );
+        kDebug() << "query done:";
+        while( it.next() ) {
+            QUrl resource = it.binding( "r" ).uri();
+            Nepomuk::Bookmark bookmark(resource);
+            kDebug() << "resource: " << resource.toString();
+            kDebug() << "resource.titles: " << bookmark.titles();
+            kDebug() << "resource.created: " << bookmark.property( Soprano::Vocabulary::NAO::naoNamespace().toString() + "created" ).toDateTime();
+        }
     }
 }
 

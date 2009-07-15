@@ -35,7 +35,7 @@
 #include <Nepomuk/Tag>
 #include <Nepomuk/ResourceManager>
 #include <Nepomuk/Variant>
-
+#include <Soprano/Vocabulary/NAO>
 #include "konqbookmark.h"
 
 class KonqBookmark::Private : public QSharedData
@@ -220,12 +220,12 @@ void KonqBookmark::setNumVisits(const long visits)
 
 QDateTime KonqBookmark::created() const
 {
-    return d->m_bookmark.contentCreated();
+    return d->m_bookmark.property(Soprano::Vocabulary::NAO::naoNamespace().toString() + "created").toDateTime();
 }
 
 void KonqBookmark::setCreated(const QDateTime& created)
 {
-    d->m_bookmark.setContentCreated(created);
+    d->m_bookmark.setProperty(Soprano::Vocabulary::NAO::naoNamespace().toString() + "created", created);
 }
 
 QDateTime KonqBookmark::lastModified() const

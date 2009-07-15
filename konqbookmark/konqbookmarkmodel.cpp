@@ -134,7 +134,7 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
         }
 
         const KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-        kDebug() << item.remoteId() << ", " << konqBookmark.uniqueUri();
+//         kDebug() << item.remoteId() << ", " << konqBookmark.uniqueUri();
 
         // Icon for the model entry
         switch( role )
@@ -302,10 +302,10 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         
         Item item = qVariantValue<Item>(data(entityIndex, EntityTreeModel::ItemRole));
         Collection collection = qVariantValue<Collection>(data(entityIndex, EntityTreeModel::CollectionRole));
-        if ( item.isValid() ) {
+        if ( item.isValid() && !item.remoteId().isEmpty()) {
             kDebug() << "removing item remoteId = " << item.remoteId();
             new Akonadi::ItemDeleteJob( item, transaction );
-        } else {
+        } else  if ( collection.isValid() ) {
             kDebug() << "removing collection (name, remoteId) = " << collection.name() << collection.remoteId();
             new Akonadi::CollectionDeleteJob( collection, transaction );
         }

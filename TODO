@@ -19,4 +19,17 @@ Planning:
  * Akonadi is used to administrate collections and virtual collections and to allow
  in the future adding new types of bookmarks and bookmark sources in an easy way.
  * The Akonadi resource is mostly decoupled from KonqBookmark (not completely but 
- that can be done later), so it's reusable.
+ that can be done later), so it's reusable. Ideally the akonadi resource should
+ only deal with Nepomuk::Resource.
+ 
+ 
+ * How to automatically expand tree
+ * How to store the items order in collections
+ 
+ Volker:
+  * What is the best way to set default current path
+ 
+ Sebastian Trueg:
+  * Nepomuk resourcedata ache syncing between different processes
+  * Integrate Nepomuk and Akonadi
+  * How to store in Nepomuk the number of Visits of each bookmark

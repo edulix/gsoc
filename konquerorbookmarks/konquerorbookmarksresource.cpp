@@ -26,6 +26,7 @@
 #include <akonadi/changerecorder.h>
 #include <akonadi/collectiondeletejob.h>
 #include <akonadi/collectionmodifyjob.h>
+#include <akonadi/searchcreatejob.h>
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemfetchscope.h>
 #include <akonadi/itemmodifyjob.h>
@@ -39,10 +40,14 @@
 #include <Nepomuk/Types/Class>
 #include <Nepomuk/ResourceManager>
 #include <Nepomuk/Variant>
+#include <Soprano/Model>
+#include <Soprano/QueryResultIterator>
+#include <Soprano/Vocabulary/NAO>
 #include <kdebug.h>
 
 #include <QtDBus/QDBusConnection>
 #include <QObject>
+#include <KLocale>
 #include <QtGlobal>
 #include <QUrl>
 
@@ -89,9 +94,37 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     
     d->mBookmarksRootCollection.setParent( Collection::root() );
     d->mBookmarksRootCollection.setRemoteId( "konqbookmark:/" );
-    d->mBookmarksRootCollection.setName( "Konqueror Bookmarks" );
+    d->mBookmarksRootCollection.setName( i18n("Konqueror Bookmarks") );
     d->mBookmarksRootCollection.setContentMimeTypes( mimeTypes );
     
+    QString latestBookmarksQuery = QString(
+        "PREFIX nao: <%1> "
+        "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+        "prefix nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#> "
+        "select distinct ?r where { "
+        "?r rdf:type nfo:Bookmark . "
+        "?r nao:created ?time . } "
+        "ORDER BY DESC(?time) "
+        "LIMIT 20")
+        .arg( Soprano::Vocabulary::NAO::naoNamespace().toString() );
+        
+        
+    QString unclasifiedBookmarksQuery = QString(
+        "PREFIX nao: <%1> "
+        "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+        "prefix nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#> "
+        "select distinct ?r where { "
+        "?r rdf:type nfo:Bookmark . "
+        "?r nao:created ?time . } "
+        "ORDER BY DESC(?time) "
+        "LIMIT 20")
+        .arg( Soprano::Vocabulary::NAO::naoNamespace().toString() );
+     
+    // TODO: What happens if it aleady exists? we should not create a new one
+    // or at least we should remove the pre-existing virtual collection 
+    
+//     Akonadi::SearchCreateJob *job = new Akonadi::SearchCreateJob( i18n("Latest Bookmarks"), query );
+
 //     d->mMenuCollection.setParent( d->mBookmarksRootCollection );
 //     d->mMenuCollection.setRemoteId( "/konquerorbookmarks/menu/" );
 //     d->mMenuCollection.setName( "Bookmarks Menu" );
@@ -135,6 +168,8 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
 //     d->mList << d->mRecentTagsCollection;
 //     d->mList << d->mMostVisitedCollection;
 //     d->mList << d->mUnclasifiedCollection;
+
+    synchronizeCollectionTree();
 }
 
 KonquerorBookmarksResource::~KonquerorBookmarksResource()
