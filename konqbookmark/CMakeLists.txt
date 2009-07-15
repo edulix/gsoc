@@ -34,8 +34,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 set(konqbookmark_LIB_SRCS
   konqbookmark.cpp
   konqbookmarkmodel.cpp
+  konqbookmarkproxymodel.cpp
   konqbookmarkview.cpp
   konqbookmarkdelegate.cpp
+  ktreeviewsearchline.cpp
 )
 
 kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
@@ -60,6 +62,8 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 set(konqbookmark_LIB_HDRS
   konqbookmark.h
   konqbookmarkmodel.h
+  konqbookmarkproxymodel.h
+  ktreeviewsearchline.h
   konqbookmarkview.h
   konqbookmarkdelegate.h
   konqbookmark_export.h

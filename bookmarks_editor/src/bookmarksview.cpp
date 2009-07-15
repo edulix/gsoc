@@ -22,7 +22,6 @@
 #include "watchitemcreatejob.h"
 #include "settings.h"
 
-#include <konqbookmark/konqbookmark.h>
 
 #include <QTimer>
 #include <QLabel>
@@ -46,6 +45,9 @@
 #include <akonadi_next/entitytreemodel.h>
 #include <akonadi/item.h>
 #include <kjob.h>
+
+#include <konqbookmark/konqbookmark.h>
+#include <konqbookmark/konqbookmarkproxymodel.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
 
@@ -57,6 +59,7 @@ public:
     Private(BookmarksView */*parent*/) {}
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
+    Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
     QDataWidgetMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
@@ -86,12 +89,16 @@ void BookmarksView::createModels()
     d->mMonitor = new Monitor( this );
     
     d->mBookmarkModel = new Akonadi::KonqBookmarkModel( session, d->mMonitor, this );
+    d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel( this );
+    d->mBookmarkProxyModel->setSourceModel(d->mBookmarkModel);
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
  
     ui_bookmarksview_base.collectionsView->setModel( filterModel );
-    ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkModel );
+    ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
+    ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
+    ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks.."));
     
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
         this, SLOT( setRootCollection( const Akonadi::Collection& ) ) );
@@ -116,6 +123,7 @@ void BookmarksView::createModels()
 //     ui_bookmarksview_base.bookmarksView->setDragDropMode(QAbstractItemView::InternalMove);
     ui_bookmarksview_base.bookmarksView->setSortingEnabled(true);
     ui_bookmarksview_base.bookmarksView->setAnimated(true);
+    ui_bookmarksview_base.bookmarksView->setFocus();
     
     ui_bookmarksview_base.collectionsView->setFocusPolicy(Qt::NoFocus);
     ui_bookmarksview_base.collectionsView->header()->hide();

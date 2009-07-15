@@ -85,21 +85,15 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLineEdit" name="bookmarksFilterBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+          <widget class="KTreeViewSearchLine" name="searchBox">
            <property name="minimumSize">
             <size>
-             <width>200</width>
+             <width>180</width>
              <height>0</height>
             </size>
            </property>
-           <property name="text">
-            <string>Find in bookmarks..</string>
+           <property name="trapEnterKeyEvent" stdset="0">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -192,6 +186,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>KTreeViewSearchLine</class>
+   <extends>KLineEdit</extends>
+   <header>konqbookmark/ktreeviewsearchline.h</header>
+  </customwidget>
   <customwidget>
    <class>KLineEdit</class>
    <extends>QLineEdit</extends>

@@ -6,12 +6,17 @@ Present bugs:
  #2 I've needed to add a disableRevisionCheck() call to the update of items in
    EntityTreeModel because it would otherwise it wouldn't work.
    
- #3 Access always directly to Nepomuk in konqbookmark.
+ #3 Access always directly to Nepomuk in konqbookmark. NOT
  
  #4 Nepomuk needs to be able to get resource updates from other processes so that
     our process' cache doesn't get outdated. See ResourceManager::resourceModified
     TODO.
-   
+
+ #5 Fix drag and drop in bookmarksView. Probably just needs to recompile akonadi_next?
+ 
+ #6 Include akonadi_next/ to be able to link to it or wait for its approval.
+
+
 Planning:
  Fix #1, create own model
  
