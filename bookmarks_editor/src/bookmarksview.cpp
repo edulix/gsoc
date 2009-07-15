@@ -104,7 +104,7 @@ void BookmarksView::createModels()
         this, SLOT( setRootCollection( const Akonadi::Collection& ) ) );
     
     d->mMapper = new QDataWidgetMapper(this);
-    d->mMapper->setModel(d->mBookmarkModel);
+    d->mMapper->setModel(d->mBookmarkProxyModel);
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
     d->mMapper->addMapping(ui_bookmarksview_base.addressBox, Akonadi::KonqBookmarkModel::Url);
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
