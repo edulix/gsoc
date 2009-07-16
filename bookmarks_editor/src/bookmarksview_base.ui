@@ -65,9 +65,12 @@
        <item>
         <layout class="QHBoxLayout" name="horizLayout2">
          <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Bookmarks &gt; All Bookmarks</string>
+          <widget class="KTreeModelNavigator" name="navigatorBreadCrumb" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>0</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -187,11 +190,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>KTreeViewSearchLine</class>
-   <extends>KLineEdit</extends>
-   <header>konqbookmark/ktreeviewsearchline.h</header>
-  </customwidget>
-  <customwidget>
    <class>KLineEdit</class>
    <extends>QLineEdit</extends>
    <header>klineedit.h</header>
@@ -200,6 +198,16 @@
    <class>KTextEdit</class>
    <extends>QTextEdit</extends>
    <header>ktextedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KTreeViewSearchLine</class>
+   <extends>KLineEdit</extends>
+   <header>konqbookmark/ktreeviewsearchline.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KTreeModelNavigator</class>
+   <extends>QWidget</extends>
+   <header>konqbookmark/ktreemodelnavigator.h</header>
   </customwidget>
   <customwidget>
    <class>Akonadi::CollectionView</class>

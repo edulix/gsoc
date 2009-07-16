@@ -96,13 +96,17 @@ void BookmarksView::createModels()
  
     ui_bookmarksview_base.collectionsView->setModel( filterModel );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );
+    ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mBookmarkProxyModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
     ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
     ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks.."));
     
+    connect( ui_bookmarksview_base.navigatorBreadCrumb, SIGNAL( currentChanged( const QModelIndex& ) ),
+        this, SLOT( setRootIndex( const QModelIndex& ) ) );
+        
     connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
         this, SLOT( setRootCollection( const Akonadi::Collection& ) ) );
-    
+        
     d->mMapper = new QDataWidgetMapper(this);
     d->mMapper->setModel(d->mBookmarkProxyModel);
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
@@ -145,6 +149,9 @@ void BookmarksView::setRootCollection( const Akonadi::Collection& collection)
 {
     d->mBookmarkModel->setRootCollection(collection);
     
+    kDebug() << d->mBookmarkModel->indexForCollection(collection).data().toString();
+    ui_bookmarksview_base.navigatorBreadCrumb->setCurrentIndex(d->mBookmarkModel->indexForCollection(collection));
+    
     // Set an invalid current model index
     setCurrentModelIndex(QModelIndex(), QModelIndex());
 }
@@ -154,6 +161,17 @@ void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelI
 {
     d->mMapper->setRootIndex(index.parent());
     d->mMapper->setCurrentModelIndex(index);
+}
+
+
+void BookmarksView::setRootIndex(const QModelIndex &index)
+{
+    Akonadi::Collection collection = index.data(EntityTreeModel::CollectionRole).value<Akonadi::Collection>();
+    if(collection.isValid())
+    {
+        setRootCollection(collection);
+    } else
+        kDebug() << "Failed setting current index: " << index;
 }
 
 void BookmarksView::addBookmark()
@@ -224,7 +242,7 @@ Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Coll
         if(!current.isValid())
             return parent;
     }
-    
+
     var = current.data(EntityTreeModel::CollectionRole);
     Akonadi::Collection collection = var.value<Akonadi::Collection>();
     if(collection.isValid())

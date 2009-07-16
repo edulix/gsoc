@@ -38,6 +38,10 @@ set(konqbookmark_LIB_SRCS
   konqbookmarkview.cpp
   konqbookmarkdelegate.cpp
   ktreeviewsearchline.cpp
+  treemodelnavigator/ktreemodelbutton.cpp
+  treemodelnavigator/ktreemodelnavigator.cpp
+  treemodelnavigator/ktreemodelnavigatorbutton.cpp
+  treemodelnavigator/ktreemodelnavigatormenu.cpp
 )
 
 kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
@@ -46,6 +50,7 @@ kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
 target_link_libraries(konqbookmark
     akonadi_next
     ontologies
+    kfile
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}
@@ -67,6 +72,10 @@ set(konqbookmark_LIB_HDRS
   konqbookmarkview.h
   konqbookmarkdelegate.h
   konqbookmark_export.h
+  treemodelnavigator/ktreemodelbutton_p.h
+  treemodelnavigator/ktreemodelnavigator.h
+  treemodelnavigator/ktreemodelnavigatorbutton_p.h
+  treemodelnavigator/ktreemodelnavigatormenu_p.h
 )
 
 install( FILES ${konqbookmark_LIB_HDRS}

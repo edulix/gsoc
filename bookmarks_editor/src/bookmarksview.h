@@ -59,20 +59,26 @@ public:
     void createModels();
     void addBookmark();
 
-signals:
+Q_SIGNALS:
     /**
      * Use this signal to change the content of the statusbar
      */
     void signalChangeStatusbar(const QString& text);
 
-public slots:
+public Q_SLOTS:
     void slotDelete();
     void slotAddFolder(const QString &folderName);
     
-protected slots:
+protected Q_SLOTS:
     void slotBookmarkAdded(const QModelIndex &index);
     void setRootCollection( const Akonadi::Collection& );
-    void setCurrentModelIndex(const QModelIndex &parent, const QModelIndex &index); 
+    void setCurrentModelIndex(const QModelIndex &index, const QModelIndex &prev); 
+    
+    /**
+     * Receives the signal from the KTreeModelNavigator (breadcrumb) that the
+     * current folder has changed.
+     */
+    void setRootIndex(const QModelIndex &index);
 
 private:
     /**
