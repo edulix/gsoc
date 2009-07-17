@@ -60,6 +60,8 @@ public:
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
+    Akonadi::CollectionModel *mCollectionModel;
+    Akonadi::CollectionFilterProxyModel *mCollectionFilteredModel;
     QDataWidgetMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
@@ -78,11 +80,11 @@ BookmarksView::~BookmarksView()
 
 void BookmarksView::createModels()
 {
-    Akonadi::CollectionModel *collectionModel = new Akonadi::CollectionModel( this );
+    d->mCollectionModel = new Akonadi::CollectionModel( this );
  
-    Akonadi::CollectionFilterProxyModel *filterModel = new Akonadi::CollectionFilterProxyModel( this );
-    filterModel->setSourceModel( collectionModel );
-    filterModel->addMimeTypeFilter( KonqBookmark::mimeType() );
+    d->mCollectionFilteredModel = new Akonadi::CollectionFilterProxyModel( this );
+    d->mCollectionFilteredModel->setSourceModel( d->mCollectionModel );
+    d->mCollectionFilteredModel->addMimeTypeFilter( KonqBookmark::mimeType() );
  
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
 
@@ -94,9 +96,9 @@ void BookmarksView::createModels()
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
  
-    ui_bookmarksview_base.collectionsView->setModel( filterModel );
+    ui_bookmarksview_base.collectionsView->setModel( d->mCollectionFilteredModel );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );
-    ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mBookmarkProxyModel );
+    ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
     ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
     ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks.."));
@@ -142,36 +144,28 @@ void BookmarksView::createModels()
             ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
     connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
-    
 }
 
 void BookmarksView::setRootCollection( const Akonadi::Collection& collection)
 {
     d->mBookmarkModel->setRootCollection(collection);
-    
-    kDebug() << d->mBookmarkModel->indexForCollection(collection).data().toString();
-    ui_bookmarksview_base.navigatorBreadCrumb->setCurrentIndex(d->mBookmarkModel->indexForCollection(collection));
+    ui_bookmarksview_base.navigatorBreadCrumb->setCurrentIndex(d->mCollectionModel->indexForCollection(collection));
     
     // Set an invalid current model index
     setCurrentModelIndex(QModelIndex(), QModelIndex());
 }
 
+void BookmarksView::setRootIndex(const QModelIndex &index)
+{
+    QModelIndex indexProxy = d->mCollectionFilteredModel->mapFromSource(index);
+    ui_bookmarksview_base.collectionsView->selectionModel()->setCurrentIndex(indexProxy,  
+        QItemSelectionModel::SelectCurrent);
+}
 
 void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelIndex &/*prev*/)
 {
     d->mMapper->setRootIndex(index.parent());
     d->mMapper->setCurrentModelIndex(index);
-}
-
-
-void BookmarksView::setRootIndex(const QModelIndex &index)
-{
-    Akonadi::Collection collection = index.data(EntityTreeModel::CollectionRole).value<Akonadi::Collection>();
-    if(collection.isValid())
-    {
-        setRootCollection(collection);
-    } else
-        kDebug() << "Failed setting current index: " << index;
 }
 
 void BookmarksView::addBookmark()
@@ -203,7 +197,6 @@ void BookmarksView::addBookmark()
     } else
         kWarning() << "job->exec() failed";
 }
-
 
 void BookmarksView::slotBookmarkAdded(const QModelIndex &newIndex)
 {

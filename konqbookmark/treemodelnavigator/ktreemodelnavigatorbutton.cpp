@@ -30,6 +30,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QStyleOption>
+#include <QModelIndex>
 
 QPointer<KTreeModelNavigatorMenu> KTreeModelNavigatorButton::m_childItemsMenu;
 
@@ -43,18 +44,11 @@ KTreeModelNavigatorButton::KTreeModelNavigatorButton(QModelIndex index, KTreeMod
     setIndex(index);
     setMouseTracking(true);
     connect(this, SIGNAL(clicked()), this, SLOT(updateNavigatorCurrentIndex()));
-
+    
     m_popupDelay = new QTimer(this);
     m_popupDelay->setSingleShot(true);
     connect(m_popupDelay, SIGNAL(timeout()), this, SLOT(listChildItems()));
     connect(this, SIGNAL(pressed()), this, SLOT(startPopupDelay()));
- 
-    QFont adjustedFont(font());   
-    setDisplayHintEnabled(ActivatedHint, true);
-    adjustedFont.setBold(true);
-    setFont(adjustedFont);
-    updateMinimumWidth();
-    update();
 }
 
 KTreeModelNavigatorButton::~KTreeModelNavigatorButton()
@@ -66,6 +60,27 @@ void KTreeModelNavigatorButton::setIndex(QModelIndex index)
     m_index = index;
     setText(index.data().toString());
     updateMinimumWidth();
+}
+
+void KTreeModelNavigatorButton::setActive(bool active)
+{   
+    QFont adjustedFont(font());
+    if (active) {
+        setDisplayHintEnabled(ActivatedHint, true);
+        adjustedFont.setBold(true);
+    } else {
+        setDisplayHintEnabled(ActivatedHint, false);
+        adjustedFont.setBold(false);
+    }
+
+    setFont(adjustedFont);
+    updateMinimumWidth();
+    update();
+}
+
+bool KTreeModelNavigatorButton::isActive() const
+{
+    return isDisplayHintEnabled(ActivatedHint);
 }
 
 QSize KTreeModelNavigatorButton::sizeHint() const
@@ -285,7 +300,7 @@ void KTreeModelNavigatorButton::updateNavigatorCurrentIndex()
         return;
     }
 
-    treeModelNavigator()->setCurrentIndex(m_index);
+    treeModelNavigator()->currentChangedTriggered(m_index);
 }
 
 void KTreeModelNavigatorButton::startPopupDelay()
@@ -321,17 +336,22 @@ static bool naturalLessThan(const QModelIndex& indexLeft, const QModelIndex& ind
 /// Helper function for listChildItems()
 static QModelIndex getSelectedChildItem(const QModelIndex& navigatorIndex, const QModelIndex& buttonIndex)
 {
-    const QModelIndex& index = navigatorIndex;
+    QModelIndex index = navigatorIndex;
     while(index.parent().isValid())
     {
         if(index.parent() == buttonIndex)
             return index;
+        index = index.parent();
     }
     return QModelIndex();
 }
 
 void KTreeModelNavigatorButton::listChildItems()
 {
+    if (!m_index.isValid()) {
+        return;
+    }
+    
     m_childItems.clear();
     int count = treeModelNavigator()->model()->rowCount(m_index);
     for(int i = 0; i < count; i++)
@@ -388,7 +408,7 @@ void KTreeModelNavigatorButton::listChildItems()
     const QAction* action = m_childItemsMenu->exec(popupPos);
     if (action != 0) {
         const int result = action->data().toInt();
-        treeModelNavigator()->setCurrentIndex(m_childItems.at(result));
+        treeModelNavigator()->currentChangedTriggered(m_childItems.at(result));
     }
 
     m_childItems.clear();

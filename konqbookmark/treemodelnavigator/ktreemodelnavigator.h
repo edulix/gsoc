@@ -89,12 +89,18 @@ Q_SIGNALS:
     void mimeDataDropped(const QModelIndex& destination, QDropEvent* event);
     
 protected:
-    /*
+    /**
      * Paste the clipboard content, if the middle mouse
      * button has been clicked.
      * @see QWidget::mouseReleaseEvent()
      */
     virtual void mouseReleaseEvent(QMouseEvent* event);
+    
+    /**
+     * Triggered by KTreeModelNavigatorButton when clicked.
+     */
+    friend class KTreeModelNavigatorButton;
+    void currentChangedTriggered(const QModelIndex& index);
 
 private:
     Q_PRIVATE_SLOT(d, void dropMimeData(const QModelIndex& destination, QDropEvent*))

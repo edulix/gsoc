@@ -33,7 +33,7 @@
 
 static void writeHeader( const KonqBookmark &konqBookmark, QXmlStreamWriter & writer )
 {
-    kDebug() << "writeHeader";
+//     kDebug() << "writeHeader";
     writer.writeStartElement( QLatin1String( "header" ) );
 //     writer.writeAttribute( QLatin1String( "url" ), konqBookmark.url().toString() );
 //     writer.writeAttribute( QLatin1String( "title" ), konqBookmark.title() );
@@ -51,7 +51,7 @@ static void writeHeader( const KonqBookmark &konqBookmark, QXmlStreamWriter & wr
 
 bool KonqBookmarkXmlIo::writeBookmarkToXml( const KonqBookmark &konqBookmark, QIODevice *device )
 {
-    kDebug();
+//     kDebug();
     if ( device == 0 || !device->isWritable() )
         return false;
 
@@ -73,7 +73,7 @@ bool KonqBookmarkXmlIo::writeBookmarkToXml( const KonqBookmark &konqBookmark, QI
 
 static bool readHeader( QXmlStreamReader &reader, KonqBookmark &konqBookmark )
 {
-    kDebug();
+//     kDebug();
     while ( !reader.atEnd() ) {
         reader.readNext();
 
@@ -123,7 +123,7 @@ static bool readHeader( QXmlStreamReader &reader, KonqBookmark &konqBookmark )
 
 bool KonqBookmarkXmlIo::readBookmarkFromXml( QIODevice *device, KonqBookmark &konqBookmark )
 {
-    kDebug();
+//     kDebug();
     if ( device == 0 || !device->isReadable() )
         return false;
 

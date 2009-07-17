@@ -52,6 +52,9 @@ public:
     void setIndex(QModelIndex index);
     QModelIndex index() const;
 
+    void setActive(bool active);
+    bool isActive() const;
+
     /** @see QWidget::sizeHint() */
     virtual QSize sizeHint() const;
 

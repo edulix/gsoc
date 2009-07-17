@@ -26,6 +26,7 @@
 #include <kglobalsettings.h>
 #include <kicon.h>
 #include <klocale.h>
+#include <kdebug.h>
 #include <kmenu.h>
 
 #include <QAbstractItemModel>
@@ -86,6 +87,7 @@ KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
 {
     m_layout->setSpacing(0);
     m_layout->setMargin(0);
+    m_layout->setAlignment(Qt::AlignLeft);
 
     q->setAutoFillBackground(false);
     q->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -93,7 +95,7 @@ KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
 
 void KTreeModelNavigator::Private::appendWidget(QWidget* widget, int stretch)
 {
-    m_layout->insertWidget(m_layout->count() - 1, widget, stretch);
+    m_layout->insertWidget(m_layout->count(), widget, stretch);
 }
 
 void KTreeModelNavigator::Private::dropMimeData(const QModelIndex& destination, QDropEvent* event)
@@ -106,7 +108,6 @@ void KTreeModelNavigator::Private::dropMimeData(const QModelIndex& destination, 
 
 void KTreeModelNavigator::Private::updateButtons()
 {
-    q->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     if(!m_currentIndex.isValid())
         return;
     
@@ -124,11 +125,16 @@ void KTreeModelNavigator::Private::updateButtons()
     }
     indexes.prepend(index);
     
+    int count = indexes.size(), i = 1;
+    kDebug() << count;
+    
     foreach(index, indexes)
     {
         createButton = (it == itEnd);
+        bool isLastButton = (i++ == count);
 
         const QString dirName = index.data().toString();
+        kDebug() << dirName << (i - 1) << isLastButton;
         KTreeModelNavigatorButton* button = 0;
         if (createButton)
         {
@@ -136,12 +142,19 @@ void KTreeModelNavigator::Private::updateButtons()
             connect(button, SIGNAL(mimeDataDropped(const QModelIndex&, QDropEvent*)),
                     q, SLOT(dropMimeData(const QModelIndex&, QDropEvent*)));
             appendWidget(button);
-            button->show();
+            // Don't show the button immediately, as setActive()
+            // might change the size and a relayout gets triggered
+            // after showing the button. So the showing of all buttons
+            // is postponed until all buttons have the correct
+            // activation state.
+            button->setActive(isLastButton);
             m_navButtons.append(button);
         } else
         {
             button = *it;
             button->setIndex(index);
+            button->setActive(isLastButton);
+            it++;
         }
     }
 
@@ -153,6 +166,14 @@ void KTreeModelNavigator::Private::updateButtons()
         ++it;
     }
     m_navButtons.erase(itBegin, m_navButtons.end());
+    
+    // all buttons have the correct activation state and
+    // can be shown now
+    foreach (KTreeModelNavigatorButton* button, m_navButtons) {
+        button->show();
+    }
+    
+    q->adjustSize();
 }
 
 void KTreeModelNavigator::Private::deleteButtons()
@@ -193,6 +214,12 @@ void KTreeModelNavigator::setModel(QAbstractItemModel *model)
 QAbstractItemModel *KTreeModelNavigator::model()
 {
     return d->m_model;
+}
+
+void KTreeModelNavigator::currentChangedTriggered(const QModelIndex& index)
+{
+    setCurrentIndex(index);
+    emit currentChanged(index);
 }
 
 void KTreeModelNavigator::setCurrentIndex(const QModelIndex& index)
