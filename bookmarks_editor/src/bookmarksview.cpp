@@ -101,7 +101,7 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
     ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
-    ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks.."));
+    ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks..."));
     
     connect( ui_bookmarksview_base.navigatorBreadCrumb, SIGNAL( currentChanged( const QModelIndex& ) ),
         this, SLOT( setRootIndex( const QModelIndex& ) ) );
@@ -146,7 +146,7 @@ void BookmarksView::createModels()
             ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
 }
 
-void BookmarksView::setRootCollection( const Akonadi::Collection& collection)
+void BookmarksView::setRootCollection(const Akonadi::Collection& collection)
 {
     d->mBookmarkModel->setRootCollection(collection);
     ui_bookmarksview_base.navigatorBreadCrumb->setCurrentIndex(d->mCollectionModel->indexForCollection(collection));

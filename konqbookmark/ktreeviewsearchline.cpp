@@ -92,8 +92,29 @@ void KTreeViewSearchLine::Private::rowsInserted( const QModelIndex & parentIndex
   if ( !widget )
     return;
 
+  
   for ( int i = start; i <= end; ++i ) {
-     widget->setRowHidden( i, parentIndex, !parent->itemMatches( parentIndex, i, parent->text() ) );
+    
+    QModelIndex ancestor = parentIndex.child(i, 0);
+    bool itemMatches = false;
+    kDebug() << ancestor.data().toString();
+    while(ancestor.isValid())
+    {
+      itemMatches |= parent->itemMatches( ancestor, search );  
+      bool rowShown = !widget->isRowHidden( ancestor.row(), ancestor.parent());
+      kDebug() << ancestor.data().toString() << "\t matches: " <<  itemMatches << "\t shown: " << rowShown << "\t patern: " << search;
+      
+      // If i == start that's a special case because by default a newly inserted
+      // index is shown, thus that doesn't warantee its ancestors are also marked as
+      // shown, so we can't stop looping.
+      if(rowShown == itemMatches && ancestor != parentIndex.child(i, 0))
+        break;
+      if(ancestor != parentIndex.child(i, 0))
+        itemMatches |= rowShown;
+      
+      widget->setRowHidden( ancestor.row(), ancestor.parent(), !itemMatches );
+      ancestor = ancestor.parent();
+    }
   }
 }
 
@@ -194,7 +215,8 @@ bool KTreeViewSearchLine::Private::checkItemParentsVisible( QTreeView *treeView,
 
   // Should this item be shown? It should if any children should be, or if it matches.
   const QModelIndex parentindex = index.parent();
-  if ( childMatch || parent->itemMatches( parentindex, index.row(), search ) ) {
+  kDebug() << "index: " << index.data().toString() << "; " << childMatch << ";" << parent->itemMatches( index, search ) << "; " << search;
+  if ( childMatch || parent->itemMatches( index, search ) ) {
     treeView->setRowHidden( index.row(), parentindex, false );
     return true;
   }
@@ -305,6 +327,7 @@ void KTreeViewSearchLine::removeTreeView( QTreeView *treeView )
 
 void KTreeViewSearchLine::updateSearch( const QString &pattern )
 {
+  kDebug();
   d->search = pattern.isNull() ? text() : pattern;
 
   foreach ( QTreeView* treeView, d->treeViews )
@@ -313,6 +336,7 @@ void KTreeViewSearchLine::updateSearch( const QString &pattern )
 
 void KTreeViewSearchLine::updateSearch( QTreeView *treeView )
 {
+  kDebug() << "yeah: " << treeView->model()->rowCount();
   if ( !treeView || !treeView->model()->rowCount() )
     return;
 
@@ -325,9 +349,10 @@ void KTreeViewSearchLine::updateSearch( QTreeView *treeView )
   bool wasUpdateEnabled = treeView->updatesEnabled();
   treeView->setUpdatesEnabled( false );
   if ( d->keepParentsVisible )
-    for ( int i = 0; i < treeView->model()->rowCount(); ++i )
+  {
+      kDebug() << d->keepParentsVisible << treeView->model()->rowCount();
       d->checkItemParentsVisible( treeView, treeView->rootIndex() );
-  else
+  } else
     d->checkItemParentsNotVisible( treeView );
   treeView->setUpdatesEnabled( wasUpdateEnabled );
 
@@ -384,12 +409,18 @@ void KTreeViewSearchLine::setTreeViews( const QList<QTreeView *> &treeViews )
 
 bool KTreeViewSearchLine::itemMatches( const QModelIndex &index, int row, const QString &pattern ) const
 {
+    return itemMatches(index.child(row, 0), pattern);
+}
+
+bool KTreeViewSearchLine::itemMatches( const QModelIndex &index, const QString &pattern ) const
+{
+  kDebug() << index.data().toString();
   if ( pattern.isEmpty() )
     return true;
-
+  
   if ( !index.isValid() )
     return false;
-
+  
   // If the search column list is populated, search just the columns
   // specifified.  If it is empty default to searching all of the columns.
 
@@ -398,16 +429,17 @@ bool KTreeViewSearchLine::itemMatches( const QModelIndex &index, int row, const 
     QList<int>::ConstIterator it = d->searchColumns.constBegin();
     for ( ; it != d->searchColumns.constEnd(); ++it ) {
       if ( *it < columncount &&
-           index.child( row, *it ).data( Qt::DisplayRole ).toString().indexOf( pattern, 0, d->caseSensitive ) >= 0 )
+           index.sibling( index.row(), *it ).data( Qt::DisplayRole ).toString().indexOf( pattern, 0, d->caseSensitive ) >= 0 )
         return true;
     }
   } else {
     for ( int i = 0; i < columncount; ++i) {
-      if ( index.child( row, i ).data( Qt::DisplayRole ).toString().indexOf( pattern, 0, d->caseSensitive ) >= 0 )
+      if ( index.sibling( index.row(), i ).data( Qt::DisplayRole ).toString().indexOf( pattern, 0, d->caseSensitive ) >= 0 )
+      {
         return true;
+      }
     }
   }
-
   return false;
 }
 
@@ -469,6 +501,9 @@ void KTreeViewSearchLine::connectTreeView( QTreeView *treeView )
 
   connect( treeView->model(), SIGNAL( rowsInserted( const QModelIndex&, int, int) ),
            this, SLOT( rowsInserted( const QModelIndex&, int, int ) ) );
+           
+  connect( treeView->model(), SIGNAL( modelReset() ),
+           this, SLOT( updateSearch() ) );
 }
 
 void KTreeViewSearchLine::disconnectTreeView( QTreeView *treeView )
@@ -478,6 +513,9 @@ void KTreeViewSearchLine::disconnectTreeView( QTreeView *treeView )
 
   disconnect( treeView->model(), SIGNAL( rowsInserted( const QModelIndex&, int, int) ),
               this, SLOT( rowsInserted( const QModelIndex&, int, int ) ) );
+  
+  disconnect( treeView->model(), SIGNAL( modelReset() ),
+           this, SLOT( updateSearch() ) );
 }
 
 bool KTreeViewSearchLine::canChooseColumnsCheck()

@@ -188,6 +188,8 @@ class KONQBOOKMARK_EXPORT KTreeViewSearchLine : public KLineEdit
      * subclasses to implement more complicated matching schemes.
      */
     virtual bool itemMatches( const QModelIndex &item, int row, const QString &pattern ) const;
+    
+    virtual bool itemMatches( const QModelIndex &item, const QString &pattern ) const;
 
     /**
     * Re-implemented for internal reasons.  API not affected.
