@@ -21,15 +21,18 @@
 #ifndef MODELWATCHER_H
 #define MODELWATCHER_H
 
+#include "konqbookmark_export.h"
+
 #include <QObject>
 #include <QAbstractItemModel>
+#include <akonadi/entity.h>
 #include <akonadi/item.h>
 #include <akonadi/collection.h>
 
 /**
- * @short Watches an item to be inserted in a model.
+ * @short Watches an entity to be inserted in a model.
  */
-class ModelWatcher : public QObject
+class KONQBOOKMARK_EXPORT ModelWatcher : public QObject
 {
     Q_OBJECT
   
@@ -38,8 +41,7 @@ public:
     /**
      * The constructor
      */
-    ModelWatcher(Akonadi::Item::Id itemId, Akonadi::Collection::Id colId,
-        QAbstractItemModel *model, QObject *parent = 0);
+    ModelWatcher(Akonadi::Entity::Id itemId, QAbstractItemModel *model, QObject *parent = 0);
     
     ~ModelWatcher();
 
@@ -47,32 +49,27 @@ public:
     
     bool watch() const;
 
-    void setWatchedItem(Akonadi::Item::Id itemId);
+    void setWatchedEntity(Akonadi::Entity::Id id);
     
-    Akonadi::Item::Id watchedItem() const;
-
-    void setWatchedCollection( Akonadi::Collection::Id colId );
-    
-    Akonadi::Collection::Id watchedCollection() const;
+    Akonadi::Entity::Id watchedEntity() const;
 
     void setWatchedModel(QAbstractItemModel *model);
     
     QAbstractItemModel *watchedModel() const;
     
-    QModelIndex itemIndex() const;
+    QModelIndex entityIndex() const;
 
 signals:
-    void newItem(const QModelIndex &idx);
+    void newEntity(const QModelIndex &idx);
 
 protected slots:
     void rowsInserted(const QModelIndex &parent, int start, int end);
 
 private:
-    Akonadi::Item::Id m_itemId; /// Item being inserted
-    Akonadi::Collection::Id m_colId; /// Collection in which the item is being inserted
+    Akonadi::Entity::Id m_entityId; /// Entity being inserted
     QAbstractItemModel *m_model; /// Model to watch for item insertion
     bool m_watch; /// are we currently watching?
-    QModelIndex m_itemIndex; /// Index of the inserted item
+    QModelIndex m_entityIndex; /// Index of the inserted entity
 };
 
 #endif // MODELWATCHER_H

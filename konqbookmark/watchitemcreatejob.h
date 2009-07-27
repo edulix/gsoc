@@ -21,6 +21,7 @@
 #ifndef AKONADI_WATCHITEMCREATEJOB_H
 #define AKONADI_WATCHITEMCREATEJOB_H
 
+#include "konqbookmark_export.h"
 #include "modelwatcher.h"
 
 #include <QObject>
@@ -65,9 +66,10 @@ namespace Akonadi {
  *
  * @endcode
  *
+ * @author Eduardo Robles Elvira <edulix@gmail.com>
  * @author Volker Krause <vkrause@kde.org>
  */
-class AKONADI_EXPORT WatchItemCreateJob : public Job
+class KONQBOOKMARK_EXPORT WatchItemCreateJob : public Job
 {
     Q_OBJECT
 

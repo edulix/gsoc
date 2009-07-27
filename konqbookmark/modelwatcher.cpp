@@ -19,15 +19,15 @@
 */
 
 #include "modelwatcher.h"
-#include <akonadi_next/entitytreemodel.h>
+#include <akonadi/entitytreemodel.h>
 
 using namespace Akonadi;
 
-ModelWatcher::ModelWatcher(Akonadi::Item::Id itemId, Akonadi::Collection::Id colId,
+ModelWatcher::ModelWatcher(Akonadi::Entity::Id entityId,
     QAbstractItemModel *model, QObject *parent)
     
-    : QObject(parent), m_itemId(itemId), m_colId(colId), m_model(model),
-        m_watch(false), m_itemIndex(QModelIndex())
+    : QObject(parent), m_entityId(entityId), m_model(model), m_watch(false), 
+    m_entityIndex(QModelIndex())
 {
     setWatch(true);
 }
@@ -57,33 +57,23 @@ bool ModelWatcher::watch() const
     return m_watch;
 }
 
-void ModelWatcher::setWatchedItem(Item::Id itemId)
+void ModelWatcher::setWatchedEntity(Entity::Id entityId)
 {
-    m_itemId = itemId;
-    m_itemIndex = QModelIndex();
+    m_entityId = entityId;
+    m_entityIndex = QModelIndex();
 }
 
-Item::Id ModelWatcher::watchedItem() const
+Entity::Id ModelWatcher::watchedEntity() const
 {
-    return m_itemId;
-}
-
-void ModelWatcher::setWatchedCollection( Collection::Id colId )
-{
-    m_colId = colId;
-    m_itemIndex = QModelIndex();
-}
-
-Collection::Id ModelWatcher::watchedCollection() const
-{
-    return m_colId;
+    return m_entityId;
 }
 
 void ModelWatcher::setWatchedModel(QAbstractItemModel *model)
 {
     setWatch(false);
     m_model = model;
-    m_itemIndex = QModelIndex();
+    m_entityId = 0;
+    m_entityIndex = QModelIndex();
     setWatch(true);
 }
 
@@ -93,30 +83,26 @@ QAbstractItemModel *ModelWatcher::watchedModel() const
     return m_model;
 }
 
-QModelIndex ModelWatcher::itemIndex() const
+QModelIndex ModelWatcher::entityIndex() const
 {
-    return m_itemIndex;
+    return m_entityIndex;
 }
     
 void ModelWatcher::rowsInserted(const QModelIndex &parent, int start, int end)
 {
-    kDebug();
-//     if (parent.data(EntityTreeModel::CollectionIdRole).toLongLong() != m_colId)
-//         return;
-
     const int column = 0;
     for (int row = start; row <= end; ++row)
     {
         QModelIndex idx = m_model->index(row, column, parent);
-        kDebug() << "row = " << row << ", m_itemId = " << m_itemId << ", idx.data(EntityTreeModel::ItemIdRole).toLongLong() = " << idx.data(EntityTreeModel::ItemIdRole).toLongLong();
-        if (idx.data(EntityTreeModel::ItemIdRole).toLongLong() != m_itemId)
+        if ((idx.data(EntityTreeModel::ItemIdRole).toLongLong() != m_entityId)
+            && (idx.data(EntityTreeModel::CollectionIdRole).toLongLong() != m_entityId))
             continue;
 
-        m_itemIndex = idx;
+        m_entityIndex = idx;
 
         // stop watching the model.
         setWatch(false);
         
-        emit newItem(idx);
+        emit newEntity(idx);
     }
 }

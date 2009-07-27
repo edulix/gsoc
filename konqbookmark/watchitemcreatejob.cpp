@@ -47,7 +47,7 @@ QModelIndex WatchItemCreateJob::itemIndex() const
     if(!m_modelWatcher)
         return QModelIndex();
     
-    return m_modelWatcher->itemIndex();
+    return m_modelWatcher->entityIndex();
 }
 
 void WatchItemCreateJob::doStart()
@@ -61,7 +61,7 @@ void WatchItemCreateJob::slotItemCreated()
 {
     kDebug();
     m_item = m_itemCreateJob->item(); // updates the item id
-    m_modelWatcher = new ModelWatcher(m_item.id(), m_collection.id(), m_model, this);
+    m_modelWatcher = new ModelWatcher(m_item.id(), m_model, this);
     connect(m_modelWatcher, SIGNAL(newItem(const QModelIndex &)), this, SLOT(slotItemAdded()));
     if(m_itemCreateJob->error())
     {
