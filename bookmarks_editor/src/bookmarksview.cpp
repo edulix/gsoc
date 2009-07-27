@@ -19,7 +19,6 @@
 */
 
 #include "bookmarksview.h"
-#include "watchitemcreatejob.h"
 #include "settings.h"
 
 
@@ -49,6 +48,7 @@
 #include <konqbookmark/konqbookmark.h>
 #include <konqbookmark/konqbookmarkproxymodel.h>
 #include <konqbookmark/konqbookmarkmodel.h>
+#include <konqbookmark/modelwatcher.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
 
 using namespace Akonadi;
@@ -191,9 +191,8 @@ void BookmarksView::addBookmark()
     ItemCreateJob *job = new ItemCreateJob(item, parent);
     if( job->exec() )
     {
-        delete d->mModelWatcher;
-        d->mModelWatcher = new ModelWatcher(job->item().id(), d->mBookmarkModel->rootCollection().id(), d->mBookmarkModel, this);
-        connect(d->mModelWatcher, SIGNAL(newItem(const QModelIndex &)), this, SLOT(slotBookmarkAdded(const QModelIndex &)));
+        d->mModelWatcher = new ModelWatcher(job->item().id(), d->mBookmarkProxyModel, this);
+        connect(d->mModelWatcher, SIGNAL(newEntity(const QModelIndex &)), this, SLOT(slotBookmarkAdded(const QModelIndex &)));
     } else
         kWarning() << "job->exec() failed";
 }

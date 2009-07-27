@@ -19,7 +19,7 @@
 */
 
 #include "konqbookmarkproxymodel.h"
-#include <akonadi_next/entitytreemodel.h>
+#include <akonadi/entitytreemodel.h>
 
 using namespace Akonadi;
 

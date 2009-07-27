@@ -187,7 +187,7 @@ int showResource(int argc, char **argv)
 int showResources()
 {
     QList<Nepomuk::Bookmark> bookmarks = Nepomuk::Bookmark::allBookmarks();
-    kDebug()  << "There are " << bookmarks.count() << " bookmarks";
+    kDebug()  << "There are" << bookmarks.count() << " bookmarks";
     
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {

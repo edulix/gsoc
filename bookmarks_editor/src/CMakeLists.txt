@@ -3,10 +3,8 @@ set(bookmarks_SRCS
     main.cpp
     bookmarksview.cpp
     actionsimpl.cpp
-    modelwatcher.cpp
-    watchitemcreatejob.cpp
 )
-# Needed to be able to use item.setPayload()
+# Exceptions are needed to be able to use item.setPayload()
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}" ) 
 include_directories(
     ${KDE4_INCLUDES}

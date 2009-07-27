@@ -23,6 +23,7 @@
 #include "settingsadaptor.h"
 
 #include <konqbookmark/konqbookmark.h>
+
 #include <akonadi/changerecorder.h>
 #include <akonadi/collectiondeletejob.h>
 #include <akonadi/collectionmodifyjob.h>
@@ -30,7 +31,7 @@
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemfetchscope.h>
 #include <akonadi/itemmodifyjob.h>
-#include <KUrl>
+#include <akonadi/entitydisplayattribute.h>
 
 #include <nepomuk/ontologies/bookmark.h>
 #include <nepomuk/ontologies/bookmarkfolder.h>
@@ -43,13 +44,15 @@
 #include <Soprano/Model>
 #include <Soprano/QueryResultIterator>
 #include <Soprano/Vocabulary/NAO>
-#include <kdebug.h>
 
 #include <QtDBus/QDBusConnection>
 #include <QObject>
-#include <KLocale>
 #include <QtGlobal>
 #include <QUrl>
+
+#include <kdebug.h>
+#include <KUrl>
+#include <KLocale>
 
 using namespace Akonadi;
 
@@ -96,6 +99,11 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     d->mBookmarksRootCollection.setRemoteId( "konqbookmark:/" );
     d->mBookmarksRootCollection.setName( i18n("Konqueror Bookmarks") );
     d->mBookmarksRootCollection.setContentMimeTypes( mimeTypes );
+    EntityDisplayAttribute* attr =
+    d->mBookmarksRootCollection.attribute<EntityDisplayAttribute>( Collection::AddIfMissing );
+    attr->setDisplayName( i18n("Konqueror Bookmarks") );
+    attr->setIconName( QLatin1String( "bookmarks" ) );
+
     
     QString latestBookmarksQuery = QString(
         "PREFIX nao: <%1> "
@@ -194,8 +202,10 @@ Collection::List listRecursive( const Nepomuk::BookmarkFolder& parent, const Col
     {
         Collection col;
         if(!bookmarkFolder.titles().empty())
+        {
+            kDebug() << "folder:" << bookmarkFolder.titles().first() << bookmarkFolder.containsBookmarks().size();
             col.setName( bookmarkFolder.titles().first() );
-        else  // shouldn't happen
+        } else  // shouldn't happen
             col.setName( "" );
         
         col.setRemoteId( bookmarkFolder.resourceUri().toString() );
@@ -220,7 +230,6 @@ void KonquerorBookmarksResource::retrieveCollections()
 
 void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &collection )
 {
-    kDebug() << collection.name();
     // this method is called when Akonadi wants to know about all the
     // items in the given collection. You can but don't have to provide all the
     // data for each item, remote ID and MIME type are enough at this stage.
@@ -229,6 +238,7 @@ void KonquerorBookmarksResource::retrieveItems( const Akonadi::Collection &colle
   
     Nepomuk::BookmarkFolder folder( collection.remoteId() );
     QList<Nepomuk::Bookmark> bookmarks = folder.containsBookmarks();
+    kDebug() << collection.name() << folder.containsBookmarks().size();
     Item::List items;
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
@@ -378,7 +388,9 @@ void KonquerorBookmarksResource::collectionRemoved( const Akonadi::Collection &c
         item.setRemoteId( bookmark.resourceUri().toString() );
         Akonadi::ItemDeleteJob *job = new Akonadi::ItemDeleteJob( item );
         if ( !job->exec() )
+        {
             kDebug() << "Error deleting an bookmark item";
+        }
     }
     
     // Remove recursively all the subfolders
@@ -390,7 +402,9 @@ void KonquerorBookmarksResource::collectionRemoved( const Akonadi::Collection &c
         
         Akonadi::CollectionDeleteJob *job = new Akonadi::CollectionDeleteJob( subCollection );
         if ( !job->exec() )
+        {
             kDebug() << "Error deleting a bookmark folder";
+        }
     }
     bookmarkFolder.remove();
     changeCommitted(collection);

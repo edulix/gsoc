@@ -108,7 +108,7 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
             return QString();
         }
     }
-
+    
     return EntityTreeModel::headerData( section, orientation, role );
 }
 
