@@ -215,6 +215,7 @@ void KonqBookmark::incrementVisits()
 
 void KonqBookmark::setNumVisits(const long visits)
 {
+    Q_UNUSED(visits);
     // TODO
 }
 

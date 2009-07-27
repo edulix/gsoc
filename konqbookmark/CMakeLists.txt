@@ -34,12 +34,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
     konqbookmarkmodel.cpp
+    konqbookmarkmodelmenu.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
     konqbookmarkproxymodel.cpp
     konqbookmarkview.cpp
     konqbookmarkdelegate.cpp
     ktreeviewsearchline.cpp
+    modelmenu.cpp
+    modelwatcher.cpp
     treemodelnavigator/ktreemodelbutton.cpp
     treemodelnavigator/ktreemodelnavigator.cpp
     treemodelnavigator/ktreemodelnavigatorbutton.cpp
@@ -70,12 +73,15 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 set(konqbookmark_LIB_HDRS
     konqbookmark.h
     konqbookmarkmodel.h
+    konqbookmarkmodelmenu.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
     konqbookmarkproxymodel.h
     ktreeviewsearchline.h
     konqbookmarkview.h
     konqbookmarkdelegate.h
+    modelmenu.h
+    modelwatcher.h
     konqbookmark_export.h
     treemodelnavigator/ktreemodelbutton_p.h
     treemodelnavigator/ktreemodelnavigator.h
@@ -109,8 +115,41 @@ target_link_libraries(akonadi_serializer_konqbookmark
 
 install(TARGETS akonadi_serializer_konqbookmark DESTINATION ${PLUGIN_INSTALL_DIR})
 
+############### Macros ###############
+
+macro(MAKE_INSTALL_PATH_ABSOLUTE out in)
+   if (IS_ABSOLUTE "${in}")
+      set(${out} "${in}")
+   else (IS_ABSOLUTE "${in}")
+      set(${out} "\${KONQBOOKMARK_INSTALL_DIR}/${in}")
+   endif (IS_ABSOLUTE "${in}")
+endmacro(MAKE_INSTALL_PATH_ABSOLUTE out in)
+
+############### Prepare KonqBookmarkConfig.cmake ###############
+
+# all the following variables are put into KonqBookmarkConfig.cmake, so
+# they are usable by projects using Akonadi.
+make_install_path_absolute(KONQBOOMARK_BIN_DIR             ${BIN_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_INCLUDE_DIR         ${INCLUDE_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_LIB_DIR             ${LIB_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_CONFIG_DIR          ${CONFIG_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_DBUS_INTERFACES_DIR ${DBUS_INTERFACES_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_DBUS_SERVICES_DIR   ${DBUS_SERVICES_INSTALL_DIR})
+make_install_path_absolute(KONQBOOMARK_XDG_MIME_DIR        ${XDG_MIME_INSTALL_DIR})
+
+############### Generate files ###############
+
+configure_file(KonqBookmarkConfig.cmake.in "${KONQBOOMARK_BIN_DIR}/KonqBookmarkConfig.cmake" @ONLY)
+
 ########### install files ###############
 
 install( FILES
   akonadi_serializer_konqbookmark.desktop
   DESTINATION ${DATA_INSTALL_DIR}/akonadi/plugins/serializer)
+
+set(_KONQBOOKMARKCONFIG_INSTALL_DIR ${LIB_INSTALL_DIR}/KonqBookmark/cmake/)
+   
+install(FILES ${KONQBOOMARK_BIN_DIR}/KonqBookmarkConfig.cmake
+        DESTINATION ${_KONQBOOKMARKCONFIG_INSTALL_DIR} )
+
+macro_display_feature_log()

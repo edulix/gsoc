@@ -8,6 +8,7 @@ include(MacroOptionalAddSubdirectory)
 include(CheckIncludeFiles)
 find_package (KdepimLibs REQUIRED)
 find_package (Nepomuk REQUIRED)
+find_package(KonqBookmark REQUIRED)
 
 find_program(XSLTPROC_EXECUTABLE xsltproc)
 macro_log_feature(XSLTPROC_EXECUTABLE "xsltproc" "The command line XSLT processor from libxslt" "http://xmlsoft.org/XSLT/" FALSE "" "Needed for building Akonadi resources. Recommended.")
