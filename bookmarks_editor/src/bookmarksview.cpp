@@ -31,6 +31,7 @@
 #include <QItemDelegate>
 
 #include <kmessagebox.h>
+#include <kselectionproxymodel.h>
 #include <klocale.h>
 #include <kmenu.h>
 #include <klineedit.h>
@@ -41,7 +42,8 @@
 #include <akonadi/itemfetchscope.h>
 #include <akonadi/monitor.h>
 #include <akonadi/session.h>
-#include <akonadi_next/entitytreemodel.h>
+#include <akonadi/entitytreemodel.h>
+#include <akonadi/entityfilterproxymodel.h>
 #include <akonadi/item.h>
 #include <kjob.h>
 
@@ -60,8 +62,7 @@ public:
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
-    Akonadi::CollectionModel *mCollectionModel;
-    Akonadi::CollectionFilterProxyModel *mCollectionFilteredModel;
+    Akonadi::EntityFilterProxyModel *mCollectionProxyModel;
     QDataWidgetMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
@@ -80,35 +81,33 @@ BookmarksView::~BookmarksView()
 
 void BookmarksView::createModels()
 {
-    d->mCollectionModel = new Akonadi::CollectionModel( this );
- 
-    d->mCollectionFilteredModel = new Akonadi::CollectionFilterProxyModel( this );
-    d->mCollectionFilteredModel->setSourceModel( d->mCollectionModel );
-    d->mCollectionFilteredModel->addMimeTypeFilter( KonqBookmark::mimeType() );
- 
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
 
     d->mMonitor = new Monitor( this );
     
     d->mBookmarkModel = new Akonadi::KonqBookmarkModel( session, d->mMonitor, this );
+    
+    d->mCollectionProxyModel = new Akonadi::EntityFilterProxyModel();
+    d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
+    d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
+ 
+    ui_bookmarksview_base.collectionsView->setModel( d->mCollectionProxyModel );
+    ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionProxyModel );
+    ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel( ui_bookmarksview_base.collectionsView->selectionModel() );
+    
+    KSelectionProxyModel *selectionProxy = new KSelectionProxyModel(ui_bookmarksview_base.collectionsView->selectionModel(), this);
+    selectionProxy->setSourceModel(d->mBookmarkModel);
+    
     d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel( this );
-    d->mBookmarkProxyModel->setSourceModel(d->mBookmarkModel);
+    d->mBookmarkProxyModel->setSourceModel(selectionProxy);
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
- 
-    ui_bookmarksview_base.collectionsView->setModel( d->mCollectionFilteredModel );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );
-    ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionModel );
     ui_bookmarksview_base.bookmarksView->setItemDelegate( itemDelegate );
     ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
     ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks..."));
     
-    connect( ui_bookmarksview_base.navigatorBreadCrumb, SIGNAL( currentChanged( const QModelIndex& ) ),
-        this, SLOT( setRootIndex( const QModelIndex& ) ) );
-        
-    connect( ui_bookmarksview_base.collectionsView, SIGNAL( currentChanged( Akonadi::Collection ) ),
-        this, SLOT( setRootCollection( const Akonadi::Collection& ) ) );
-        
+    // TODO: Create KDataWidgetSelectionMapper which has setSelectionModel()
     d->mMapper = new QDataWidgetMapper(this);
     d->mMapper->setModel(d->mBookmarkProxyModel);
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
@@ -116,9 +115,6 @@ void BookmarksView::createModels()
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
     d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description, "plainText");
     d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
-
-     connect(ui_bookmarksview_base.bookmarksView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-         this, SLOT(setCurrentModelIndex(QModelIndex, QModelIndex)));
     
     d->mModelWatcher = 0;
     
@@ -131,6 +127,9 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.bookmarksView->setAnimated(true);
     ui_bookmarksview_base.bookmarksView->setFocus();
     
+    for(int i = KonqBookmarkModel::Url; i < KonqBookmarkModel::ColumnCount; i++)
+        ui_bookmarksview_base.collectionsView->setColumnHidden(i, true);
+        
     ui_bookmarksview_base.collectionsView->setFocusPolicy(Qt::NoFocus);
     ui_bookmarksview_base.collectionsView->header()->hide();
     ui_bookmarksview_base.collectionsView->setSortingEnabled(false);
@@ -142,30 +141,9 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
+    // Fix this doesn't work:
     connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
-}
-
-void BookmarksView::setRootCollection(const Akonadi::Collection& collection)
-{
-    d->mBookmarkModel->setRootCollection(collection);
-    ui_bookmarksview_base.navigatorBreadCrumb->setCurrentIndex(d->mCollectionModel->indexForCollection(collection));
-    
-    // Set an invalid current model index
-    setCurrentModelIndex(QModelIndex(), QModelIndex());
-}
-
-void BookmarksView::setRootIndex(const QModelIndex &index)
-{
-    QModelIndex indexProxy = d->mCollectionFilteredModel->mapFromSource(index);
-    ui_bookmarksview_base.collectionsView->selectionModel()->setCurrentIndex(indexProxy,  
-        QItemSelectionModel::SelectCurrent);
-}
-
-void BookmarksView::setCurrentModelIndex(const QModelIndex &index, const QModelIndex &/*prev*/)
-{
-    d->mMapper->setRootIndex(index.parent());
-    d->mMapper->setCurrentModelIndex(index);
 }
 
 void BookmarksView::addBookmark()

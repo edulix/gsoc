@@ -18,8 +18,8 @@
     02110-1301, USA.
 */
 
-#ifndef AKONADI_WATCHCOLLECTIONCREATEJOB_H
-#define AKONADI_WATCHCOLLECTIONCREATEJOB_H
+#ifndef WATCHCOLLECTIONCREATEJOB_H
+#define WATCHCOLLECTIONCREATEJOB_H
 
 #include "konqbookmark_export.h"
 #include "modelwatcher.h"
@@ -94,7 +94,7 @@ public:
 protected:
     virtual void doStart();
 
-protected slots:
+protected Q_SLOTS:
     /**
      * Called by m_collectionCreateJob when it finishes.
      */
@@ -115,4 +115,4 @@ private:
 
 }
 
-#endif // AKONADI_WATCHCOLLECTIONCREATEJOB_H
+#endif // WATCHCOLLECTIONCREATEJOB_H

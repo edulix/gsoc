@@ -67,7 +67,7 @@
 #include <QEvent>
 #include <QMouseEvent>
 
-#include <qdebug.h>
+#include <kdebug.h>
 
 ModelMenu::ModelMenu(QWidget *parent)
     : KMenu(parent)
@@ -80,8 +80,8 @@ ModelMenu::ModelMenu(QWidget *parent)
     m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
     connect(this, SIGNAL(aboutToShow()), this, SLOT(aboutToShow()));
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
+    setFlags(IsRootFlag);
 }
-
 
 ModelMenu::ModelMenu(ModelMenu *parentMenu)
     : KMenu(parentMenu)
@@ -94,7 +94,7 @@ ModelMenu::ModelMenu(ModelMenu *parentMenu)
     m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
     connect(this, SIGNAL(aboutToShow()), this, SLOT(aboutToShow()));
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
-    setFlags(flags()|IsRootFlag);
+    setFlags(NoOptionsFlag);
 }
 
 bool ModelMenu::prePopulated()
@@ -108,7 +108,13 @@ void ModelMenu::postPopulated()
 
 void ModelMenu::setModel(QAbstractItemModel *model)
 {
+    kDebug();
     m_model = model;
+    if(flags() & IsRootFlag)
+    {
+        kDebug() << "yeah";
+        setRootIndex(this->model()->index(0,0));
+    }
 }
 
 QAbstractItemModel *ModelMenu::model() const
@@ -161,6 +167,7 @@ Q_DECLARE_METATYPE(QModelIndex)
 // on changes.
 void ModelMenu::aboutToShow()
 {
+    kDebug();
     clear();
 
     if (prePopulated())

@@ -71,14 +71,6 @@ public Q_SLOTS:
     
 protected Q_SLOTS:
     void slotBookmarkAdded(const QModelIndex &index);
-    void setRootCollection( const Akonadi::Collection& );
-    void setCurrentModelIndex(const QModelIndex &index, const QModelIndex &prev); 
-    
-    /**
-     * Receives the signal from the KTreeModelNavigator (breadcrumb) that the
-     * current folder has changed.
-     */
-    void setRootIndex(const QModelIndex &index);
 
 private:
     /**

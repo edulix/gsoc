@@ -101,9 +101,9 @@ public:
     enum MenuRole
     {
         StatusBarTextRole = 0x1,
-        SeparatorRole = 0x2,
-        MenuRolesSize = 2
+        SeparatorRole = 0x2
     };
+    enum { MenuRolesSize = 2 };
     
     ModelMenu(QWidget *parent = 0);
     ModelMenu(ModelMenu *parentMenu = 0);

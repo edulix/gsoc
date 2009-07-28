@@ -18,8 +18,8 @@
     02110-1301, USA.
 */
 
-#ifndef AKONADI_WATCHITEMCREATEJOB_H
-#define AKONADI_WATCHITEMCREATEJOB_H
+#ifndef WATCHITEMCREATEJOB_H
+#define WATCHITEMCREATEJOB_H
 
 #include "konqbookmark_export.h"
 #include "modelwatcher.h"
@@ -102,7 +102,7 @@ public:
 protected:
     virtual void doStart();
 
-protected slots:
+protected Q_SLOTS:
     /**
      * Called by m_itemCreateJob when it finishes.
      */
@@ -124,4 +124,4 @@ private:
 
 }
 
-#endif // AKONADI_WATCHITEMCREATEJOB_H
+#endif // WATCHITEMCREATEJOB_H

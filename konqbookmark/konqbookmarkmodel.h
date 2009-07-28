@@ -21,7 +21,7 @@
 #define KONQBOOKMARK_MODEL_H
 
 #include "konqbookmark_export.h"
-#include <akonadi_next/entitytreemodel.h>
+#include <akonadi/entitytreemodel.h>
 #include <akonadi/itemmodel.h>
 #include <QModelIndex>
 
@@ -35,6 +35,7 @@ namespace Akonadi
 
     class KONQBOOKMARK_EXPORT KonqBookmarkModel : public EntityTreeModel
     {
+        Q_OBJECT
     public:
         enum Column
         {
@@ -55,7 +56,7 @@ namespace Akonadi
         virtual ~KonqBookmarkModel();
 
         virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
-        virtual QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+        virtual QVariant getHeaderData( int section, Qt::Orientation orientation, int role, int headerSet ) const;
         
         // We let the delegate know that we are editable
         Qt::ItemFlags flags(const QModelIndex &index) const;

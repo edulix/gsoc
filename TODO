@@ -1,4 +1,4 @@
-Present bugs:
+TODO:
 
  #1 The KonqBookmarkView delegate is not being triggered for some reason when
    trying to edit an item.
@@ -12,9 +12,16 @@ Present bugs:
     our process' cache doesn't get outdated. See ResourceManager::resourceModified
     TODO.
 
- #5 Fix drag and drop in bookmarksView. Probably just needs to recompile akonadi_next?
+ #5 Fix drag and drop in bookmarksView.
  
- #6 Include akonadi_next/ to be able to link to it or wait for its approval.
+ #6 Wait for EntityTreeView to get out of akonadi_next and into kdepimlibs.
+ 
+ #7 Segfaults with EntityTreeModel.
+ 
+ #8 Convert KonqBookmark to Awesome::Place or similar? We need to make something
+    more flexible which will allow others use it outside konqueror.
+ 
+ #9 Fix bookmarks menu.
 
 
 Planning:

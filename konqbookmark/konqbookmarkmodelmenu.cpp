@@ -21,6 +21,7 @@
 #include "konqbookmarkmodel.h"
 
 #include <kbookmarkmenu.h>
+#include <kdebug.h>
 
 class KonqBookmarkModelMenu::Private {
 public:
@@ -40,14 +41,20 @@ KonqBookmarkModelMenu::Private::Private(KonqBookmarkModelMenu *parent)
 KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, QWidget *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
+    kDebug();;
     setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
 }
 
+KonqBookmarkModelMenu::~KonqBookmarkModelMenu()
+{
+    delete d;
+}
 
 KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, KonqBookmarkModelMenu *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
+    kDebug();
     setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
 }
@@ -79,11 +86,12 @@ void KonqBookmarkModelMenu::openBookmark(Qt::MouseButtons mb, Qt::KeyboardModifi
     if(!action)
         return;
     
-    QUrl url = index(action).data(Akonadi::KonqBookmarkModel::Url).value<QUrl>();
+    KUrl url(index(action).data(Akonadi::KonqBookmarkModel::Url).toString());
     d->m_KonqBookmarkMenuHelper->openBookmark(url, mb, km);
 }
 
 KMenu *KonqBookmarkModelMenu::contextMenu(QAction * action )
 {
+    Q_UNUSED(action);
     return 0;
 }

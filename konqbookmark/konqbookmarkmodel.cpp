@@ -75,13 +75,15 @@ KonqBookmarkModel::~KonqBookmarkModel()
     delete d;
 }
 
-int KonqBookmarkModel::columnCount( const QModelIndex& /*index*/) const
+int KonqBookmarkModel::columnCount( const QModelIndex& index) const
 {
+    Q_UNUSED(index);
+    
     return 9;
 }
 
-QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation, int role ) const
-{
+QVariant KonqBookmarkModel::getHeaderData( int section, Qt::Orientation orientation, int role, int headerSet ) const
+{   
     if ( role == Qt::DisplayRole && orientation == Qt::Horizontal )
     {
         switch( section )
@@ -109,7 +111,7 @@ QVariant KonqBookmarkModel::headerData( int section, Qt::Orientation orientation
         }
     }
     
-    return EntityTreeModel::headerData( section, orientation, role );
+    return EntityTreeModel::getHeaderData( section, orientation, role, headerSet );
 }
 
 
@@ -432,7 +434,7 @@ bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
         }
     }
     // As this is an async way to drop data, we always return false. Akonadi will
-    // iupdate the model later on 
+    // update the model later on 
     return false;
 }
 

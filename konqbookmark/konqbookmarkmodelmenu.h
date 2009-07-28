@@ -27,18 +27,19 @@
 
 #include <QAbstractItemModel>
 #include <QList>
-#include <QUrl>
+#include <KUrl>
 
 #include <kactioncollection.h>
 #include <konqbookmarkmenu.h>
 
 class KonqBookmarkMenuHelper;
-class KIO_EXPORT KonqBookmarkModelMenu : public ModelMenu
+class KONQBOOKMARK_EXPORT KonqBookmarkModelMenu : public ModelMenu
 {
     Q_OBJECT
 public:
     KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, QWidget *parent = 0);
     KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, KonqBookmarkModelMenu *parent = 0);
+    virtual ~KonqBookmarkModelMenu();
 protected:
     // add any actions before the tree, return true if any actions are added.
     virtual bool prePopulated();
@@ -62,20 +63,21 @@ private:
 };
 
 
-class KIO_EXPORT KonqBookmarkMenuHelper
+class KONQBOOKMARK_EXPORT KonqBookmarkMenuHelper
 {
 public:
-  virtual ~KonqBookmarkMenuHelper() {}
-  
-  virtual KonqBookmark currentPlace() const;
-  virtual bool supportsTabs() const { return false; }
-  virtual QList<KonqBookmark> currentPlacesList() const { return QList<KonqBookmark>(); }
-  
-  virtual void openInNewTabs(const QList<QUrl> &urls) { Q_UNUSED(urls); }
-  
-  virtual void openBookmark(const QUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km) = 0;
-  virtual void openInNewTab(const QUrl &url) = 0;
-  virtual void openInNewWindow(const QUrl &url) = 0;
+    KonqBookmarkMenuHelper() {}
+    virtual ~KonqBookmarkMenuHelper() {}
+    
+    virtual KonqBookmark currentPlace() const = 0;
+    virtual bool supportsTabs() const { return false; }
+    virtual QList<KonqBookmark> currentPlacesList() const { return QList<KonqBookmark>(); }
+    
+    virtual void openInNewTabs(const QList<KUrl> &urls) { Q_UNUSED(urls); }
+    
+    virtual void openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km) = 0;
+    virtual void openInNewTab(const KUrl &url) = 0;
+    virtual void openInNewWindow(const KUrl &url) = 0;
 };
 
 #endif // KONQBOOKMARK_MODEL_MENU_H

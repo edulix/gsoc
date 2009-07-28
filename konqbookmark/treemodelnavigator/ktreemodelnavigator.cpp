@@ -30,8 +30,10 @@
 #include <kmenu.h>
 
 #include <QAbstractItemModel>
+#include <QAbstractProxyModel>
 #include <QMimeData>
 #include <KUrl>
+#include <QList>
 #include <QtCore/QLinkedList>
 #include <QtCore/QTimer>
 #include <QtGui/QApplication>
@@ -59,6 +61,8 @@ public:
 
     /** Emits the signal urlsDropped(). */
     void dropMimeData(const QModelIndex& destination, QDropEvent* event);
+    
+    void slotCurrentIndexChanged();
 
     /**
      * Updates all buttons to have one button for each part of the
@@ -74,16 +78,29 @@ public:
      */
     void deleteButtons();
     
+    /**
+     * Traverses the proxy models between m_selectionModel and m_model.
+     * Creating a chain as it goes.
+     */
+    void createProxyChain();
+    
+    /**
+     * Converts an index in the source model (m_model) to an index
+     * in the selection model parent (m_selectionModel->model()).
+     */
+    QModelIndex sourceIndexToSelectionIndexParent(const QModelIndex &index) const;
+    
 public:
-    QModelIndex m_currentIndex;
+    QList<QAbstractProxyModel *> m_proxyChain;
     QAbstractItemModel* m_model;
+    QItemSelectionModel* m_selectionModel;
     QHBoxLayout* m_layout;
     QLinkedList<KTreeModelNavigatorButton*> m_navButtons;
     KTreeModelNavigator* q;
 };
 
 KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
-    :  m_model(0), m_layout(new QHBoxLayout), q(q)
+    :  m_model(0), m_selectionModel(0), m_layout(new QHBoxLayout), q(q)
 {
     m_layout->setSpacing(0);
     m_layout->setMargin(0);
@@ -91,6 +108,48 @@ KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
 
     q->setAutoFillBackground(false);
     q->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+}
+
+void KTreeModelNavigator::Private::createProxyChain()
+{
+    QAbstractItemModel *model = const_cast<QAbstractItemModel *>(m_selectionModel->model());
+    QAbstractProxyModel *nextProxyModel;
+    QAbstractProxyModel *proxyModel = qobject_cast<QAbstractProxyModel*>(model);
+
+    QAbstractItemModel *rootModel;
+    while (proxyModel)
+    {
+
+        if (proxyModel == m_model)
+            break;
+
+        m_proxyChain.prepend(proxyModel);
+
+        nextProxyModel = qobject_cast<QAbstractProxyModel*>(proxyModel->sourceModel());
+
+        if (!nextProxyModel)
+        {
+            rootModel = qobject_cast<QAbstractItemModel*>(proxyModel->sourceModel());
+            // It's the final model in the chain, so it is necessarily m_model.
+            Q_ASSERT(rootModel == m_model);
+            break;
+        }
+        proxyModel = nextProxyModel;
+    }
+}
+
+
+QModelIndex KTreeModelNavigator::Private::sourceIndexToSelectionIndexParent(const QModelIndex &index) const
+{
+    QModelIndex seekIndex = index;
+    QListIterator<QAbstractProxyModel*> i(m_proxyChain);
+    QAbstractProxyModel *proxy;
+    while (i.hasNext())
+    {
+        proxy = i.next();
+        seekIndex = proxy->mapFromSource(seekIndex);
+    }
+    return seekIndex;
 }
 
 void KTreeModelNavigator::Private::appendWidget(QWidget* widget, int stretch)
@@ -108,7 +167,7 @@ void KTreeModelNavigator::Private::dropMimeData(const QModelIndex& destination, 
 
 void KTreeModelNavigator::Private::updateButtons()
 {
-    if(!m_currentIndex.isValid())
+    if(!m_selectionModel || !m_selectionModel->currentIndex().isValid())
         return;
     
     QLinkedList<KTreeModelNavigatorButton*>::iterator it = m_navButtons.begin();
@@ -116,7 +175,7 @@ void KTreeModelNavigator::Private::updateButtons()
     bool createButton = false;
 
     // Get to the topmost parent model index
-    QModelIndex& index = m_currentIndex;
+    QModelIndex index = m_selectionModel->currentIndex();
     QList<QModelIndex> indexes;
     while(index.parent().isValid())
     {
@@ -216,19 +275,24 @@ QAbstractItemModel *KTreeModelNavigator::model()
     return d->m_model;
 }
 
-void KTreeModelNavigator::currentChangedTriggered(const QModelIndex& index)
+
+void KTreeModelNavigator::setSelectionModel(QItemSelectionModel *selectionModel)
 {
-    setCurrentIndex(index);
-    emit currentChanged(index);
+    d->m_selectionModel = selectionModel;
+    connect(d->m_selectionModel, SIGNAL(currentChanged ( const QModelIndex &, const QModelIndex &)),
+            this, SLOT(slotCurrentIndexChanged()));
+    d->updateButtons();
+    d->createProxyChain();
 }
 
-void KTreeModelNavigator::setCurrentIndex(const QModelIndex& index)
+QItemSelectionModel *KTreeModelNavigator::selectionModel()
 {
-    if(index == d->m_currentIndex)
-        return;
-    
-    d->m_currentIndex = index;
-    d->updateButtons();
+    return d->m_selectionModel;
+}
+
+void KTreeModelNavigator::Private::slotCurrentIndexChanged()
+{
+    updateButtons();
 }
 
 void KTreeModelNavigator::setCurrentIndex(const QMimeData* mimeData)
@@ -236,6 +300,19 @@ void KTreeModelNavigator::setCurrentIndex(const QMimeData* mimeData)
     Q_UNUSED(mimeData);
 }
 
+
+QModelIndex KTreeModelNavigator::currentIndex()
+{
+    return d->sourceIndexToSelectionIndexParent(d->m_selectionModel->currentIndex());
+}
+
+// TODO: Fix this doesn't work
+void KTreeModelNavigator::currentChangedTriggered(const QModelIndex& index)
+{
+    kDebug();
+    Q_ASSERT(d->m_selectionModel);
+    d->m_selectionModel->setCurrentIndex(d->sourceIndexToSelectionIndexParent(index), QItemSelectionModel::Current);
+}
 
 bool KTreeModelNavigator::haveCommonMimetypes(const QMimeData* mimeData)
 {
@@ -249,11 +326,6 @@ bool KTreeModelNavigator::haveCommonMimetypes(const QMimeData* mimeData)
     }
     
     return false;
-}
-
-QModelIndex KTreeModelNavigator::currentIndex() const
-{
-    return d->m_currentIndex;
 }
 
 

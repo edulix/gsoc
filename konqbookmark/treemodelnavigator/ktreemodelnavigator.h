@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QModelIndex>
 #include <QStringList>
+#include <QItemSelectionModel>
 
 class QAbstractTreeModel;
 class QMimeData;
@@ -59,9 +60,15 @@ public:
     
     void setModel(QAbstractItemModel *model);
     
-    QAbstractItemModel *model();
+    /**
+     * We use current index from the selection model. We will this selection
+     * model as ours, so we'll both react on changes refreshing the widget state
+     * and change current selection on the selection model if needed.
+     */
+    void setSelectionModel(QItemSelectionModel *selectionModel);
+    QItemSelectionModel *selectionModel();
     
-    QModelIndex currentIndex() const;
+    QAbstractItemModel *model();
     
     /**
      * Changes current index based on the mime data from clipboard. Reimplement
@@ -75,12 +82,12 @@ public:
      */
     bool haveCommonMimetypes(const QMimeData* mimeData);
     
-public Q_SLOTS:
-    void setCurrentIndex(const QModelIndex& index);
+    /**
+     * Returns current index in relation to the model.
+     */
+    QModelIndex currentIndex();
     
 Q_SIGNALS:
-    void currentChanged(const QModelIndex& index);
-    
     /**
      * Is emitted if a dropping has been done above the destination
      * \a destination. The receiver must accept the drop event if
@@ -104,6 +111,7 @@ protected:
 
 private:
     Q_PRIVATE_SLOT(d, void dropMimeData(const QModelIndex& destination, QDropEvent*))
+    Q_PRIVATE_SLOT(d, void slotCurrentIndexChanged())
     
 private:
     class Private;
