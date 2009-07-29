@@ -36,19 +36,19 @@ set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
-    konqbookmarkmodelmenu.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
     konqbookmarkview.cpp
     konqbookmarkdelegate.cpp
-    ktreeviewsearchline.cpp
     kdatawidgetselectionmapper.cpp
-    modelmenu.cpp
     modelwatcher.cpp
     itemviews/kbreadcrumbbutton.cpp
     itemviews/kbreadcrumbnavigator.cpp
     itemviews/kbreadcrumbnavigatorbutton.cpp
     itemviews/kbreadcrumbnavigatormenu.cpp
+    itemviews/konqbookmarkmodelmenu.cpp
+    itemviews/modelmenu.cpp
+    itemviews/ktreeviewsearchline.cpp
 #     kbookmarkbridge/kbookmarkimporter.cpp
 )
 
@@ -76,20 +76,20 @@ set(konqbookmark_LIB_HDRS
     konqbookmark.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
-    konqbookmarkmodelmenu.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
-    ktreeviewsearchline.h
     kdatawidgetselectionmapper.h
     konqbookmarkview.h
     konqbookmarkdelegate.h
-    modelmenu.h
     modelwatcher.h
     konqbookmark_export.h
     itemviews/kbreadcrumbbutton_p.h
     itemviews/kbreadcrumbnavigator.h
     itemviews/kbreadcrumbnavigatorbutton_p.h
     itemviews/kbreadcrumbnavigatormenu_p.h
+    itemviews/ktreeviewsearchline.h
+    itemviews/modelmenu.h
+    itemviews/konqbookmarkmodelmenu.h
 #     kbookmarkbridge/kbookmarkimporter.h
 )
 
