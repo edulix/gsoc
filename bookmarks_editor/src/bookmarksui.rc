@@ -41,6 +41,8 @@
   </Menu>
 </Menu>
 
+<Action name="bookmarksmenu"/>
+
 <Menu name="settings"><text>&amp;Settings</text>
 </Menu>
 

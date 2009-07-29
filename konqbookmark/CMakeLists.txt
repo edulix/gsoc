@@ -38,10 +38,10 @@ set(konqbookmark_LIB_SRCS
     itemmodels/konqbookmarkmodel.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
-    konqbookmarkview.cpp
-    konqbookmarkdelegate.cpp
     kdatawidgetselectionmapper.cpp
     modelwatcher.cpp
+    itemviews/konqbookmarkview.cpp
+    itemviews/konqbookmarkdelegate.cpp
     itemviews/kbreadcrumbbutton.cpp
     itemviews/kbreadcrumbnavigator.cpp
     itemviews/kbreadcrumbnavigatorbutton.cpp
@@ -79,10 +79,10 @@ set(konqbookmark_LIB_HDRS
     watchitemcreatejob.h
     watchcollectioncreatejob.h
     kdatawidgetselectionmapper.h
-    konqbookmarkview.h
-    konqbookmarkdelegate.h
     modelwatcher.h
     konqbookmark_export.h
+    itemviews/konqbookmarkview.h
+    itemviews/konqbookmarkdelegate.h
     itemviews/kbreadcrumbbutton_p.h
     itemviews/kbreadcrumbnavigator.h
     itemviews/kbreadcrumbnavigatorbutton_p.h

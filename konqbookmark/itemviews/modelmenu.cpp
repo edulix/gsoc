@@ -112,7 +112,6 @@ void ModelMenu::setModel(QAbstractItemModel *model)
     m_model = model;
     if(flags() & IsRootFlag)
     {
-        kDebug() << "yeah";
         setRootIndex(this->model()->index(0,0));
     }
 }
@@ -211,6 +210,7 @@ void ModelMenu::createMenu(const QModelIndex &parent, int max, QMenu *parentMenu
 
     for (int i = 0; i < end; ++i) {
         QModelIndex idx = m_model->index(i, 0, parent);
+        kDebug() << idx << idx.data();
         if (m_model->hasChildren(idx)) {
             createMenu(idx, -1, menu);
         } else {
@@ -235,7 +235,9 @@ QAction *ModelMenu::makeAction(const QModelIndex &index)
     QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, m_maxWidth);
     
     QAction *action = makeAction(icon, smallText, this);
-    action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+    
+    if(m_menuRole[StatusBarTextRole] != 0)
+        action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
 
     QVariant v;
     v.setValue(index);

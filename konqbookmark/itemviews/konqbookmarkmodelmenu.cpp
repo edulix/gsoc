@@ -27,6 +27,7 @@ class KonqBookmarkModelMenu::Private {
 public:
     Private(KonqBookmarkModelMenu *parent);
     
+    void setChildAsRoot(const QModelIndex& index);
 public:
     KonqBookmarkMenuHelper *m_KonqBookmarkMenuHelper;
     KonqBookmarkModelMenu *m_parent;
@@ -38,12 +39,27 @@ KonqBookmarkModelMenu::Private::Private(KonqBookmarkModelMenu *parent)
 
 }
 
+void KonqBookmarkModelMenu::Private::setChildAsRoot(const QModelIndex& index)
+{
+    if(index.isValid())
+    {
+        m_parent->setRootIndex(index);
+        disconnect(m_parent->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+            m_parent, SLOT(setChildAsRoot(const QModelIndex&)));
+    }
+}
+
 KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, QWidget *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
-    kDebug();;
+    kDebug();
+    setFlags(IsRootFlag);
     setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
+    
+    // We want to set "Konqueror Bookmarks" as root
+    connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        this, SLOT(setChildAsRoot(const QModelIndex&)));
 }
 
 KonqBookmarkModelMenu::~KonqBookmarkModelMenu()
@@ -76,7 +92,6 @@ ModelMenu *KonqBookmarkModelMenu::createBaseMenu()
 
 QAction *KonqBookmarkModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
 {
-    // TODO
     return ModelMenu::makeAction(icon, text, parent);
 }
 
@@ -95,3 +110,5 @@ KMenu *KonqBookmarkModelMenu::contextMenu(QAction * action )
     Q_UNUSED(action);
     return 0;
 }
+
+#include "konqbookmarkmodelmenu.moc"

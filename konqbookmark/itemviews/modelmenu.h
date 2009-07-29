@@ -140,7 +140,9 @@ protected:
     // return the QMenu that is used to populate sub menu's
     virtual ModelMenu *createBaseMenu();
 
-    // put all of the children of parent into menu up to max
+    /**
+     * Puts all children of parent into menu up to max
+     */
     void createMenu(const QModelIndex &parent, int max, QMenu *parentMenu = 0, QMenu *menu = 0);
 
     void mousePressEvent(QMouseEvent *event);

@@ -38,9 +38,9 @@ class KONQBOOKMARK_EXPORT KonqBookmarkModelMenu : public ModelMenu
     Q_OBJECT
 public:
     KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, QWidget *parent = 0);
-    KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, KonqBookmarkModelMenu *parent = 0);
     virtual ~KonqBookmarkModelMenu();
 protected:
+    KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, KonqBookmarkModelMenu *parent = 0);
     // add any actions before the tree, return true if any actions are added.
     virtual bool prePopulated();
     // add any actions after the tree
@@ -60,6 +60,7 @@ protected Q_SLOTS:
 private:
     class Private;
     Private* const d;
+    Q_PRIVATE_SLOT(d, void setChildAsRoot(const QModelIndex& index))
 };
 
 

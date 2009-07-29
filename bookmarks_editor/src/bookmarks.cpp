@@ -21,21 +21,25 @@
 #include "settings.h"
 #include "actionsimpl.h"
 
+#include <QMenu>
 #include <QtGui/QDropEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QPrinter>
 #include <QtCore/QTimer>
 
 #include <Nepomuk/ResourceManager> 
-#include <akonadi/control.h>
 #include <kconfigdialog.h>
 #include <kstatusbar.h>
-
 #include <kaction.h>
 #include <kactioncollection.h>
 #include <kstandardaction.h>
+#include <KLocale>
+#include <akonadi/control.h>
+#include <akonadi/monitor.h>
+#include <akonadi/session.h>
 
-#include <KDE/KLocale>
+#include <konqbookmark/konqbookmarkmodel.h>
+#include <konqbookmark/konqbookmarkmodelmenu.h>
 
 Bookmarks::Bookmarks()
     : KXmlGuiWindow(),
@@ -82,6 +86,17 @@ void Bookmarks::setupActions()
     (void) KStandardAction::copy(actn, SLOT( slotCopy() ), actionCollection());
     (void) KStandardAction::paste(actn, SLOT( slotPaste() ), actionCollection());
 
+    Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
+    Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
+    Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
+    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, this);
+    
+    KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");
+    actnBookmarksMenu->setIcon(KIcon("bookmarks"));
+    actnBookmarksMenu->setText(i18n("Bookmarks"));
+    actnBookmarksMenu->setShortcut(Qt::Key_B);
+    actnBookmarksMenu->setMenu(bookmarksMenu);
+    
     // actions
     KAction* actnDelete = actionCollection()->addAction("delete");
     actnDelete->setIcon(KIcon("edit-delete"));

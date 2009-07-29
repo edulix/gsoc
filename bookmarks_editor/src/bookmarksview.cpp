@@ -287,5 +287,4 @@ void BookmarksView::slotAddFolder(const QString &folderName)
     new Akonadi::CollectionCreateJob( collection );
 }
 
-
 #include "bookmarksview.moc"
