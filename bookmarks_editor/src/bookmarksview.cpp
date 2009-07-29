@@ -52,6 +52,7 @@
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/modelwatcher.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
+#include <konqbookmark/kdatawidgetselectionmapper.h>
 
 using namespace Akonadi;
 
@@ -63,7 +64,7 @@ public:
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
     Akonadi::EntityFilterProxyModel *mCollectionProxyModel;
-    QDataWidgetMapper *mMapper;
+    KDataWidgetSelectionMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
 };
@@ -107,9 +108,9 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.searchBox->setTreeView( ui_bookmarksview_base.bookmarksView );
     ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks..."));
     
-    // TODO: Create KDataWidgetSelectionMapper which has setSelectionModel()
-    d->mMapper = new QDataWidgetMapper(this);
+    d->mMapper = new KDataWidgetSelectionMapper(this);
     d->mMapper->setModel(d->mBookmarkProxyModel);
+    d->mMapper->setSelectionModel(ui_bookmarksview_base.bookmarksView->selectionModel());
     d->mMapper->addMapping(ui_bookmarksview_base.titleBox, Akonadi::KonqBookmarkModel::Title);
     d->mMapper->addMapping(ui_bookmarksview_base.addressBox, Akonadi::KonqBookmarkModel::Url);
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
@@ -139,9 +140,11 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.collectionsView->setDropIndicatorShown(true);
 //     ui_bookmarksview_base.collectionsView->setDragDropMode(QAbstractItemView::InternalMove);
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
+    
+    // TODO: Set as current the first added index.
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
-    // Fix this doesn't work:
+    // TODO: Fix this doesn't work:
     connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
 }
@@ -178,7 +181,6 @@ void BookmarksView::addBookmark()
 void BookmarksView::slotBookmarkAdded(const QModelIndex &newIndex)
 {
     kDebug();
-    d->mMapper->setCurrentIndex(newIndex.row());
     ui_bookmarksview_base.bookmarksView->setCurrentIndex(newIndex);
     delete d->mModelWatcher;
     d->mModelWatcher = 0;

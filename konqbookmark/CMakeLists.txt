@@ -41,6 +41,7 @@ set(konqbookmark_LIB_SRCS
     konqbookmarkview.cpp
     konqbookmarkdelegate.cpp
     ktreeviewsearchline.cpp
+    kdatawidgetselectionmapper.cpp
     modelmenu.cpp
     modelwatcher.cpp
     treemodelnavigator/ktreemodelbutton.cpp
@@ -78,6 +79,7 @@ set(konqbookmark_LIB_HDRS
     watchcollectioncreatejob.h
     konqbookmarkproxymodel.h
     ktreeviewsearchline.h
+    kdatawidgetselectionmapper.h
     konqbookmarkview.h
     konqbookmarkdelegate.h
     modelmenu.h

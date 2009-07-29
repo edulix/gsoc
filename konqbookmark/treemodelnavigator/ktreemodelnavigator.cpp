@@ -4,6 +4,7 @@
  * Copyright (C) 2007 by Kevin Ottens <ervin@kde.org>                        *
  * Copyright (C) 2007 by Urs Wolfer <uwolfer @ kde.org>                      *
  * Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>               *
+ * Copyright (c) 2009 Stephen Kelly <steveire@gmail.com>                     *
  *                                                                           *
  * This library is free software; you can redistribute it and/or             *
  * modify it under the terms of the GNU Library General Public               *
