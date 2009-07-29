@@ -59,7 +59,10 @@ using namespace Akonadi;
 class BookmarksView::Private : public QSharedData
 {
 public:
-    Private(BookmarksView */*parent*/) {}
+    Private(BookmarksView *parent);
+    
+    void expand(const QModelIndex& index);
+    void selectBookmarkFolder(const QModelIndex& index = QModelIndex());
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
@@ -67,7 +70,47 @@ public:
     KDataWidgetSelectionMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
+    BookmarksView *mParent;
 };
+
+BookmarksView::Private::Private(BookmarksView *parent)
+    : mParent(parent)
+{
+    
+}
+
+void BookmarksView::Private::expand(const QModelIndex& index)
+{
+    // If index is invalid it means that the inserted index is the root index
+    // and thus we need to expand all children
+    if(!index.isValid())
+    {
+        mParent->ui_bookmarksview_base.bookmarksView->expandAll();
+    } else
+        mParent->ui_bookmarksview_base.bookmarksView->expand(index);
+}
+
+void BookmarksView::Private::selectBookmarkFolder(const QModelIndex& index)
+{
+    static QModelIndex savedIndex;
+    
+    kDebug() << index << index.data(Akonadi::KonqBookmarkModel::Title);
+    
+    if(index.isValid())
+    {
+        QTimer::singleShot(0, mParent, SLOT(selectBookmarkFolder()));
+        savedIndex = index;
+        
+        disconnect(mParent->ui_bookmarksview_base.collectionsView->model(),
+            SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+            mParent, SLOT(selectBookmarkFolder(const QModelIndex&)));
+    }
+    else if(savedIndex.isValid())
+    {
+        mParent->ui_bookmarksview_base.collectionsView->selectionModel()->
+            setCurrentIndex(savedIndex, QItemSelectionModel::SelectCurrent);   
+    }
+}
 
 BookmarksView::BookmarksView(QWidget *)
     : d( new Private ( this ) )
@@ -141,12 +184,14 @@ void BookmarksView::createModels()
 //     ui_bookmarksview_base.collectionsView->setDragDropMode(QAbstractItemView::InternalMove);
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
     
-    // TODO: Set as current the first added index.
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
-    // TODO: Fix this doesn't work:
+    
+    connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        this, SLOT(selectBookmarkFolder(const QModelIndex&)));
+        
     connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-            ui_bookmarksview_base.bookmarksView, SLOT(expand(const QModelIndex&)));
+            this, SLOT(expand(const QModelIndex&)));
 }
 
 void BookmarksView::addBookmark()

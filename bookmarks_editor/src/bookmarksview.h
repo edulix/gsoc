@@ -89,6 +89,8 @@ private:
     Ui::bookmarksview_base ui_bookmarksview_base;
     class Private;
     QSharedDataPointer<Private> d;
+    Q_PRIVATE_SLOT(d, void expand(const QModelIndex& index))
+    Q_PRIVATE_SLOT(d, void selectBookmarkFolder(const QModelIndex& index = QModelIndex()))
 };
 
 #endif // BOOKMARSVIEW_H

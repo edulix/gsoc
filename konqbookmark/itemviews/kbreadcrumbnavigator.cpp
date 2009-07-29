@@ -307,12 +307,12 @@ QModelIndex KBreadCrumbNavigator::currentIndex()
     return d->sourceIndexToSelectionIndexParent(d->m_selectionModel->currentIndex());
 }
 
-// TODO: Fix this doesn't work
 void KBreadCrumbNavigator::currentChangedTriggered(const QModelIndex& index)
 {
     kDebug();
     Q_ASSERT(d->m_selectionModel);
-    d->m_selectionModel->setCurrentIndex(d->sourceIndexToSelectionIndexParent(index), QItemSelectionModel::Current);
+    d->m_selectionModel->setCurrentIndex(d->sourceIndexToSelectionIndexParent(index), 
+        QItemSelectionModel::SelectCurrent);
 }
 
 bool KBreadCrumbNavigator::haveCommonMimetypes(const QMimeData* mimeData)
