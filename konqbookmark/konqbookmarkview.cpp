@@ -18,7 +18,7 @@
 */
 
 #include "konqbookmarkview.h"
-#include "konqbookmarkmodel.h"
+#include "itemmodels/konqbookmarkmodel.h"
 #include "konqbookmarksettings.h"
 
 #include <QHeaderView>

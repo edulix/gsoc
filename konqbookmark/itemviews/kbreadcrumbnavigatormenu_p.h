@@ -19,44 +19,40 @@
    Boston, MA 02110-1301, USA.  
 */
 
-#include "ktreemodelnavigatormenu_p.h"
-#include "ktreemodelnavigator.h"
+#ifndef KBREADCRUMBNAVIGATORMENU_P_H
+#define KBREADCRUMBNAVIGATORMENU_P_H
 
-#include <QtGui/QKeyEvent>
-#include <QStringList>
+#include <kmenu.h>
 
+class KBreadCrumbNavigator;
 
-KTreeModelNavigatorMenu::KTreeModelNavigatorMenu(KTreeModelNavigator *treeModelNavigator, QWidget* parent) :
-    KMenu(parent), m_treeModelNavigator(treeModelNavigator)
+/**
+ * @brief Base class for drop-down url menus of the bread crumb navigator.
+ *
+ * This menu acts like KMenu with drag&drop support. 
+ */
+class KBreadCrumbNavigatorMenu : public KMenu
 {
-    setAcceptDrops(true);
-}
+    Q_OBJECT
 
-KTreeModelNavigatorMenu::~KTreeModelNavigatorMenu()
-{
-}
+public:
+    explicit KBreadCrumbNavigatorMenu(KBreadCrumbNavigator *breadCrumbNavigator, QWidget* parent);
+    virtual ~KBreadCrumbNavigatorMenu();
+    
+Q_SIGNALS:
 
-void KTreeModelNavigatorMenu::dragEnterEvent(QDragEnterEvent* event)
-{
-    bool match = m_treeModelNavigator->haveCommonMimetypes(event->mimeData());
-    if (match) {
-        event->acceptProposedAction();
-    }   
-}
+    /**
+     * Is emitted when drop event occurs.
+     */
+    void mimeDataDropped(QAction* action, QDropEvent* event);
 
-void KTreeModelNavigatorMenu::dragMoveEvent(QDragMoveEvent* event)
-{      
-      QMouseEvent mouseEvent(QMouseEvent(QEvent::MouseMove, event->pos(), 
-          Qt::LeftButton, event->mouseButtons(), event->keyboardModifiers()));
-      mouseMoveEvent(&mouseEvent);
-}
+protected:
+    virtual void dragEnterEvent(QDragEnterEvent* event);
+    virtual void dragMoveEvent(QDragMoveEvent* event);
+    virtual void dropEvent(QDropEvent* event);    
+   
+private:
+    KBreadCrumbNavigator* m_breadCrumbNavigator;
+};
 
-void KTreeModelNavigatorMenu::dropEvent(QDropEvent* event)
-{
-    QAction* action = actionAt(event->pos());
-    if (action != 0) {
-        emit mimeDataDropped(action, event);
-    }
-}
-
-#include "ktreemodelnavigatormenu_p.moc"
+#endif // KBREADCRUMBNAVIGATORMENU_P_H

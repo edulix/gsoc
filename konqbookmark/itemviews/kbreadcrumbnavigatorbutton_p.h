@@ -18,36 +18,36 @@
  * Boston, MA 02110-1301, USA.                                               *
  *****************************************************************************/
 
-#ifndef KTREEMODELNAVIGATORBUTTON_P_H
-#define KTREEMODELNAVIGATORBUTTON_P_H
+#ifndef KBREADCRUMBNAVIGATORBUTTON_P_H
+#define KBREADCRUMBNAVIGATORBUTTON_P_H
 
-#include "ktreemodelbutton_p.h"
-#include "ktreemodelnavigatormenu_p.h"
+#include "kbreadcrumbbutton_p.h"
+#include "kbreadcrumbnavigatormenu_p.h"
 
 #include <kurl.h>
 
 #include <QPointer>
 #include <QModelIndex>
 
-class KTreeModelNavigator;
+class KBreadCrumbNavigator;
 class QDropEvent;
 class QPaintEvent;
 
 /**
- * @brief Button of the Tree Model Navigator which contains one part of the current path.
+ * @brief Button of the BreadCrumb Navigator which contains one part of the current path.
  *
- * It is possible to drop a various number of items to an KTreeModelNavigatorButton. In this case
+ * It is possible to drop a various number of items to an KBreadCrumbNavigatorButton. In this case
  * a context menu is opened where the user must select whether he wants
  * to copy, move or link the dropped items to the URL part indicated by
  * the button.
  */
-class KTreeModelNavigatorButton : public KTreeModelButton
+class KBreadCrumbNavigatorButton : public KBreadCrumbButton
 {
     Q_OBJECT
 
 public:
-    explicit KTreeModelNavigatorButton(QModelIndex index, KTreeModelNavigator* parent);
-    virtual ~KTreeModelNavigatorButton();
+    explicit KBreadCrumbNavigatorButton(QModelIndex index, KBreadCrumbNavigator* parent);
+    virtual ~KBreadCrumbNavigatorButton();
 
     void setIndex(QModelIndex index);
     QModelIndex index() const;
@@ -96,12 +96,12 @@ private:
     QTimer* m_popupDelay;
     QList<QModelIndex> m_childItems;
 
-    static QPointer<KTreeModelNavigatorMenu> m_childItemsMenu;
+    static QPointer<KBreadCrumbNavigatorMenu> m_childItemsMenu;
 };
 
-inline QModelIndex KTreeModelNavigatorButton::index() const
+inline QModelIndex KBreadCrumbNavigatorButton::index() const
 {
     return m_index;
 }
 
-#endif // KTREEMODELNAVIGATORBUTTON_P_H
+#endif // KBREADCRUMBNAVIGATORBUTTON_P_H

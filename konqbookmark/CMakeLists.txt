@@ -25,6 +25,7 @@ include_directories(
     ${KDEPIMLIBS_INCLUDE_DIRS}
     ${SOPRANO_INCLUDE_DIRS}
     ${NEPOMUK_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
@@ -33,21 +34,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 
 set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
-    konqbookmarkmodel.cpp
+    itemmodels/konqbookmarkproxymodel.cpp
+    itemmodels/konqbookmarkmodel.cpp
     konqbookmarkmodelmenu.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
-    konqbookmarkproxymodel.cpp
     konqbookmarkview.cpp
     konqbookmarkdelegate.cpp
     ktreeviewsearchline.cpp
     kdatawidgetselectionmapper.cpp
     modelmenu.cpp
     modelwatcher.cpp
-    treemodelnavigator/ktreemodelbutton.cpp
-    treemodelnavigator/ktreemodelnavigator.cpp
-    treemodelnavigator/ktreemodelnavigatorbutton.cpp
-    treemodelnavigator/ktreemodelnavigatormenu.cpp
+    itemviews/kbreadcrumbbutton.cpp
+    itemviews/kbreadcrumbnavigator.cpp
+    itemviews/kbreadcrumbnavigatorbutton.cpp
+    itemviews/kbreadcrumbnavigatormenu.cpp
 #     kbookmarkbridge/kbookmarkimporter.cpp
 )
 
@@ -73,11 +74,11 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 set(konqbookmark_LIB_HDRS
     konqbookmark.h
-    konqbookmarkmodel.h
+    itemmodels/konqbookmarkproxymodel.h
+    itemmodels/konqbookmarkmodel.h
     konqbookmarkmodelmenu.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
-    konqbookmarkproxymodel.h
     ktreeviewsearchline.h
     kdatawidgetselectionmapper.h
     konqbookmarkview.h
@@ -85,10 +86,10 @@ set(konqbookmark_LIB_HDRS
     modelmenu.h
     modelwatcher.h
     konqbookmark_export.h
-    treemodelnavigator/ktreemodelbutton_p.h
-    treemodelnavigator/ktreemodelnavigator.h
-    treemodelnavigator/ktreemodelnavigatorbutton_p.h
-    treemodelnavigator/ktreemodelnavigatormenu_p.h
+    itemviews/kbreadcrumbbutton_p.h
+    itemviews/kbreadcrumbnavigator.h
+    itemviews/kbreadcrumbnavigatorbutton_p.h
+    itemviews/kbreadcrumbnavigatormenu_p.h
 #     kbookmarkbridge/kbookmarkimporter.h
 )
 

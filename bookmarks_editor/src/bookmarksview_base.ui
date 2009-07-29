@@ -65,7 +65,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizLayout2">
          <item>
-          <widget class="KTreeModelNavigator" name="navigatorBreadCrumb" native="true">
+          <widget class="KBreadCrumbNavigator" name="navigatorBreadCrumb" native="true">
            <property name="minimumSize">
             <size>
              <width>50</width>
@@ -205,9 +205,9 @@
    <header>konqbookmark/ktreeviewsearchline.h</header>
   </customwidget>
   <customwidget>
-   <class>KTreeModelNavigator</class>
+   <class>KBreadCrumbNavigator</class>
    <extends>QWidget</extends>
-   <header>konqbookmark/ktreemodelnavigator.h</header>
+   <header>konqbookmark/kbreadcrumbnavigator.h</header>
   </customwidget>
   <customwidget>
    <class>Akonadi::CollectionView</class>

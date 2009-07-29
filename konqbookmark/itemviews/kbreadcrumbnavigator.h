@@ -17,8 +17,8 @@
     02110-1301, USA.
 */
 
-#ifndef KTREEMODELNAVIGATOR_H
-#define KTREEMODELNAVIGATOR_H
+#ifndef KBREADCRUMBNAVIGATOR_H
+#define KBREADCRUMBNAVIGATOR_H
 
 #include "konqbookmark_export.h"
 
@@ -33,30 +33,37 @@ class QMimeData;
 class KUrl;
 
 /**
- * @brief Allows to navigate through the paths of tree model with a bread crumb view.
+ * @brief Allows to navigate through the paths of an item model with a bread crumb view.
  *
- * This tree model navigator uses breadcrumb view: The URL is represented by a
- * number of buttons, where each button represents an element of the tree model.
- * By clicking on a button the tree view will change its current index and emit
- * currentChanged signal.This mode also supports drag and drop of items.
+ * In this navigator the URL is represented by a number of buttons, where each
+ * button represents an element of the tree model. By clicking on a button the
+ * tree view will change its current index and emit currentChanged signal. This
+ * mode also supports drag and drop of items.
  * 
- * The typical usage of the KTreeModelNavigator is:
- * - Create an instance of a tree model sibbling of QAbstractTreeModel.
- * - Create an instance of KTreeModelNavigator and set its model as the one
- *   above.
- * - Create an instance of QAbstractItemView which shows the content of the model 
- *   for the index given by the tree model navigator.
- * - Connect to the signal KTreeModelNavigator::currentChanged() and synchronize 
- *   the content of QAbstractItemView with the index given by the tree model
- *   navigator.
-
+ * The typical usage of the breadcrumb navigator is:
+ *
+ @code
+    QAbstractItemModel *model = new MyModel(this);
+    
+    QTreeView *view = new QTreeView(this);
+    view->setModel(model); 
+    
+    KBreadCrumbView *breadCrumb = new KBreadCrumbView(this);
+    breadCrumb->setModel(model);
+    breadCrumb->setSelectionModel(view->selectionModel());
+ @endcode
+ *
+ * In the example above, when the user changes current item in the view, that
+ * change is automatically reflected in the breadcrumb. Also, if the user
+ * changes the current index in the breadcrumb, that's also reflected in the
+ * view.
  */
-class KONQBOOKMARK_EXPORT KTreeModelNavigator : public QWidget
+class KONQBOOKMARK_EXPORT KBreadCrumbNavigator : public QWidget
 {
     Q_OBJECT
 public:
-    KTreeModelNavigator(QWidget* parent = 0);
-    virtual ~KTreeModelNavigator();
+    KBreadCrumbNavigator(QWidget* parent = 0);
+    virtual ~KBreadCrumbNavigator();
     
     void setModel(QAbstractItemModel *model);
     
@@ -104,9 +111,9 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent* event);
     
     /**
-     * Triggered by KTreeModelNavigatorButton when clicked.
+     * Triggered by KBreadCrumbNavigatorButton when clicked.
      */
-    friend class KTreeModelNavigatorButton;
+    friend class KBreadCrumbNavigatorButton;
     void currentChangedTriggered(const QModelIndex& index);
 
 private:
@@ -117,8 +124,8 @@ private:
     class Private;
     Private* const d;
 
-    Q_DISABLE_COPY(KTreeModelNavigator)
+    Q_DISABLE_COPY(KBreadCrumbNavigator)
 };
 
 
-#endif // KTREEMODELNAVIGATOR_H
+#endif // KBREADCRUMBNAVIGATOR_H

@@ -19,40 +19,44 @@
    Boston, MA 02110-1301, USA.  
 */
 
-#ifndef KTREEMODELNAVIGATORMENU_P_H
-#define KTREEMODELNAVIGATORMENU_P_H
+#include "kbreadcrumbnavigatormenu_p.h"
+#include "kbreadcrumbnavigator.h"
 
-#include <kmenu.h>
+#include <QtGui/QKeyEvent>
+#include <QStringList>
 
-class KTreeModelNavigator;
 
-/**
- * @brief Base class for drop-down url menus of the tree model navigator.
- *
- * This menu acts like KMenu with drag&drop support. 
- */
-class KTreeModelNavigatorMenu : public KMenu
+KBreadCrumbNavigatorMenu::KBreadCrumbNavigatorMenu(KBreadCrumbNavigator *breadCrumbNavigator, QWidget* parent) :
+    KMenu(parent), m_breadCrumbNavigator(breadCrumbNavigator)
 {
-    Q_OBJECT
+    setAcceptDrops(true);
+}
 
-public:
-    explicit KTreeModelNavigatorMenu(KTreeModelNavigator *treeModelNavigator, QWidget* parent);
-    virtual ~KTreeModelNavigatorMenu();
-    
-Q_SIGNALS:
+KBreadCrumbNavigatorMenu::~KBreadCrumbNavigatorMenu()
+{
+}
 
-    /**
-     * Is emitted when drop event occurs.
-     */
-    void mimeDataDropped(QAction* action, QDropEvent* event);
+void KBreadCrumbNavigatorMenu::dragEnterEvent(QDragEnterEvent* event)
+{
+    bool match = m_breadCrumbNavigator->haveCommonMimetypes(event->mimeData());
+    if (match) {
+        event->acceptProposedAction();
+    }   
+}
 
-protected:
-    virtual void dragEnterEvent(QDragEnterEvent* event);
-    virtual void dragMoveEvent(QDragMoveEvent* event);
-    virtual void dropEvent(QDropEvent* event);    
-   
-private:
-    KTreeModelNavigator* m_treeModelNavigator;
-};
+void KBreadCrumbNavigatorMenu::dragMoveEvent(QDragMoveEvent* event)
+{      
+      QMouseEvent mouseEvent(QMouseEvent(QEvent::MouseMove, event->pos(), 
+          Qt::LeftButton, event->mouseButtons(), event->keyboardModifiers()));
+      mouseMoveEvent(&mouseEvent);
+}
 
-#endif // KTREEMODELNAVIGATORMENU_P_H
+void KBreadCrumbNavigatorMenu::dropEvent(QDropEvent* event)
+{
+    QAction* action = actionAt(event->pos());
+    if (action != 0) {
+        emit mimeDataDropped(action, event);
+    }
+}
+
+#include "kbreadcrumbnavigatormenu_p.moc"

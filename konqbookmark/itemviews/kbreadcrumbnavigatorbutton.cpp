@@ -18,10 +18,10 @@
  * Boston, MA 02110-1301, USA.                                               *
  *****************************************************************************/
 
-#include "ktreemodelnavigatorbutton_p.h"
+#include "kbreadcrumbnavigatorbutton_p.h"
 
-#include "ktreemodelnavigator.h"
-#include "ktreemodelnavigatormenu_p.h"
+#include "kbreadcrumbnavigator.h"
+#include "kbreadcrumbnavigatormenu_p.h"
 
 #include <kglobalsettings.h>
 #include <kstringhandler.h>
@@ -32,10 +32,10 @@
 #include <QtGui/QStyleOption>
 #include <QModelIndex>
 
-QPointer<KTreeModelNavigatorMenu> KTreeModelNavigatorButton::m_childItemsMenu;
+QPointer<KBreadCrumbNavigatorMenu> KBreadCrumbNavigatorButton::m_childItemsMenu;
 
-KTreeModelNavigatorButton::KTreeModelNavigatorButton(QModelIndex index, KTreeModelNavigator* parent) :
-    KTreeModelButton(parent),
+KBreadCrumbNavigatorButton::KBreadCrumbNavigatorButton(QModelIndex index, KBreadCrumbNavigator* parent) :
+    KBreadCrumbButton(parent),
     m_index(index),
     m_hoverArrow(false),
     m_popupDelay(0)
@@ -51,18 +51,18 @@ KTreeModelNavigatorButton::KTreeModelNavigatorButton(QModelIndex index, KTreeMod
     connect(this, SIGNAL(pressed()), this, SLOT(startPopupDelay()));
 }
 
-KTreeModelNavigatorButton::~KTreeModelNavigatorButton()
+KBreadCrumbNavigatorButton::~KBreadCrumbNavigatorButton()
 {
 }
 
-void KTreeModelNavigatorButton::setIndex(QModelIndex index)
+void KBreadCrumbNavigatorButton::setIndex(QModelIndex index)
 {
     m_index = index;
     setText(index.data().toString());
     updateMinimumWidth();
 }
 
-void KTreeModelNavigatorButton::setActive(bool active)
+void KBreadCrumbNavigatorButton::setActive(bool active)
 {   
     QFont adjustedFont(font());
     if (active) {
@@ -78,20 +78,20 @@ void KTreeModelNavigatorButton::setActive(bool active)
     update();
 }
 
-bool KTreeModelNavigatorButton::isActive() const
+bool KBreadCrumbNavigatorButton::isActive() const
 {
     return isDisplayHintEnabled(ActivatedHint);
 }
 
-QSize KTreeModelNavigatorButton::sizeHint() const
+QSize KBreadCrumbNavigatorButton::sizeHint() const
 {
     // the minimum size is textWidth + arrowWidth() + 2 * BorderWidth; for the
     // preferred size we add the BorderWidth 2 times again for having an uncluttered look
     const int width = fontMetrics().width(text()) + arrowWidth() + 4 * BorderWidth;
-    return QSize(width, KTreeModelButton::sizeHint().height());
+    return QSize(width, KBreadCrumbButton::sizeHint().height());
 }
 
-void KTreeModelNavigatorButton::paintEvent(QPaintEvent* event)
+void KBreadCrumbNavigatorButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
 
@@ -177,9 +177,9 @@ void KTreeModelNavigatorButton::paintEvent(QPaintEvent* event)
     painter.drawText(textRect, align, text());
 }
 
-void KTreeModelNavigatorButton::enterEvent(QEvent* event)
+void KBreadCrumbNavigatorButton::enterEvent(QEvent* event)
 {
-    KTreeModelButton::enterEvent(event);
+    KBreadCrumbButton::enterEvent(event);
 
     // if the text is clipped due to a small window width, the text should
     // be shown as tooltip
@@ -188,9 +188,9 @@ void KTreeModelNavigatorButton::enterEvent(QEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::leaveEvent(QEvent* event)
+void KBreadCrumbNavigatorButton::leaveEvent(QEvent* event)
 {
-    KTreeModelButton::leaveEvent(event);
+    KBreadCrumbButton::leaveEvent(event);
     setToolTip(QString());
 
     if (m_hoverArrow) {
@@ -199,13 +199,13 @@ void KTreeModelNavigatorButton::leaveEvent(QEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::dropEvent(QDropEvent* event)
+void KBreadCrumbNavigatorButton::dropEvent(QDropEvent* event)
 {
     if (!m_index.isValid()) {
         return;
     }
 
-    bool match = treeModelNavigator()->haveCommonMimetypes(event->mimeData());
+    bool match = breadCrumbNavigator()->haveCommonMimetypes(event->mimeData());
     if (match) {
         setDisplayHintEnabled(DraggedHint, true);
 
@@ -216,9 +216,9 @@ void KTreeModelNavigatorButton::dropEvent(QDropEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::dragEnterEvent(QDragEnterEvent* event)
+void KBreadCrumbNavigatorButton::dragEnterEvent(QDragEnterEvent* event)
 {
-    bool match = treeModelNavigator()->haveCommonMimetypes(event->mimeData());
+    bool match = breadCrumbNavigator()->haveCommonMimetypes(event->mimeData());
     if (match) {
         setDisplayHintEnabled(DraggedHint, true);
         event->acceptProposedAction();
@@ -227,7 +227,7 @@ void KTreeModelNavigatorButton::dragEnterEvent(QDragEnterEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
+void KBreadCrumbNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
 {
     QRect rect = event->answerRect();
     if (isAboveArrow(rect.center().x())) {
@@ -254,36 +254,36 @@ void KTreeModelNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::dragLeaveEvent(QDragLeaveEvent* event)
+void KBreadCrumbNavigatorButton::dragLeaveEvent(QDragLeaveEvent* event)
 {
-    KTreeModelButton::dragLeaveEvent(event);
+    KBreadCrumbButton::dragLeaveEvent(event);
 
     m_hoverArrow = false;
     setDisplayHintEnabled(DraggedHint, false);
     update();
 }
 
-void KTreeModelNavigatorButton::mousePressEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mousePressEvent(QMouseEvent* event)
 {
     if (isAboveArrow(event->x()) && (event->button() == Qt::LeftButton)) {
         listChildItems();
     } else {
         // the mouse is pressed above the text area
-        KTreeModelButton::mousePressEvent(event);
+        KBreadCrumbButton::mousePressEvent(event);
     }
 }
 
-void KTreeModelNavigatorButton::mouseReleaseEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mouseReleaseEvent(QMouseEvent* event)
 {
     if (!isAboveArrow(event->x()) || (event->button() != Qt::LeftButton)) {
         // the mouse is released above the text area
-        KTreeModelButton::mouseReleaseEvent(event);
+        KBreadCrumbButton::mouseReleaseEvent(event);
     }
 }
 
-void KTreeModelNavigatorButton::mouseMoveEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mouseMoveEvent(QMouseEvent* event)
 {
-    KTreeModelButton::mouseMoveEvent(event);
+    KBreadCrumbButton::mouseMoveEvent(event);
 
     const bool hoverArrow = isAboveArrow(event->x());
     if (hoverArrow != m_hoverArrow) {
@@ -292,7 +292,7 @@ void KTreeModelNavigatorButton::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
-void KTreeModelNavigatorButton::updateNavigatorCurrentIndex()
+void KBreadCrumbNavigatorButton::updateNavigatorCurrentIndex()
 {
     stopPopupDelay();
 
@@ -300,10 +300,10 @@ void KTreeModelNavigatorButton::updateNavigatorCurrentIndex()
         return;
     }
 
-    treeModelNavigator()->currentChangedTriggered(m_index);
+    breadCrumbNavigator()->currentChangedTriggered(m_index);
 }
 
-void KTreeModelNavigatorButton::startPopupDelay()
+void KBreadCrumbNavigatorButton::startPopupDelay()
 {
     if (m_popupDelay->isActive() || !m_index.isValid()) {
         return;
@@ -312,12 +312,12 @@ void KTreeModelNavigatorButton::startPopupDelay()
     m_popupDelay->start(300);
 }
 
-void KTreeModelNavigatorButton::stopPopupDelay()
+void KBreadCrumbNavigatorButton::stopPopupDelay()
 {
     m_popupDelay->stop();
 }
 
-void KTreeModelNavigatorButton::mimeDataDropped(QAction* action, QDropEvent* event)
+void KBreadCrumbNavigatorButton::mimeDataDropped(QAction* action, QDropEvent* event)
 {
     const int result = action->data().toInt();
     emit mimeDataDropped(m_childItems.at(result), event);
@@ -346,14 +346,14 @@ static QModelIndex getSelectedChildItem(const QModelIndex& navigatorIndex, const
     return QModelIndex();
 }
 
-void KTreeModelNavigatorButton::listChildItems()
+void KBreadCrumbNavigatorButton::listChildItems()
 {
     if (!m_index.isValid()) {
         return;
     }
     
     m_childItems.clear();
-    int count = treeModelNavigator()->model()->rowCount(m_index);
+    int count = breadCrumbNavigator()->model()->rowCount(m_index);
     for(int i = 0; i < count; i++)
     {
         m_childItems.append(m_index.child(i, 0));
@@ -369,13 +369,13 @@ void KTreeModelNavigatorButton::listChildItems()
         m_childItemsMenu = 0;
     }
 
-    m_childItemsMenu = new KTreeModelNavigatorMenu(treeModelNavigator(), this);
+    m_childItemsMenu = new KBreadCrumbNavigatorMenu(breadCrumbNavigator(), this);
     connect(m_childItemsMenu, SIGNAL(mimeDataDropped(QAction*, QDropEvent*)),
             this, SLOT(mimeDataDropped(QAction*, QDropEvent*)));
 
     m_childItemsMenu->setLayoutDirection(Qt::LeftToRight);
     int i = 0;
-    QModelIndex selectedChildItem = getSelectedChildItem(treeModelNavigator()->currentIndex(), m_index);
+    QModelIndex selectedChildItem = getSelectedChildItem(breadCrumbNavigator()->currentIndex(), m_index);
     foreach (const QModelIndex& childIndex, m_childItems)
     {
         QString text = KStringHandler::csqueeze(childIndex.data().toString(), 60);
@@ -403,12 +403,12 @@ void KTreeModelNavigatorButton::listChildItems()
 
     const bool leftToRight = (layoutDirection() == Qt::LeftToRight);
     const int popupX = leftToRight ? width() - arrowWidth() - BorderWidth : 0;
-    const QPoint popupPos  = treeModelNavigator()->mapToGlobal(geometry().bottomLeft() + QPoint(popupX, 0));
+    const QPoint popupPos  = breadCrumbNavigator()->mapToGlobal(geometry().bottomLeft() + QPoint(popupX, 0));
 
     const QAction* action = m_childItemsMenu->exec(popupPos);
     if (action != 0) {
         const int result = action->data().toInt();
-        treeModelNavigator()->currentChangedTriggered(m_childItems.at(result));
+        breadCrumbNavigator()->currentChangedTriggered(m_childItems.at(result));
     }
 
     m_childItems.clear();
@@ -418,7 +418,7 @@ void KTreeModelNavigatorButton::listChildItems()
     setDisplayHintEnabled(PopupActiveHint, false);
 }
 
-int KTreeModelNavigatorButton::arrowWidth() const
+int KBreadCrumbNavigatorButton::arrowWidth() const
 {
     // if there isn't arrow then return 0
     int width = 0;
@@ -432,13 +432,13 @@ int KTreeModelNavigatorButton::arrowWidth() const
     return width;
 }
 
-bool KTreeModelNavigatorButton::isAboveArrow(int x) const
+bool KBreadCrumbNavigatorButton::isAboveArrow(int x) const
 {
     const bool leftToRight = (layoutDirection() == Qt::LeftToRight);
     return leftToRight ? (x >= width() - arrowWidth()) : (x < arrowWidth());
 }
 
-bool KTreeModelNavigatorButton::isTextClipped() const
+bool KBreadCrumbNavigatorButton::isTextClipped() const
 {
     int availableWidth = width() - 2 * BorderWidth;
     if (!isDisplayHintEnabled(ActivatedHint)) {
@@ -449,7 +449,7 @@ bool KTreeModelNavigatorButton::isTextClipped() const
     return fontMetrics.width(text()) >= availableWidth;
 }
 
-void KTreeModelNavigatorButton::updateMinimumWidth()
+void KBreadCrumbNavigatorButton::updateMinimumWidth()
 {
     const int oldMinWidth = minimumWidth();
 
@@ -466,4 +466,4 @@ void KTreeModelNavigatorButton::updateMinimumWidth()
     }
 }
 
-#include "ktreemodelnavigatorbutton_p.moc"
+#include "kbreadcrumbnavigatorbutton_p.moc"

@@ -18,7 +18,7 @@
 */
 
 #include "konqbookmarkmodelmenu.h"
-#include "konqbookmarkmodel.h"
+#include "itemmodels/konqbookmarkmodel.h"
 
 #include <kbookmarkmenu.h>
 #include <kdebug.h>

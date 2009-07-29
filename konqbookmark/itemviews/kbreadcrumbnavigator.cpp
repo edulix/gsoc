@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.                                               *
  *****************************************************************************/
 
-#include "ktreemodelnavigator.h"
-#include "ktreemodelnavigatorbutton_p.h"
+#include "kbreadcrumbnavigator.h"
+#include "kbreadcrumbnavigatorbutton_p.h"
 
 #include <kglobalsettings.h>
 #include <kicon.h>
@@ -48,10 +48,10 @@
 
 #include <fixx11h.h>
 
-class KTreeModelNavigator::Private
+class KBreadCrumbNavigator::Private
 {
 public:
-    Private(KTreeModelNavigator* q);
+    Private(KBreadCrumbNavigator* q);
 
     /**
      * Appends the widget at the end of the URL navigator. It is assured
@@ -96,11 +96,11 @@ public:
     QAbstractItemModel* m_model;
     QItemSelectionModel* m_selectionModel;
     QHBoxLayout* m_layout;
-    QLinkedList<KTreeModelNavigatorButton*> m_navButtons;
-    KTreeModelNavigator* q;
+    QLinkedList<KBreadCrumbNavigatorButton*> m_navButtons;
+    KBreadCrumbNavigator* q;
 };
 
-KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
+KBreadCrumbNavigator::Private::Private(KBreadCrumbNavigator* q)
     :  m_model(0), m_selectionModel(0), m_layout(new QHBoxLayout), q(q)
 {
     m_layout->setSpacing(0);
@@ -111,7 +111,7 @@ KTreeModelNavigator::Private::Private(KTreeModelNavigator* q)
     q->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
 
-void KTreeModelNavigator::Private::createProxyChain()
+void KBreadCrumbNavigator::Private::createProxyChain()
 {
     QAbstractItemModel *model = const_cast<QAbstractItemModel *>(m_selectionModel->model());
     QAbstractProxyModel *nextProxyModel;
@@ -140,7 +140,7 @@ void KTreeModelNavigator::Private::createProxyChain()
 }
 
 
-QModelIndex KTreeModelNavigator::Private::sourceIndexToSelectionIndexParent(const QModelIndex &index) const
+QModelIndex KBreadCrumbNavigator::Private::sourceIndexToSelectionIndexParent(const QModelIndex &index) const
 {
     QModelIndex seekIndex = index;
     QListIterator<QAbstractProxyModel*> i(m_proxyChain);
@@ -153,12 +153,12 @@ QModelIndex KTreeModelNavigator::Private::sourceIndexToSelectionIndexParent(cons
     return seekIndex;
 }
 
-void KTreeModelNavigator::Private::appendWidget(QWidget* widget, int stretch)
+void KBreadCrumbNavigator::Private::appendWidget(QWidget* widget, int stretch)
 {
     m_layout->insertWidget(m_layout->count(), widget, stretch);
 }
 
-void KTreeModelNavigator::Private::dropMimeData(const QModelIndex& destination, QDropEvent* event)
+void KBreadCrumbNavigator::Private::dropMimeData(const QModelIndex& destination, QDropEvent* event)
 {
     bool match = q->haveCommonMimetypes(event->mimeData());
     if (match) {
@@ -166,13 +166,13 @@ void KTreeModelNavigator::Private::dropMimeData(const QModelIndex& destination, 
     }
 }
 
-void KTreeModelNavigator::Private::updateButtons()
+void KBreadCrumbNavigator::Private::updateButtons()
 {
     if(!m_selectionModel || !m_selectionModel->currentIndex().isValid())
         return;
     
-    QLinkedList<KTreeModelNavigatorButton*>::iterator it = m_navButtons.begin();
-    const QLinkedList<KTreeModelNavigatorButton*>::const_iterator itEnd = m_navButtons.end();
+    QLinkedList<KBreadCrumbNavigatorButton*>::iterator it = m_navButtons.begin();
+    const QLinkedList<KBreadCrumbNavigatorButton*>::const_iterator itEnd = m_navButtons.end();
     bool createButton = false;
 
     // Get to the topmost parent model index
@@ -195,10 +195,10 @@ void KTreeModelNavigator::Private::updateButtons()
 
         const QString dirName = index.data().toString();
         kDebug() << dirName << (i - 1) << isLastButton;
-        KTreeModelNavigatorButton* button = 0;
+        KBreadCrumbNavigatorButton* button = 0;
         if (createButton)
         {
-            button = new KTreeModelNavigatorButton(index, q);
+            button = new KBreadCrumbNavigatorButton(index, q);
             connect(button, SIGNAL(mimeDataDropped(const QModelIndex&, QDropEvent*)),
                     q, SLOT(dropMimeData(const QModelIndex&, QDropEvent*)));
             appendWidget(button);
@@ -219,7 +219,7 @@ void KTreeModelNavigator::Private::updateButtons()
     }
 
     // delete buttons which are not used anymore
-    QLinkedList<KTreeModelNavigatorButton*>::iterator itBegin = it;
+    QLinkedList<KBreadCrumbNavigatorButton*>::iterator itBegin = it;
     while (it != itEnd) {
         (*it)->hide();
         (*it)->deleteLater();
@@ -229,16 +229,16 @@ void KTreeModelNavigator::Private::updateButtons()
     
     // all buttons have the correct activation state and
     // can be shown now
-    foreach (KTreeModelNavigatorButton* button, m_navButtons) {
+    foreach (KBreadCrumbNavigatorButton* button, m_navButtons) {
         button->show();
     }
     
     q->adjustSize();
 }
 
-void KTreeModelNavigator::Private::deleteButtons()
+void KBreadCrumbNavigator::Private::deleteButtons()
 {
-    foreach (KTreeModelNavigatorButton* button, m_navButtons) {
+    foreach (KBreadCrumbNavigatorButton* button, m_navButtons) {
         button->hide();
         button->deleteLater();
     }
@@ -246,7 +246,7 @@ void KTreeModelNavigator::Private::deleteButtons()
 }
 
 
-KTreeModelNavigator::KTreeModelNavigator(QWidget* parent)
+KBreadCrumbNavigator::KBreadCrumbNavigator(QWidget* parent)
     : QWidget(parent), d(new Private(this))
 {
     setLayoutDirection(Qt::LeftToRight);
@@ -260,24 +260,24 @@ KTreeModelNavigator::KTreeModelNavigator(QWidget* parent)
     d->updateButtons();
 }
 
-KTreeModelNavigator::~KTreeModelNavigator()
+KBreadCrumbNavigator::~KBreadCrumbNavigator()
 {
     delete d;
 }
 
-void KTreeModelNavigator::setModel(QAbstractItemModel *model)
+void KBreadCrumbNavigator::setModel(QAbstractItemModel *model)
 {
     d->m_model = model;
     d->updateButtons();
 }
 
-QAbstractItemModel *KTreeModelNavigator::model()
+QAbstractItemModel *KBreadCrumbNavigator::model()
 {
     return d->m_model;
 }
 
 
-void KTreeModelNavigator::setSelectionModel(QItemSelectionModel *selectionModel)
+void KBreadCrumbNavigator::setSelectionModel(QItemSelectionModel *selectionModel)
 {
     d->m_selectionModel = selectionModel;
     connect(d->m_selectionModel, SIGNAL(currentChanged ( const QModelIndex &, const QModelIndex &)),
@@ -286,36 +286,36 @@ void KTreeModelNavigator::setSelectionModel(QItemSelectionModel *selectionModel)
     d->createProxyChain();
 }
 
-QItemSelectionModel *KTreeModelNavigator::selectionModel()
+QItemSelectionModel *KBreadCrumbNavigator::selectionModel()
 {
     return d->m_selectionModel;
 }
 
-void KTreeModelNavigator::Private::slotCurrentIndexChanged()
+void KBreadCrumbNavigator::Private::slotCurrentIndexChanged()
 {
     updateButtons();
 }
 
-void KTreeModelNavigator::setCurrentIndex(const QMimeData* mimeData)
+void KBreadCrumbNavigator::setCurrentIndex(const QMimeData* mimeData)
 {
     Q_UNUSED(mimeData);
 }
 
 
-QModelIndex KTreeModelNavigator::currentIndex()
+QModelIndex KBreadCrumbNavigator::currentIndex()
 {
     return d->sourceIndexToSelectionIndexParent(d->m_selectionModel->currentIndex());
 }
 
 // TODO: Fix this doesn't work
-void KTreeModelNavigator::currentChangedTriggered(const QModelIndex& index)
+void KBreadCrumbNavigator::currentChangedTriggered(const QModelIndex& index)
 {
     kDebug();
     Q_ASSERT(d->m_selectionModel);
     d->m_selectionModel->setCurrentIndex(d->sourceIndexToSelectionIndexParent(index), QItemSelectionModel::Current);
 }
 
-bool KTreeModelNavigator::haveCommonMimetypes(const QMimeData* mimeData)
+bool KBreadCrumbNavigator::haveCommonMimetypes(const QMimeData* mimeData)
 {
     Q_ASSERT(d->m_model);
     
@@ -330,7 +330,7 @@ bool KTreeModelNavigator::haveCommonMimetypes(const QMimeData* mimeData)
 }
 
 
-void KTreeModelNavigator::mouseReleaseEvent(QMouseEvent* event)
+void KBreadCrumbNavigator::mouseReleaseEvent(QMouseEvent* event)
 {
 
     if (event->button() == Qt::MidButton) {
@@ -344,4 +344,4 @@ void KTreeModelNavigator::mouseReleaseEvent(QMouseEvent* event)
     QWidget::mouseReleaseEvent(event);
 }
 
-#include "ktreemodelnavigator.moc"
+#include "kbreadcrumbnavigator.moc"

@@ -18,9 +18,9 @@
  * Boston, MA 02110-1301, USA.                                               *
  *****************************************************************************/
 
-#include "ktreemodelbutton_p.h"
+#include "kbreadcrumbbutton_p.h"
 
-#include "ktreemodelnavigator.h"
+#include "kbreadcrumbnavigator.h"
 
 #include <kcolorscheme.h>
 #include <kicon.h>
@@ -35,21 +35,21 @@
 #include <QStyleOptionFocusRect>
 #include <QModelIndexList>
 
-KTreeModelButton::KTreeModelButton(KTreeModelNavigator* parent) :
+KBreadCrumbButton::KBreadCrumbButton(KBreadCrumbNavigator* parent) :
     QPushButton(parent),
     m_displayHint(0),
-    m_treeModelNavigator(parent)
+    m_breadCrumbNavigator(parent)
 {
     setFocusPolicy(Qt::NoFocus);
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
     setMinimumHeight(parent->minimumHeight());
 }
 
-KTreeModelButton::~KTreeModelButton()
+KBreadCrumbButton::~KBreadCrumbButton()
 {
 }
 
-void KTreeModelButton::setDisplayHintEnabled(DisplayHint hint,
+void KBreadCrumbButton::setDisplayHintEnabled(DisplayHint hint,
                                        bool enable)
 {
     if (enable) {
@@ -60,26 +60,26 @@ void KTreeModelButton::setDisplayHintEnabled(DisplayHint hint,
     update();
 }
 
-bool KTreeModelButton::isDisplayHintEnabled(DisplayHint hint) const
+bool KBreadCrumbButton::isDisplayHintEnabled(DisplayHint hint) const
 {
     return (m_displayHint & hint) > 0;
 }
 
-void KTreeModelButton::enterEvent(QEvent* event)
+void KBreadCrumbButton::enterEvent(QEvent* event)
 {
     QPushButton::enterEvent(event);
     setDisplayHintEnabled(EnteredHint, true);
     update();
 }
 
-void KTreeModelButton::leaveEvent(QEvent* event)
+void KBreadCrumbButton::leaveEvent(QEvent* event)
 {
     QPushButton::leaveEvent(event);
     setDisplayHintEnabled(EnteredHint, false);
     update();
 }
 
-void KTreeModelButton::contextMenuEvent(QContextMenuEvent* event)
+void KBreadCrumbButton::contextMenuEvent(QContextMenuEvent* event)
 {
     Q_UNUSED(event);
 
@@ -98,14 +98,14 @@ void KTreeModelButton::contextMenuEvent(QContextMenuEvent* event)
     QAction* activatedAction = popup.exec(QCursor::pos());
     if (activatedAction == copyAction) {
         QModelIndexList currentIndex;
-        currentIndex.append(m_treeModelNavigator->currentIndex());
-        clipboard->setMimeData(m_treeModelNavigator->model()->mimeData(currentIndex));
+        currentIndex.append(m_breadCrumbNavigator->currentIndex());
+        clipboard->setMimeData(m_breadCrumbNavigator->model()->mimeData(currentIndex));
     } else if (activatedAction == pasteAction) {
-        m_treeModelNavigator->setCurrentIndex(clipboard->mimeData());
+        m_breadCrumbNavigator->setCurrentIndex(clipboard->mimeData());
     }
 }
 
-void KTreeModelButton::drawHoverBackground(QPainter* painter)
+void KBreadCrumbButton::drawHoverBackground(QPainter* painter)
 {
     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) ||
                                isDisplayHintEnabled(DraggedHint) ||
@@ -123,7 +123,7 @@ void KTreeModelButton::drawHoverBackground(QPainter* painter)
     }
 }
 
-QColor KTreeModelButton::foregroundColor() const
+QColor KBreadCrumbButton::foregroundColor() const
 {
     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) ||
                                isDisplayHintEnabled(DraggedHint) ||
@@ -140,4 +140,4 @@ QColor KTreeModelButton::foregroundColor() const
     return foregroundColor;
 }
 
-#include "ktreemodelbutton_p.moc"
+#include "kbreadcrumbbutton_p.moc"

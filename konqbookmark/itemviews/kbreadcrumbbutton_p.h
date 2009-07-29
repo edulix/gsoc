@@ -18,29 +18,29 @@
  * Boston, MA 02110-1301, USA.                                               *
  *****************************************************************************/
 
-#ifndef KTREEMODELBUTTON_P_H
-#define KTREEMODELBUTTON_P_H
+#ifndef KBREADCRUMBBUTTON_P_H
+#define KBREADCRUMBBUTTON_P_H
 
 #include <QtGui/QColor>
 #include <QtGui/QPushButton>
 
 class QEvent;
-class KTreeModelNavigator;
+class KBreadCrumbNavigator;
 
 /**
- * @brief Base class for buttons of the tree model navigator.
+ * @brief Base class for buttons of the bread crumb navigator.
  *
- * Each button of the tree model navigator contains an index, which
- * is set as soon as the button has been clicked.
+ * Each button of the bread crumb contains an index, which is set as soon as the
+ * button has been clicked.
  */
-class KTreeModelButton : public QPushButton
+class KBreadCrumbButton : public QPushButton
 {
     Q_OBJECT
 
 public:
-    explicit KTreeModelButton(KTreeModelNavigator* parent);
-    virtual ~KTreeModelButton();
-    KTreeModelNavigator* treeModelNavigator() const;
+    explicit KBreadCrumbButton(KBreadCrumbNavigator* parent);
+    virtual ~KBreadCrumbButton();
+    KBreadCrumbNavigator* breadCrumbNavigator() const;
     
 protected:
     enum DisplayHint {
@@ -66,12 +66,12 @@ protected:
 
 private:
     int m_displayHint;
-    KTreeModelNavigator* m_treeModelNavigator;
+    KBreadCrumbNavigator* m_breadCrumbNavigator;
 };
 
-inline KTreeModelNavigator* KTreeModelButton::treeModelNavigator() const
+inline KBreadCrumbNavigator* KBreadCrumbButton::breadCrumbNavigator() const
 {
-    return m_treeModelNavigator;
+    return m_breadCrumbNavigator;
 }
 
-#endif // KTREEMODELBUTTON_P_H
+#endif // KBREADCRUMBBUTTON_P_H
