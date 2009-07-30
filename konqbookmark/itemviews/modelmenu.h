@@ -107,12 +107,10 @@ public:
     
     ModelMenu(QWidget *parent = 0);
     ModelMenu(ModelMenu *parentMenu = 0);
+    virtual ~ModelMenu();
 
     void setModel(QAbstractItemModel *model);
     QAbstractItemModel *model() const;
-
-    void setMaxRows(int max);
-    int maxRows() const;
 
     void setRootIndex(const QModelIndex &index);
     QModelIndex rootIndex() const;
@@ -124,8 +122,8 @@ public:
     
     virtual KMenu *contextMenu(QAction *action) { Q_UNUSED(action); return 0; }
 
-    void setFlags(Flags flags) { Q_UNUSED(flags); }
-    Flags flags() { return NoOptionsFlag; }
+    void setFlags(Flags flags);
+    Flags flags() const;
     
 protected:
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
@@ -155,14 +153,9 @@ private slots:
 
 private:
     QAction *makeAction(const QModelIndex &index);
-    int m_maxRows;
-    int m_firstSeparator;
-    int m_maxWidth;
-    QAbstractItemModel *m_model;
-    QPersistentModelIndex m_root;
-    QPoint m_dragStartPos;
-    int m_menuRole[MenuRolesSize];
-    ModelMenu *m_parentMenu;
+    
+    class Private;
+    Private* const d;
 };
 
 #endif // MODELMENU_H

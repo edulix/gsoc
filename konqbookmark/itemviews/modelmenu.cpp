@@ -69,32 +69,58 @@
 
 #include <kdebug.h>
 
-ModelMenu::ModelMenu(QWidget *parent)
-    : KMenu(parent)
-    , m_maxRows(-1)
+class ModelMenu::Private
+{
+public:
+    Private();
+    ~Private();
+    
+    int m_maxRows;
+    int m_firstSeparator;
+    int m_maxWidth;
+    QAbstractItemModel *m_model;
+    QPersistentModelIndex m_root;
+    QPoint m_dragStartPos;
+    int m_menuRole[MenuRolesSize];
+    int m_flags;
+    ModelMenu *m_parentMenu;
+};
+
+ModelMenu::Private::Private()
+    : m_maxRows(-1)
     , m_firstSeparator(-1)
     , m_maxWidth(-1)
     , m_model(0)
+    , m_flags(IsRootFlag)
     , m_parentMenu(0)
 {
     m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
+}
+
+ModelMenu::Private::~Private()
+{
+    
+}
+
+ModelMenu::ModelMenu(QWidget *parent)
+    : KMenu(parent), d(new Private)
+{
+    d->m_flags = IsRootFlag;
     connect(this, SIGNAL(aboutToShow()), this, SLOT(aboutToShow()));
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
-    setFlags(IsRootFlag);
 }
 
 ModelMenu::ModelMenu(ModelMenu *parentMenu)
-    : KMenu(parentMenu)
-    , m_maxRows(-1)
-    , m_firstSeparator(-1)
-    , m_maxWidth(-1)
-    , m_model(0)
-    , m_parentMenu(parentMenu)
+    : KMenu(parentMenu), d(new Private)
 {
-    m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
+    d->m_parentMenu = parentMenu;
     connect(this, SIGNAL(aboutToShow()), this, SLOT(aboutToShow()));
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
-    setFlags(NoOptionsFlag);
+}
+
+ModelMenu::~ModelMenu()
+{
+    delete d;
 }
 
 bool ModelMenu::prePopulated()
@@ -108,62 +134,55 @@ void ModelMenu::postPopulated()
 
 void ModelMenu::setModel(QAbstractItemModel *model)
 {
-    kDebug();
-    m_model = model;
-    if(flags() & IsRootFlag)
-    {
-        setRootIndex(this->model()->index(0,0));
-    }
+    d->m_model = model;
 }
 
 QAbstractItemModel *ModelMenu::model() const
 {
-    return m_model;
-}
-
-void ModelMenu::setMaxRows(int max)
-{
-    m_maxRows = max;
-}
-
-int ModelMenu::maxRows() const
-{
-    return m_maxRows;
+    return d->m_model;
 }
 
 void ModelMenu::setFirstSeparator(int offset)
 {
-    m_firstSeparator = offset;
+    d->m_firstSeparator = offset;
 }
 
 int ModelMenu::firstSeparator() const
 {
-    return m_firstSeparator;
+    return d->m_firstSeparator;
 }
 
 void ModelMenu::setRootIndex(const QModelIndex &index)
 {
-    m_root = index;
+    d->m_root = index;
 }
 
 QModelIndex ModelMenu::rootIndex() const
 {
-    return m_root;
+    return d->m_root;
 }
 
 void ModelMenu::setRole(MenuRole menuRole, int modelRole)
 {
-    m_menuRole[menuRole] = modelRole;
+    d->m_menuRole[menuRole] = modelRole;
 }
 
 int ModelMenu::role(MenuRole menuRole) const
 {
-    return m_menuRole[menuRole];
+    return d->m_menuRole[menuRole];
+}
+
+void ModelMenu::setFlags(ModelMenu::Flags flags)
+{
+    d->m_flags = flags;
+}
+
+ModelMenu::Flags ModelMenu::flags() const
+{
+    return ModelMenu::Flags(d->m_flags);
 }
 
 Q_DECLARE_METATYPE(QModelIndex)
-// TODO: Check if dirty and only repopulate in that case. Dynamicly update menu
-// on changes.
 void ModelMenu::aboutToShow()
 {
     kDebug();
@@ -171,10 +190,10 @@ void ModelMenu::aboutToShow()
 
     if (prePopulated())
         addSeparator();
-    int max = m_maxRows;
+    int max = d->m_maxRows;
     if (max != -1)
-        max += m_firstSeparator;
-    createMenu(m_root, max, this, this);
+        max += d->m_firstSeparator;
+    createMenu(d->m_root, max, this, this);
     postPopulated();
 }
 
@@ -185,6 +204,8 @@ ModelMenu *ModelMenu::createBaseMenu()
 
 void ModelMenu::createMenu(const QModelIndex &parent, int max, QMenu *parentMenu, QMenu *menu)
 {
+    static QAction *lastAddedAction = 0;
+    
     if (!menu) {
         QString title = parent.data().toString();
         ModelMenu *modelMenu = createBaseMenu();
@@ -192,52 +213,60 @@ void ModelMenu::createMenu(const QModelIndex &parent, int max, QMenu *parentMenu
         disconnect(modelMenu, SIGNAL(triggered(QAction*)),
                    modelMenu, SLOT(actionTriggered(QAction*)));
         modelMenu->setTitle(title);
-        QIcon icon = qvariant_cast<QIcon>(parent.data(Qt::DecorationRole));
+        QIcon icon(parent.data(Qt::DecorationRole).value<QPixmap>());
         modelMenu->setIcon(icon);
         parentMenu->addMenu(modelMenu);
+        lastAddedAction = modelMenu->menuAction();
         modelMenu->setRootIndex(parent);
-        modelMenu->setModel(m_model);
+        modelMenu->setModel(d->m_model);
         return;
     }
 
-    if (!m_model)
+    if (!d->m_model)
         return;
 
-    int end = m_model->rowCount(parent);
+    int end = d->m_model->rowCount(parent);
     if (max != -1)
         end = qMin(max, end);
 
 
     for (int i = 0; i < end; ++i) {
-        QModelIndex idx = m_model->index(i, 0, parent);
+        QModelIndex idx = d->m_model->index(i, 0, parent);
         kDebug() << idx << idx.data();
-        if (m_model->hasChildren(idx)) {
+        if (d->m_model->hasChildren(idx)) {
             createMenu(idx, -1, menu);
         } else {
-            if (m_menuRole[SeparatorRole] != 0
-                && idx.data(m_menuRole[SeparatorRole]).toBool())
-                addSeparator();
-            else
-                menu->addAction(makeAction(idx));
+            if (d->m_menuRole[SeparatorRole] != 0
+                && idx.data(d->m_menuRole[SeparatorRole]).toBool())
+                lastAddedAction = addSeparator();
+            else {
+                menu->addAction(lastAddedAction = makeAction(idx));
+            }
         }
-        if (menu == this && i == m_firstSeparator - 1)
-            addSeparator();
+        if (menu == this && i == d->m_firstSeparator - 1)
+            lastAddedAction = addSeparator();
+        
+        if(columnCount() > 1)
+        {
+            d->m_maxRows = i;
+            lastAddedAction->setVisible(false);
+        }
     }
 }
 
 QAction *ModelMenu::makeAction(const QModelIndex &index)
 {
-    QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
+    QIcon icon(index.data(Qt::DecorationRole).value<QPixmap>());
     
     QFontMetrics fm(font());
-    if (-1 == m_maxWidth)
-        m_maxWidth = fm.width(QLatin1Char('m')) * 30;
-    QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, m_maxWidth);
+    if (d->m_maxWidth == -1)
+        d->m_maxWidth = fm.width(QLatin1Char('m')) * 30;
+    QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, d->m_maxWidth);
     
     QAction *action = makeAction(icon, smallText, this);
     
-    if(m_menuRole[StatusBarTextRole] != 0)
-        action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+    if(d->m_menuRole[StatusBarTextRole] != 0)
+        action->setStatusTip(index.data(d->m_menuRole[StatusBarTextRole]).toString());
 
     QVariant v;
     v.setValue(index);
@@ -271,7 +300,7 @@ QModelIndex ModelMenu::index(QAction *action)
 void ModelMenu::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
-        m_dragStartPos = event->pos();
+        d->m_dragStartPos = event->pos();
     QMenu::mousePressEvent(event);
 }
 
@@ -282,14 +311,14 @@ void ModelMenu::mouseReleaseEvent(QMouseEvent *event)
 
 void ModelMenu::mouseMoveEvent(QMouseEvent *event)
 {
-    if ((event->pos() - m_dragStartPos).manhattanLength() > QApplication::startDragDistance()) {
-        QAction *action = actionAt(m_dragStartPos);
+    if ((event->pos() - d->m_dragStartPos).manhattanLength() > QApplication::startDragDistance()) {
+        QAction *action = actionAt(d->m_dragStartPos);
         QModelIndex idx = index(action);
         if (event->buttons() == Qt::LeftButton
             && idx.isValid()
-            && !m_model->hasChildren(idx)) {
+            && !d->m_model->hasChildren(idx)) {
             QDrag *drag = new QDrag(this);
-            drag->setMimeData(m_model->mimeData((QModelIndexList() << idx)));
+            drag->setMimeData(d->m_model->mimeData((QModelIndexList() << idx)));
             QRect actionRect = actionGeometry(action);
             drag->setPixmap(QPixmap::grabWidget(this, actionRect));
             drag->exec();
@@ -298,3 +327,4 @@ void ModelMenu::mouseMoveEvent(QMouseEvent *event)
     QMenu::mouseMoveEvent(event);
 }
 
+#include "modelmenu.moc"

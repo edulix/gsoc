@@ -22,6 +22,9 @@
 
 #include <kbookmarkmenu.h>
 #include <kdebug.h>
+#include <QWidgetAction>
+#include <QPushButton>
+#include <QStyle>
 
 class KonqBookmarkModelMenu::Private {
 public:
@@ -53,7 +56,6 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
     : ModelMenu(parent),  d( new Private(this) )
 {
     kDebug();
-    setFlags(IsRootFlag);
     setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
     
@@ -77,6 +79,17 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
 
 bool KonqBookmarkModelMenu::prePopulated()
 {
+    if(flags() & IsRootFlag)
+    {
+        
+        QWidgetAction *widgetAction = new QWidgetAction(this);
+        widgetAction->setDefaultWidget(new QPushButton("Funciona!"));
+        addAction(widgetAction);
+        QTimer::singleShot(1000, widgetAction, SLOT(deleteLater()));
+        
+        return true;
+    }
+    
     return false;
 }
 

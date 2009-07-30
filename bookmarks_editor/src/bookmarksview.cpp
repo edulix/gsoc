@@ -170,6 +170,7 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.bookmarksView->setSortingEnabled(true);
     ui_bookmarksview_base.bookmarksView->setAnimated(true);
     ui_bookmarksview_base.bookmarksView->setFocus();
+    ui_bookmarksview_base.bookmarksView->setEditTriggers(QAbstractItemView::DoubleClicked);
     
     for(int i = KonqBookmarkModel::Url; i < KonqBookmarkModel::ColumnCount; i++)
         ui_bookmarksview_base.collectionsView->setColumnHidden(i, true);
