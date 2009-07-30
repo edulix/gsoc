@@ -73,10 +73,10 @@
 #include <kmenu.h>
 
 /**
- * @short A QMenu that is dynamically populated from a QAbstractItemModel
+ * @short A QMenu that is dynamically populated and updated from a QAbstractItemModel
  *
- * This class is like an ItemView which is uses a QAbstractItemModel as
- * a data source but inheriting instead from QMenu.
+ * This class is similar to an ItemView (uses a QAbstractItemModel as
+ * a data source) but inheriting instead from QMenu.
  *
  * @author Benjamin C. Meyer <ben@meyerhome.net>
  * @author Eduardo Robles Elvira <edulix@gmail.com>
@@ -84,9 +84,6 @@
 class KONQBOOKMARK_EXPORT ModelMenu : public KMenu
 {
     Q_OBJECT
-
-signals:
-    void activated(const QModelIndex &index);
 
 public:
     enum Flag
@@ -98,6 +95,7 @@ public:
         CustomFlag = 0xF
     };
     Q_DECLARE_FLAGS(Flags, Flag)
+    
     enum MenuRole
     {
         StatusBarTextRole = 0x1,
@@ -119,8 +117,10 @@ public:
     int role(MenuRole menuRole) const;
 
     QModelIndex index(QAction *action);
+    QModelIndex indexAt(const QPoint& pt);
+    QAction *actionForIndex(const QModelIndex& index);
     
-    virtual KMenu *contextMenu(QAction *action) { Q_UNUSED(action); return 0; }
+    virtual KMenu *contextMenu(const QModelIndex& index) { Q_UNUSED(index); return 0; }
 
     void setFlags(Flags flags);
     Flags flags() const;
@@ -128,34 +128,42 @@ public:
 protected:
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
     
-    void setFirstSeparator(int offset);
-    int firstSeparator() const;
-    
-    // add any actions before the tree, return true if any actions are added.
-    virtual bool prePopulated();
-    // add any actions after the tree
-    virtual void postPopulated();
-    // return the QMenu that is used to populate sub menu's
-    virtual ModelMenu *createBaseMenu();
-
     /**
-     * Puts all children of parent into menu up to max
+     * Add actions at the menu before it's populated with model's items.
+     * 
+     * @return true if any actions are added.
      */
-    void createMenu(const QModelIndex &parent, int max, QMenu *parentMenu = 0, QMenu *menu = 0);
+    virtual bool prePopulated();
+    
+    /**
+     * Add actions at the menu after it's been populated.
+     */
+    virtual void postPopulated();
+    
+    
+    /**
+     * @return the QMenu that is used to populate sub-menu's
+     */
+    virtual ModelMenu *createBaseMenu();
 
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
-
-private slots:
-    void aboutToShow();
-    void actionTriggered(QAction *action);
+    
+Q_SIGNALS:
+    void activated(const QModelIndex &index);
 
 private:
-    QAction *makeAction(const QModelIndex &index);
-    
     class Private;
     Private* const d;
+    
+    Q_PRIVATE_SLOT(d, void slotAboutToShow())
+    Q_PRIVATE_SLOT(d, void actionTriggered(QAction *action))
+    Q_PRIVATE_SLOT(d, void actionDeleted(QObject* actionObj))
+    Q_PRIVATE_SLOT(d, void dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight ))
+    Q_PRIVATE_SLOT(d, void rowsInserted ( const QModelIndex & parent, int start, int end ))
+    Q_PRIVATE_SLOT(d, void rowsAboutTobeRemoved ( const QModelIndex & parent, int start, int end ))
+    Q_PRIVATE_SLOT(d, void modelReset (bool aboutTobeShown = false))
 };
 
 #endif // MODELMENU_H

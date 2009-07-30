@@ -49,7 +49,7 @@ protected:
     virtual ModelMenu *createBaseMenu();
     
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
-    virtual KMenu * contextMenu(QAction * action );
+    virtual KMenu * contextMenu(const QModelIndex& index);
     
 protected Q_SLOTS:
     /**

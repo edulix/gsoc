@@ -118,10 +118,9 @@ void KonqBookmarkModelMenu::openBookmark(Qt::MouseButtons mb, Qt::KeyboardModifi
     d->m_KonqBookmarkMenuHelper->openBookmark(url, mb, km);
 }
 
-KMenu *KonqBookmarkModelMenu::contextMenu(QAction * action )
+KMenu *KonqBookmarkModelMenu::contextMenu(const QModelIndex& index)
 {
-    Q_UNUSED(action);
-    return 0;
+    return ModelMenu::contextMenu(index);
 }
 
 #include "konqbookmarkmodelmenu.moc"
