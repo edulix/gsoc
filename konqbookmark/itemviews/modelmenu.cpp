@@ -36,19 +36,64 @@ public:
     Private(ModelMenu *parent, Private *copy);
     ~Private();
 
+    /**
+     * Repopulates if m_dirty is true
+     */
     void slotAboutToShow();
+    
+    /**
+     * Called when an action is activated by the user. It will in turn emit
+     * activated if it's index is valid.
+     */
     void actionTriggered(QAction *action);
+    
+    /**
+     * Convenience function to create an action out of an index. Extracts the
+     * icon, text and tooltipText for the action and then calls to
+     * ModelMenu::makeAction().
+     * @arg index   Index from currentModel()
+     */
     QAction *makeAction(const QModelIndex &index);
     
+    /**
+     * Current model changes. When searching is activated, currentModel() returns
+     * m_searchModel, otherwise it returns m_model.
+     */
     QAbstractItemModel* currentModel() const;
+    
+    /**
+     * When search is activated currentModel() is m_search which contains all
+     * the indexes in a plain list without any hierarchy other than all of them
+     * have QModelIndex() as parent so that's what currentRootIndex() returns if
+     * search is active. OTherwise returns m_root.
+     */
     QModelIndex currentRootIndex();
+    
+    /**
+     * Convenience function to map an index from current model (which can either
+     * be m_model or m_searchModel) to m_model. 
+     */
     QModelIndex indexToSource(const QModelIndex& index);
+    
+    /**
+     * Convenience function which does the reverse as the one above.
+     */
     QModelIndex indexToCurrent(const QModelIndex& index);
+    
+    /**
+     * HACK This functions checks if an index from q->model() (i.e. "source
+     * model") is descendant from m_root. This is needed when calling to
+     * Private::insertIndex() in order to filter index which are not descedants
+     * from m_root.
+     * 
+     * This should be done by setting m_proxyModel->rootIndex() to
+     * m_proxyModel->mapFromSource(m_root) but doesn't seem to work.
+     */
     bool descendantFromRoot(const QModelIndex &index);
     
     /**
      * Deals with some managements (i.e. updating m_actionForIndex) needed
-     * when actions are added;
+     * when actions are added.
      */
     void actionAdded(QAction *action);
     
@@ -59,18 +104,24 @@ public:
     void actionDeleted(QObject *actionObj);
 
     /**
-     * Puts all children of parent into menu up to max
+     * Puts all children of parent into menu. Called by modelReset() only.
      */
     void populateMenu();
     
     /**
      * Inserts an index in the menu. Does the work of dealing with if the index
      * should be a submenu or a simple QAction, etc.
-     * @arg index       Index to be inserted
+     * @arg index       Index from currentModel() to be inserted
      * @arg before      The index will be inserted before it
      */
     void insertIndex(const QModelIndex &index, QAction *before = 0);
     
+    /**
+     * Creates a submenu for the given index and adds it before the "before"
+     * action var in our menu. Called by insertIndex().
+     * @arg index       Index from currentModel() to be inserted
+     * @arg before      The index will be inserted before it
+     */
     QAction* createSubmenu(const QModelIndex &parent, QAction *before = 0);
     
     /**
@@ -258,10 +309,8 @@ QModelIndex ModelMenu::rootIndex() const
 
 bool ModelMenu::setSearchActive(bool newSearchActive)
 {
-        kDebug() << "1 newSearchActive = " << newSearchActive;
     if(flags() & IsRootFlag && searchActive() != newSearchActive)
     {
-        kDebug() << "1.1" << (d->currentModel() == d->m_searchModel);
         disconnect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
             this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
         disconnect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
@@ -274,9 +323,7 @@ bool ModelMenu::setSearchActive(bool newSearchActive)
             this, SLOT(modelReset()));
             
         d->m_searchActive = newSearchActive;
-        kDebug() << "1.2"  << (d->currentModel() == d->m_model);
         d->modelReset();
-        kDebug() << "1.3";
         
         connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
             this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
@@ -288,7 +335,6 @@ bool ModelMenu::setSearchActive(bool newSearchActive)
             this, SLOT(modelReset ()));
         connect(d->currentModel(), SIGNAL(layoutChanged()),
             this, SLOT(modelReset()));
-        kDebug() << "1.4";
     }
     
     return d->m_searchActive;
@@ -328,7 +374,6 @@ ModelMenu::Flags ModelMenu::flags() const
 Q_DECLARE_METATYPE(QModelIndex)
 void ModelMenu::Private::slotAboutToShow()
 {
-    kDebug();
     if(m_dirty)
         modelReset(true);
 }
@@ -413,13 +458,11 @@ void ModelMenu::Private::populateMenu()
         return;
     
     int end = currentModel()->rowCount(currentRootIndex());
-    kDebug() << end;
     if (m_maxRows != -1)
         end = qMin(m_maxRows, end);
     
     for (int i = 0; i < end; ++i) {
         QModelIndex index = currentModel()->index(i, 0, currentRootIndex());
-        kDebug() << index.data();
         insertIndex(index);
     }
 }

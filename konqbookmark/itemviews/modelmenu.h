@@ -83,9 +83,9 @@ public:
     Flags flags() const;
     
     /**
-     * Search can be activated only if we are root.
+     * Search mode can be activated only if we are root.
      * 
-     * @returns if it was activated
+     * @returns true if search mode was activated
      */
     bool setSearchActive(bool searchActive);
     bool searchActive() const;
