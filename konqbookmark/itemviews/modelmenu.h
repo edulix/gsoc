@@ -72,6 +72,8 @@
 
 #include <kmenu.h>
 
+class QSortFilterProxyModel;
+
 /**
  * @short A QMenu that is dynamically populated and updated from a QAbstractItemModel
  *
@@ -84,7 +86,7 @@
 class KONQBOOKMARK_EXPORT ModelMenu : public KMenu
 {
     Q_OBJECT
-
+    Q_PROPERTY(bool searchActive READ searchActive WRITE setSearchActive)
 public:
     enum Flag
     {
@@ -125,6 +127,14 @@ public:
     void setFlags(Flags flags);
     Flags flags() const;
     
+    /**
+     * Search can be activated only if we are root.
+     * 
+     * @returns if it was activated
+     */
+    bool setSearchActive(bool searchActive);
+    bool searchActive() const;
+    QSortFilterProxyModel* searchModel();
 protected:
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
     
@@ -140,6 +150,13 @@ protected:
      */
     virtual void postPopulated();
     
+    /**
+     * Returns whether an index corresponds to a folder or not. This is needed
+     * to now if we should create a QAction or a QMenu when inserting an index.
+     * 
+     * The default implementation only checks if the index has any children.
+     */
+    virtual bool isFolder(const QModelIndex& index) const;
     
     /**
      * @return the QMenu that is used to populate sub-menu's

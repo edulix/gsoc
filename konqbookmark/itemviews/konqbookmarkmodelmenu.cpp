@@ -18,28 +18,44 @@
 */
 
 #include "konqbookmarkmodelmenu.h"
+#include "modelmenusearchline.h"
 #include "itemmodels/konqbookmarkmodel.h"
 
 #include <kbookmarkmenu.h>
 #include <kdebug.h>
+#include <klineedit.h>
 #include <QWidgetAction>
 #include <QPushButton>
 #include <QStyle>
+#include <QEvent>
 
-class KonqBookmarkModelMenu::Private {
+class KonqBookmarkModelMenu::Private
+{
 public:
     Private(KonqBookmarkModelMenu *parent);
+    virtual ~Private() {}
     
     void setChildAsRoot(const QModelIndex& index);
+    void slotAboutToHide();
+    
 public:
     KonqBookmarkMenuHelper *m_KonqBookmarkMenuHelper;
     KonqBookmarkModelMenu *m_parent;
+    ModelMenuSearchLine *m_searchLine;
+    bool m_show;
 };
 
 KonqBookmarkModelMenu::Private::Private(KonqBookmarkModelMenu *parent)
-    : m_parent(parent)
+    : m_parent(parent), m_show(false)
 {
 
+}
+
+void KonqBookmarkModelMenu::Private::slotAboutToHide()
+{
+    kDebug();
+    m_searchLine->clearFocus();
+    m_show = false;
 }
 
 void KonqBookmarkModelMenu::Private::setChildAsRoot(const QModelIndex& index)
@@ -55,13 +71,22 @@ void KonqBookmarkModelMenu::Private::setChildAsRoot(const QModelIndex& index)
 KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, QWidget *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
-    kDebug();
     setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
     
     // We want to set "Konqueror Bookmarks" as root
     connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-        this, SLOT(setChildAsRoot(const QModelIndex&)));
+        this, SLOT(setChildAsRoot(const QModelIndex&)));    
+    connect(this, SIGNAL(aboutToHide()), this, SLOT(slotAboutToHide()));
+    
+    if(flags() & IsRootFlag)
+    {
+        QWidgetAction *widgetAction = new QWidgetAction(this);
+        d->m_searchLine = new ModelMenuSearchLine(this);
+        d->m_searchLine->lineEdit()->setClickMessage(i18n("Search in boomarks.."));
+        widgetAction->setDefaultWidget(d->m_searchLine);
+        addAction(widgetAction);
+    }
 }
 
 KonqBookmarkModelMenu::~KonqBookmarkModelMenu()
@@ -69,27 +94,14 @@ KonqBookmarkModelMenu::~KonqBookmarkModelMenu()
     delete d;
 }
 
-KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, KonqBookmarkModelMenu *parent)
+KonqBookmarkModelMenu::KonqBookmarkModelMenu(KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, KonqBookmarkModelMenu *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
-    kDebug();
-    setModel(model);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
 }
 
 bool KonqBookmarkModelMenu::prePopulated()
-{
-    if(flags() & IsRootFlag)
-    {
-        
-        QWidgetAction *widgetAction = new QWidgetAction(this);
-        widgetAction->setDefaultWidget(new QPushButton("Funciona!"));
-        addAction(widgetAction);
-        QTimer::singleShot(1000, widgetAction, SLOT(deleteLater()));
-        
-        return true;
-    }
-    
+{   
     return false;
 }
 
@@ -100,7 +112,7 @@ void KonqBookmarkModelMenu::postPopulated()
 
 ModelMenu *KonqBookmarkModelMenu::createBaseMenu()
 {
-    return new KonqBookmarkModelMenu(model(), d->m_KonqBookmarkMenuHelper, this);
+    return new KonqBookmarkModelMenu(d->m_KonqBookmarkMenuHelper, this);
 }
 
 QAction *KonqBookmarkModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)

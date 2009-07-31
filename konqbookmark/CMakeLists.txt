@@ -49,6 +49,7 @@ set(konqbookmark_LIB_SRCS
     itemviews/konqbookmarkmodelmenu.cpp
     itemviews/modelmenu.cpp
     itemviews/ktreeviewsearchline.cpp
+    itemviews/modelmenusearchline.cpp
 #     kbookmarkbridge/kbookmarkimporter.cpp
 )
 
@@ -90,6 +91,7 @@ set(konqbookmark_LIB_HDRS
     itemviews/ktreeviewsearchline.h
     itemviews/modelmenu.h
     itemviews/konqbookmarkmodelmenu.h
+    itemviews/modelmenusearchline.h
 #     kbookmarkbridge/kbookmarkimporter.h
 )
 
