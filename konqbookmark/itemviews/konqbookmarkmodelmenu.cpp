@@ -83,7 +83,7 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
     {
         QWidgetAction *widgetAction = new QWidgetAction(this);
         d->m_searchLine = new ModelMenuSearchLine(this);
-        d->m_searchLine->lineEdit()->setClickMessage(i18n("Search in boomarks.."));
+        d->m_searchLine->lineEdit()->setClickMessage(i18n("Search in boomarks..."));
         widgetAction->setDefaultWidget(d->m_searchLine);
         addAction(widgetAction);
     }
@@ -98,16 +98,6 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(KonqBookmarkMenuHelper *KonqBookmar
     : ModelMenu(parent),  d( new Private(this) )
 {
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
-}
-
-bool KonqBookmarkModelMenu::prePopulated()
-{   
-    return false;
-}
-
-void KonqBookmarkModelMenu::postPopulated()
-{
-    
 }
 
 ModelMenu *KonqBookmarkModelMenu::createBaseMenu()

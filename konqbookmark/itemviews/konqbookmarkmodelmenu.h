@@ -41,10 +41,6 @@ public:
     virtual ~KonqBookmarkModelMenu();
 protected:
     KonqBookmarkModelMenu(KonqBookmarkMenuHelper *konqBookmarkOwner, KonqBookmarkModelMenu *parent = 0);
-    // add any actions before the tree, return true if any actions are added.
-    virtual bool prePopulated();
-    // add any actions after the tree
-    virtual void postPopulated();
     // return the QMenu that is used to populate sub menu's
     virtual ModelMenu *createBaseMenu();
     
