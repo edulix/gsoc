@@ -23,23 +23,40 @@
 #include <QEvent>
 #include <QTimer>
 #include <QHash>
+#include <QWidgetAction>
 #include <QMouseEvent>
+#include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 
 #include <kdebug.h>
 #include <kdescendantsproxymodel.h>
 
+/**
+ * Private class that helps to provide binary compatibility between releases.
+ * @internal
+ */
+//@cond PRIVATE
 class ModelMenu::Private
 {
 public:
     Private(ModelMenu *parent);
     Private(ModelMenu *parent, Private *copy);
     ~Private();
+    
+    /**
+     * Shared initialization method by both constructors
+     */
+    void init();
 
     /**
      * Repopulates if m_dirty is true
      */
     void slotAboutToShow();
+    
+    /**
+     * Search line loses focus
+     */
+    void slotAboutToHide();
     
     /**
      * Called when an action is activated by the user. It will in turn emit
@@ -154,6 +171,9 @@ public:
     bool m_dirty;
     bool m_searchActive;
     ModelMenu *q;
+    bool m_showSearchLine;
+    ModelMenuSearchLine *m_searchLine;
+    QWidgetAction *m_searchLineAction;
     
     /// Here we store which action correspond to which index
     QHash<QModelIndex, QAction*> m_actionForIndex;
@@ -169,9 +189,12 @@ ModelMenu::Private::Private(ModelMenu *parentMenu)
     m_parentMenu(0),
     m_dirty(false),
     m_searchActive(false),
-    q(parentMenu)
+    q(parentMenu),
+    m_showSearchLine(false),
+    m_searchLine(0),
+    m_searchLineAction(0)
 {
-    m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
+    init();
 }
 
 ModelMenu::Private::Private(ModelMenu *parentMenu, Private* copy)
@@ -184,9 +207,22 @@ ModelMenu::Private::Private(ModelMenu *parentMenu, Private* copy)
     m_parentMenu(0),
     m_dirty(false),
     m_searchActive(false),
-    q(parentMenu)
+    q(parentMenu),
+    m_showSearchLine(false),
+    m_searchLine(0),
+    m_searchLineAction(0)
+{
+    init();
+}
+
+
+void ModelMenu::Private::init()
 {
     m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
+    
+    connect(q, SIGNAL(aboutToShow()), q, SLOT(slotAboutToShow()));
+    connect(q, SIGNAL(aboutToHide()), q, SLOT(slotAboutToHide()));
+    connect(q, SIGNAL(triggered(QAction*)), q, SLOT(actionTriggered(QAction*)));
 }
 
 ModelMenu::Private::~Private()
@@ -227,150 +263,6 @@ QModelIndex ModelMenu::Private::indexToCurrent(const QModelIndex& index)
         return index;
 }
 
-ModelMenu::ModelMenu(QWidget *parent)
-    : KMenu(parent), d(new Private(this))
-{
-    d->m_flags = IsRootFlag;
-    connect(this, SIGNAL(aboutToShow()), this, SLOT(slotAboutToShow()));
-    connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
-}
-
-ModelMenu::ModelMenu(ModelMenu *parentMenu)
-    : KMenu(parentMenu), d(new Private(this, parentMenu->d))
-{
-    d->m_parentMenu = parentMenu;
-    connect(this, SIGNAL(aboutToShow()), this, SLOT(slotAboutToShow()));
-    connect(this, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
-}
-
-ModelMenu::~ModelMenu()
-{
-    delete d;
-}
-
-void ModelMenu::setModel(QAbstractItemModel *newModel)
-{
-    if(d->currentModel() == d->m_model && d->m_model)
-    {
-        disconnect(d->m_model, SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-        disconnect(d->m_model, SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-        disconnect(d->m_model, SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-        disconnect(d->m_model, SIGNAL(modelReset ()),
-            this, SLOT(modelReset ()));
-        disconnect(d->m_model, SIGNAL(layoutChanged()),
-            this, SLOT(modelReset()));
-    }
-    
-    d->m_model = newModel;
-    if(flags() & IsRootFlag)
-    {
-        delete d->m_proxyModel;
-        delete d->m_searchModel;
-        
-        d->m_proxyModel = new KDescendantsProxyModel(this);
-        d->m_proxyModel->setSourceModel(newModel);
-        
-        d->m_searchModel = new QSortFilterProxyModel(this);
-        d->m_searchModel->setSourceModel(d->m_proxyModel);
-    }
-    
-    d->m_dirty = true;
-    d->modelReset();
-    
-    connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-        this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-    connect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-        this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-    connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-        this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-    connect(d->currentModel(), SIGNAL(modelReset ()),
-        this, SLOT(modelReset ()));
-    connect(d->currentModel(), SIGNAL(layoutChanged()),
-        this, SLOT(modelReset()));
-}
-
-QAbstractItemModel *ModelMenu::model() const
-{
-    return d->m_model;
-}
-
-void ModelMenu::setRootIndex(const QModelIndex &index)
-{
-    d->m_root = index;
-}
-
-QModelIndex ModelMenu::rootIndex() const
-{
-    return d->m_root;
-}
-
-bool ModelMenu::setSearchActive(bool newSearchActive)
-{
-    if(flags() & IsRootFlag && searchActive() != newSearchActive)
-    {
-        disconnect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-        disconnect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-        disconnect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-        disconnect(d->currentModel(), SIGNAL(modelReset ()),
-            this, SLOT(modelReset ()));
-        disconnect(d->currentModel(), SIGNAL(layoutChanged()),
-            this, SLOT(modelReset()));
-            
-        d->m_searchActive = newSearchActive;
-        d->modelReset();
-        
-        connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-        connect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-        connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-        connect(d->currentModel(), SIGNAL(modelReset ()),
-            this, SLOT(modelReset ()));
-        connect(d->currentModel(), SIGNAL(layoutChanged()),
-            this, SLOT(modelReset()));
-    }
-    
-    return d->m_searchActive;
-}
-
-bool ModelMenu::searchActive() const
-{
-    return d->m_searchActive;
-}
-
-void ModelMenu::setRole(MenuRole menuRole, int modelRole)
-{
-    d->m_menuRole[menuRole] = modelRole;
-}
-
-
-QSortFilterProxyModel* ModelMenu::searchModel()
-{
-    return d->m_searchModel;
-}
-
-int ModelMenu::role(MenuRole menuRole) const
-{
-    return d->m_menuRole[menuRole];
-}
-
-void ModelMenu::setFlags(ModelMenu::Flags flags)
-{
-    d->m_flags = flags;
-}
-
-ModelMenu::Flags ModelMenu::flags() const
-{
-    return ModelMenu::Flags(d->m_flags);
-}
-
 Q_DECLARE_METATYPE(QModelIndex)
 void ModelMenu::Private::slotAboutToShow()
 {
@@ -378,9 +270,14 @@ void ModelMenu::Private::slotAboutToShow()
         modelReset(true);
 }
 
-ModelMenu *ModelMenu::createBaseMenu()
+void ModelMenu::Private::slotAboutToHide()
 {
-    return new ModelMenu(this);
+    if(m_showSearchLine)
+    {
+        m_searchLine->clearFocus();
+        QFocusEvent event(QEvent::FocusOut);
+        QCoreApplication::sendEvent(m_searchLine, &event);
+    }
 }
 
 QAction* ModelMenu::Private::createSubmenu(const QModelIndex &parent, QAction *before)
@@ -398,13 +295,6 @@ QAction* ModelMenu::Private::createSubmenu(const QModelIndex &parent, QAction *b
     modelMenu->setRootIndex(indexToSource(parent));
     modelMenu->setModel(m_model);
     return modelMenu->menuAction();
-}
-
-bool ModelMenu::isFolder(const QModelIndex& index) const
-{
-    Q_ASSERT(model());
-    
-    return model()->hasChildren(index);
 }
 
 bool ModelMenu::Private::descendantFromRoot(const QModelIndex &index)
@@ -473,7 +363,6 @@ void ModelMenu::Private::actionAdded(QAction *action)
     connect(action, SIGNAL(destroyed(QObject *)), q, SLOT(actionDeleted(QObject *)));
 }
 
-
 void ModelMenu::Private::actionDeleted(QObject* actionObj)
 {
     QAction *action = qobject_cast<QAction*>(actionObj);
@@ -502,76 +391,11 @@ QAction *ModelMenu::Private::makeAction(const QModelIndex &index)
     return action;
 }
 
-QAction *ModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
-{
-    return new QAction(icon, text, parent);
-}
-
 void ModelMenu::Private::actionTriggered(QAction *action)
 {
     QModelIndex idx = q->index(action);
     if (idx.isValid())
         emit q->activated(idx);
-}
-
-QModelIndex ModelMenu::index(QAction *action)
-{
-    if (!action)
-        return QModelIndex();
-    QVariant variant = action->data();
-    if (!variant.canConvert<QModelIndex>())
-        return QModelIndex();
-
-    return qvariant_cast<QModelIndex>(variant);
-}
-
-QModelIndex ModelMenu::indexAt(const QPoint& pt)
-{
-    return index(actionAt(pt));
-}
-
-QAction* ModelMenu::actionForIndex(const QModelIndex& index)
-{
-    if(!d->m_actionForIndex.contains(index))
-        return 0;
-    
-    return d->m_actionForIndex.value(index);
-}
-
-void ModelMenu::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton)
-        d->m_dragStartPos = event->pos();
-    QMenu::mousePressEvent(event);
-}
-
-void ModelMenu::mouseReleaseEvent(QMouseEvent *event)
-{
-    QMenu::mouseReleaseEvent(event);
-}
-
-void ModelMenu::mouseMoveEvent(QMouseEvent *event)
-{
-    if(!d->currentModel())
-        return;
-    
-    if ((event->pos() - d->m_dragStartPos).manhattanLength() > QApplication::startDragDistance())
-    {
-        QAction *action = actionAt(d->m_dragStartPos);
-        QModelIndex eventIndex = index(action);
-        
-        if (event->buttons() == Qt::LeftButton
-            && eventIndex.isValid()
-            && !isFolder(eventIndex))
-        {
-            QDrag *drag = new QDrag(this);
-            drag->setMimeData(d->currentModel()->mimeData((QModelIndexList() << eventIndex)));
-            QRect actionRect = actionGeometry(action);
-            drag->setPixmap(QPixmap::grabWidget(this, actionRect));
-            drag->exec();
-        }
-    }
-    QMenu::mouseMoveEvent(event);
 }
 
 void ModelMenu::Private::dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight )
@@ -704,6 +528,270 @@ void ModelMenu::Private::modelReset (bool force)
     
     m_dirty = false;
         
+}
+
+//@endcond
+
+ModelMenu::ModelMenu(QWidget *parent)
+    : KMenu(parent), d(new Private(this))
+{
+    d->m_flags = IsRootFlag;
+}
+
+ModelMenu::ModelMenu(ModelMenu *parentMenu)
+    : KMenu(parentMenu), d(new Private(this, parentMenu->d))
+{
+    d->m_parentMenu = parentMenu;
+}
+
+ModelMenu::~ModelMenu()
+{
+    delete d;
+}
+
+void ModelMenu::setModel(QAbstractItemModel *newModel)
+{
+    if(d->currentModel() == d->m_model && d->m_model)
+    {
+        disconnect(d->m_model, SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
+            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
+        disconnect(d->m_model, SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
+            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
+        disconnect(d->m_model, SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
+            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
+        disconnect(d->m_model, SIGNAL(modelReset ()),
+            this, SLOT(modelReset ()));
+        disconnect(d->m_model, SIGNAL(layoutChanged()),
+            this, SLOT(modelReset()));
+    }
+    
+    d->m_model = newModel;
+    if(flags() & IsRootFlag)
+    {
+        delete d->m_proxyModel;
+        delete d->m_searchModel;
+        
+        d->m_proxyModel = new KDescendantsProxyModel(this);
+        d->m_proxyModel->setSourceModel(newModel);
+        
+        d->m_searchModel = new QSortFilterProxyModel(this);
+        d->m_searchModel->setSourceModel(d->m_proxyModel);
+    }
+    
+    d->m_dirty = true;
+    d->modelReset();
+    
+    connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
+        this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
+    connect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
+        this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
+    connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
+        this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
+    connect(d->currentModel(), SIGNAL(modelReset ()),
+        this, SLOT(modelReset ()));
+    connect(d->currentModel(), SIGNAL(layoutChanged()),
+        this, SLOT(modelReset()));
+}
+
+QAbstractItemModel *ModelMenu::model() const
+{
+    return d->m_model;
+}
+
+void ModelMenu::setRootIndex(const QModelIndex &index)
+{
+    if(d->m_root == index)
+        return;
+    
+    d->m_root = index;
+    
+    d->modelReset();
+    
+    emit rootChanged(index);
+}
+
+QModelIndex ModelMenu::rootIndex() const
+{
+    return d->m_root;
+}
+
+bool ModelMenu::setShowSearchLine(bool newSearchLine)
+{
+    if(!(flags() & IsRootFlag))
+        return false;
+    
+    if(d->m_showSearchLine == newSearchLine)
+        return d->m_showSearchLine;
+    
+    d->m_showSearchLine = newSearchLine;
+    
+    if(newSearchLine)
+    {
+        d->m_searchLineAction = new QWidgetAction(this);
+        d->m_searchLine = new ModelMenuSearchLine(this);
+        d->m_searchLineAction->setDefaultWidget(d->m_searchLine);
+        addAction(d->m_searchLineAction);
+    }
+    else
+    {
+        d->m_searchLineAction->deleteLater();
+        d->m_searchLine = 0;
+        d->m_searchLineAction = 0;
+    }
+    
+    return d->m_showSearchLine;
+}
+
+bool ModelMenu::showSearchLine() const
+{
+    return d->m_showSearchLine;
+}
+
+
+ModelMenuSearchLine* ModelMenu::searchLine() 
+{
+    return d->m_searchLine;
+}
+
+bool ModelMenu::setSearchActive(bool newSearchActive)
+{
+    if(flags() & IsRootFlag && searchActive() != newSearchActive)
+    {
+        disconnect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
+            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
+        disconnect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
+            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
+        disconnect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
+            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
+        disconnect(d->currentModel(), SIGNAL(modelReset ()),
+            this, SLOT(modelReset ()));
+        disconnect(d->currentModel(), SIGNAL(layoutChanged()),
+            this, SLOT(modelReset()));
+            
+        d->m_searchActive = newSearchActive;
+        d->modelReset();
+        
+        connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
+            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
+        connect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
+            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
+        connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
+            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
+        connect(d->currentModel(), SIGNAL(modelReset ()),
+            this, SLOT(modelReset ()));
+        connect(d->currentModel(), SIGNAL(layoutChanged()),
+            this, SLOT(modelReset()));
+    }
+    
+    return d->m_searchActive;
+}
+
+bool ModelMenu::searchActive() const
+{
+    return d->m_searchActive;
+}
+
+void ModelMenu::setRole(MenuRole menuRole, int modelRole)
+{
+    d->m_menuRole[menuRole] = modelRole;
+}
+
+
+QSortFilterProxyModel* ModelMenu::searchModel()
+{
+    return d->m_searchModel;
+}
+
+int ModelMenu::role(MenuRole menuRole) const
+{
+    return d->m_menuRole[menuRole];
+}
+
+void ModelMenu::setFlags(ModelMenu::Flags flags)
+{
+    d->m_flags = flags;
+}
+
+ModelMenu::Flags ModelMenu::flags() const
+{
+    return ModelMenu::Flags(d->m_flags);
+}
+
+ModelMenu *ModelMenu::createBaseMenu()
+{
+    return new ModelMenu(this);
+}
+
+bool ModelMenu::isFolder(const QModelIndex& index) const
+{
+    Q_ASSERT(model());
+    
+    return model()->hasChildren(index);
+}
+
+QAction *ModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
+{
+    return new QAction(icon, text, parent);
+}
+
+QModelIndex ModelMenu::index(QAction *action)
+{
+    if (!action)
+        return QModelIndex();
+    QVariant variant = action->data();
+    if (!variant.canConvert<QModelIndex>())
+        return QModelIndex();
+
+    return qvariant_cast<QModelIndex>(variant);
+}
+
+QModelIndex ModelMenu::indexAt(const QPoint& pt)
+{
+    return index(actionAt(pt));
+}
+
+QAction* ModelMenu::actionForIndex(const QModelIndex& index)
+{
+    if(!d->m_actionForIndex.contains(index))
+        return 0;
+    
+    return d->m_actionForIndex.value(index);
+}
+
+void ModelMenu::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        d->m_dragStartPos = event->pos();
+    QMenu::mousePressEvent(event);
+}
+
+void ModelMenu::mouseReleaseEvent(QMouseEvent *event)
+{
+    QMenu::mouseReleaseEvent(event);
+}
+
+void ModelMenu::mouseMoveEvent(QMouseEvent *event)
+{
+    if(!d->currentModel())
+        return;
+    
+    if ((event->pos() - d->m_dragStartPos).manhattanLength() > QApplication::startDragDistance())
+    {
+        QAction *action = actionAt(d->m_dragStartPos);
+        QModelIndex eventIndex = index(action);
+        
+        if (event->buttons() == Qt::LeftButton
+            && eventIndex.isValid()
+            && !isFolder(eventIndex))
+        {
+            QDrag *drag = new QDrag(this);
+            drag->setMimeData(d->currentModel()->mimeData((QModelIndexList() << eventIndex)));
+            QRect actionRect = actionGeometry(action);
+            drag->setPixmap(QPixmap::grabWidget(this, actionRect));
+            drag->exec();
+        }
+    }
+    QMenu::mouseMoveEvent(event);
 }
 
 #include "modelmenu.moc"

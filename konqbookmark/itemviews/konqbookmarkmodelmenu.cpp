@@ -25,9 +25,11 @@
 #include <kdebug.h>
 #include <klineedit.h>
 #include <QWidgetAction>
+#include <QCoreApplication>
 #include <QPushButton>
+#include <QFocusEvent>
+#include <QKeyEvent>
 #include <QStyle>
-#include <QEvent>
 
 class KonqBookmarkModelMenu::Private
 {
@@ -36,33 +38,26 @@ public:
     virtual ~Private() {}
     
     void setChildAsRoot(const QModelIndex& index);
-    void slotAboutToHide();
     
 public:
     KonqBookmarkMenuHelper *m_KonqBookmarkMenuHelper;
     KonqBookmarkModelMenu *m_parent;
     ModelMenuSearchLine *m_searchLine;
-    bool m_show;
 };
 
 KonqBookmarkModelMenu::Private::Private(KonqBookmarkModelMenu *parent)
-    : m_parent(parent), m_show(false)
+    : m_parent(parent)
 {
 
-}
-
-void KonqBookmarkModelMenu::Private::slotAboutToHide()
-{
-    kDebug();
-    m_searchLine->clearFocus();
-    m_show = false;
 }
 
 void KonqBookmarkModelMenu::Private::setChildAsRoot(const QModelIndex& index)
 {
     if(index.isValid())
     {
+        kDebug() << index.data();
         m_parent->setRootIndex(index);
+        kDebug() << m_parent->rootIndex().data();
         disconnect(m_parent->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             m_parent, SLOT(setChildAsRoot(const QModelIndex&)));
     }
@@ -72,21 +67,12 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
     : ModelMenu(parent),  d( new Private(this) )
 {
     setModel(model);
+    setShowSearchLine(true);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
     
     // We want to set "Konqueror Bookmarks" as root
     connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(setChildAsRoot(const QModelIndex&)));    
-    connect(this, SIGNAL(aboutToHide()), this, SLOT(slotAboutToHide()));
-    
-    if(flags() & IsRootFlag)
-    {
-        QWidgetAction *widgetAction = new QWidgetAction(this);
-        d->m_searchLine = new ModelMenuSearchLine(this);
-        d->m_searchLine->lineEdit()->setClickMessage(i18n("Search in boomarks..."));
-        widgetAction->setDefaultWidget(d->m_searchLine);
-        addAction(widgetAction);
-    }
 }
 
 KonqBookmarkModelMenu::~KonqBookmarkModelMenu()

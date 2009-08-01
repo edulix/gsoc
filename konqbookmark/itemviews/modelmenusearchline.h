@@ -24,10 +24,10 @@
 #include <kdeui_export.h>
 
 #include <QtGui/QWidget>
-#include "modelmenu.h"
 
 class KLineEdit;
 class QSortFilterProxyModel;
+class ModelMenu;
 
 /**
  * @class ModelMenuSearchLine
@@ -38,7 +38,8 @@ class QSortFilterProxyModel;
  * search line should operate.
  *
  * @author Tom Albers <tomalbers@kde.nl>
- * @since 4.2
+ * @author Eduardo Robles Elvira <edulix@gmail.com>
+ * @since 4.4
  */
 
 class KDEUI_EXPORT ModelMenuSearchLine
@@ -74,6 +75,7 @@ private:
     Q_DISABLE_COPY( ModelMenuSearchLine )
     Q_PRIVATE_SLOT( d, void slotSearchLineChange( const QString& newText ) )
     Q_PRIVATE_SLOT( d, void slotSearchLineActivate() )
+    Q_PRIVATE_SLOT( d, void slotRootChanged(const QModelIndex &rootIndex) )
 };
 
 #endif //MODELMENUSEARCHLINE_H

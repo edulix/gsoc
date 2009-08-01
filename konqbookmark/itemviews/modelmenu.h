@@ -21,34 +21,40 @@
 #define MODELMENU_H
 
 #include "konqbookmark_export.h"
+#include "modelmenusearchline.h"
 
 #include <QMenu>
-#include <QAbstractItemModel>
 #include <QFlags>
+#include <QModelIndex>
 
 #include <kmenu.h>
 
 class QSortFilterProxyModel;
+class ModelMenuSearchLine;
+class QAbstractItemModel;
 
 /**
  * @short A QMenu that is dynamically populated and updated from a QAbstractItemModel
  *
  * This class is similar to an ItemView (uses a QAbstractItemModel as
- * a data source) but inheriting instead from QMenu.
+ * a data source) but inheriting instead from QMenu. Each item in the menu
+ * represents an index in the model.
+ * 
+ * It supports searching with a search line. Search can be activated with the
+ * property showSearchLine.
  *
- * @author Benjamin C. Meyer <ben@meyerhome.net>
+ * @author Eduardo Robles Elvira <edulix@gmail.com>
  */
 class KONQBOOKMARK_EXPORT ModelMenu : public KMenu
 {
     Q_OBJECT
-    Q_PROPERTY(bool searchActive READ searchActive WRITE setSearchActive)
+    Q_PROPERTY(bool showSearchLine READ showSearchLine WRITE setShowSearchLine)
 public:
     enum Flag
     {
         NoOptionsFlag = 0x0,
-        ShowSearchBarFlag = 0x1,
-        OneColumnFlag = 0x2,
-        IsRootFlag = 0x4,
+        OneColumnFlag = 0x1, // TODO
+        IsRootFlag = 0x2,
         CustomFlag = 0xF
     };
     Q_DECLARE_FLAGS(Flags, Flag)
@@ -82,14 +88,11 @@ public:
     void setFlags(Flags flags);
     Flags flags() const;
     
-    /**
-     * Search mode can be activated only if we are root.
-     * 
-     * @returns true if search mode was activated
-     */
-    bool setSearchActive(bool searchActive);
-    bool searchActive() const;
     QSortFilterProxyModel* searchModel();
+        
+    bool setShowSearchLine(bool showSearchLine);
+    bool showSearchLine() const;
+    ModelMenuSearchLine *searchLine();
 protected:
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
     
@@ -110,14 +113,25 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     
+    /**
+     * Search mode can be activated only if we are root.
+     * 
+     * @returns true if search mode was activated
+     */
+    friend class ModelMenuSearchLine;
+    bool setSearchActive(bool searchActive);
+    bool searchActive() const;
+    
 Q_SIGNALS:
     void activated(const QModelIndex &index);
+    void rootChanged(const QModelIndex &rootIndex);
 
 private:
     class Private;
     Private* const d;
     
     Q_PRIVATE_SLOT(d, void slotAboutToShow())
+    Q_PRIVATE_SLOT(d, void slotAboutToHide())
     Q_PRIVATE_SLOT(d, void actionTriggered(QAction *action))
     Q_PRIVATE_SLOT(d, void actionDeleted(QObject* actionObj))
     Q_PRIVATE_SLOT(d, void dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight ))

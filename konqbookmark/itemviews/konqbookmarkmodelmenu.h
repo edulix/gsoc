@@ -58,7 +58,6 @@ private:
     Private* const d;
     
     Q_PRIVATE_SLOT(d, void setChildAsRoot(const QModelIndex& index))
-    Q_PRIVATE_SLOT(d, void slotAboutToHide())
 };
 
 

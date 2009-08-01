@@ -19,6 +19,7 @@
  */
 
 #include "modelmenusearchline.h"
+#include "modelmenu.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -51,6 +52,7 @@ public:
 
     void slotSearchLineChange( const QString& newText );
     void slotSearchLineActivate();
+    void slotRootChanged(const QModelIndex &rootIndex);
 };
 
 void ModelMenuSearchLine::Private::slotSearchLineChange( const QString& )
@@ -72,6 +74,16 @@ void ModelMenuSearchLine::Private::slotSearchLineActivate()
     if(m_parent->searchActive() != activate)
         m_parent->setSearchActive(activate);
 }
+
+void ModelMenuSearchLine::Private::slotRootChanged(const QModelIndex &rootIndex)
+{
+    QString rootTitle = rootIndex.data().toString();
+    if(rootTitle.isEmpty())
+        searchLine->setClickMessage(i18n("Search..."));
+    else
+        searchLine->setClickMessage(i18n("Search in %1...", rootTitle));
+}
+
 //@endcond
 
 ModelMenuSearchLine::ModelMenuSearchLine( ModelMenu* parent )
@@ -81,7 +93,10 @@ ModelMenuSearchLine::ModelMenuSearchLine( ModelMenu* parent )
 
     d->searchLine = new KLineEdit( this );
     d->searchLine->setClearButtonShown( true );
-
+    d->searchLine->setMinimumWidth(300);
+    
+    d->slotRootChanged(parent->rootIndex());
+    
     QHBoxLayout* layout = new QHBoxLayout( this );
     layout->setMargin( 0 );
     layout->addWidget( d->searchLine );
@@ -89,6 +104,8 @@ ModelMenuSearchLine::ModelMenuSearchLine( ModelMenu* parent )
 
     connect( d->searchLine, SIGNAL( textChanged( const QString& ) ),
              SLOT( slotSearchLineChange( const QString& ) ) );
+    connect( parent, SIGNAL( rootChanged(const QModelIndex &) ),
+             SLOT( slotRootChanged(const QModelIndex & ) ) );
 }
 
 ModelMenuSearchLine::~ModelMenuSearchLine()
