@@ -97,12 +97,12 @@ void KTreeViewSearchLine::Private::rowsInserted( const QModelIndex & parentIndex
     
     QModelIndex ancestor = parentIndex.child(i, 0);
     bool itemMatches = false;
-    kDebug() << ancestor.data().toString();
+//     kDebug() << ancestor.data().toString();
     while(ancestor.isValid())
     {
       itemMatches |= parent->itemMatches( ancestor, search );  
       bool rowShown = !widget->isRowHidden( ancestor.row(), ancestor.parent());
-      kDebug() << ancestor.data().toString() << "\t matches: " <<  itemMatches << "\t shown: " << rowShown << "\t patern: " << search;
+//       kDebug() << ancestor.data().toString() << "\t matches: " <<  itemMatches << "\t shown: " << rowShown << "\t patern: " << search;
       
       // If i == start that's a special case because by default a newly inserted
       // index is shown, thus that doesn't warantee its ancestors are also marked as
@@ -215,7 +215,7 @@ bool KTreeViewSearchLine::Private::checkItemParentsVisible( QTreeView *treeView,
 
   // Should this item be shown? It should if any children should be, or if it matches.
   const QModelIndex parentindex = index.parent();
-  kDebug() << "index: " << index.data().toString() << "; " << childMatch << ";" << parent->itemMatches( index, search ) << "; " << search;
+//   kDebug() << "index: " << index.data().toString() << "; " << childMatch << ";" << parent->itemMatches( index, search ) << "; " << search;
   if ( childMatch || parent->itemMatches( index, search ) ) {
     treeView->setRowHidden( index.row(), parentindex, false );
     return true;
@@ -327,7 +327,7 @@ void KTreeViewSearchLine::removeTreeView( QTreeView *treeView )
 
 void KTreeViewSearchLine::updateSearch( const QString &pattern )
 {
-  kDebug();
+//   kDebug();
   d->search = pattern.isNull() ? text() : pattern;
 
   foreach ( QTreeView* treeView, d->treeViews )
@@ -336,7 +336,7 @@ void KTreeViewSearchLine::updateSearch( const QString &pattern )
 
 void KTreeViewSearchLine::updateSearch( QTreeView *treeView )
 {
-  kDebug() << "yeah: " << treeView->model()->rowCount();
+//   kDebug() << "yeah: " << treeView->model()->rowCount();
   if ( !treeView || !treeView->model()->rowCount() )
     return;
 
@@ -350,7 +350,7 @@ void KTreeViewSearchLine::updateSearch( QTreeView *treeView )
   treeView->setUpdatesEnabled( false );
   if ( d->keepParentsVisible )
   {
-      kDebug() << d->keepParentsVisible << treeView->model()->rowCount();
+//       kDebug() << d->keepParentsVisible << treeView->model()->rowCount();
       d->checkItemParentsVisible( treeView, treeView->rootIndex() );
   } else
     d->checkItemParentsNotVisible( treeView );
@@ -414,7 +414,7 @@ bool KTreeViewSearchLine::itemMatches( const QModelIndex &index, int row, const 
 
 bool KTreeViewSearchLine::itemMatches( const QModelIndex &index, const QString &pattern ) const
 {
-  kDebug() << index.data().toString();
+//   kDebug() << index.data().toString();
   if ( pattern.isEmpty() )
     return true;
   

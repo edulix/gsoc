@@ -22,7 +22,10 @@
 #include <QApplication>
 #include <QEvent>
 #include <QTimer>
+#include <QStyle>
+#include <QDesktopWidget>
 #include <QHash>
+#include <QList>
 #include <QWidgetAction>
 #include <QMouseEvent>
 #include <QAbstractItemModel>
@@ -128,8 +131,9 @@ public:
     /**
      * Inserts an index in the menu. Does the work of dealing with if the index
      * should be a submenu or a simple QAction, etc.
-     * @arg index       Index from currentModel() to be inserted
-     * @arg before      The index will be inserted before it
+     * @arg index           Index from currentModel() to be inserted
+     * @arg before          The index will be inserted before it
+     * @arg repopulating    Should be true if all actions are bein reinserted
      */
     void insertIndex(const QModelIndex &index, QAction *before = 0);
     
@@ -149,8 +153,9 @@ public:
     void rowsInserted ( const QModelIndex & parent, int start, int end );
     void rowsAboutTobeRemoved ( const QModelIndex & parent, int start, int end );
     void modelReset (bool force = false);
+    int maxMenuHeight();
     
-    /// Max number of rows before we go to two columns
+    /// Max number of rows allowed
     int m_maxRows;
     int m_maxWidth;
     
@@ -177,6 +182,14 @@ public:
     
     /// Here we store which action correspond to which index
     QHash<QModelIndex, QAction*> m_actionForIndex;
+    
+    /// Actions shown before the model's actions
+    QList<QAction*> m_preActions;
+    QAction *m_preSeparator;
+    QAction *m_postSeparator;
+    
+    /// Actions shown after the model's actions
+    QList<QAction*> m_postActions;
 };
 
 ModelMenu::Private::Private(ModelMenu *parentMenu)
@@ -192,7 +205,9 @@ ModelMenu::Private::Private(ModelMenu *parentMenu)
     q(parentMenu),
     m_showSearchLine(false),
     m_searchLine(0),
-    m_searchLineAction(0)
+    m_searchLineAction(0),
+    m_preSeparator(0),
+    m_postSeparator(0)
 {
     init();
 }
@@ -210,7 +225,9 @@ ModelMenu::Private::Private(ModelMenu *parentMenu, Private* copy)
     q(parentMenu),
     m_showSearchLine(false),
     m_searchLine(0),
-    m_searchLineAction(0)
+    m_searchLineAction(0),
+    m_preSeparator(0),
+    m_postSeparator(0)
 {
     init();
 }
@@ -266,8 +283,7 @@ QModelIndex ModelMenu::Private::indexToCurrent(const QModelIndex& index)
 Q_DECLARE_METATYPE(QModelIndex)
 void ModelMenu::Private::slotAboutToShow()
 {
-    if(m_dirty)
-        modelReset(true);
+    modelReset(true);
 }
 
 void ModelMenu::Private::slotAboutToHide()
@@ -309,9 +325,14 @@ bool ModelMenu::Private::descendantFromRoot(const QModelIndex &index)
 
 void ModelMenu::Private::insertIndex(const QModelIndex &index, QAction *before)
 {
+    
     Q_ASSERT(currentModel());
     
-    QAction* lastAddedAction = 0;
+    
+    int size = q->actions().size();
+    
+    QAction* addedAction = 0;
+    QAction* tempBefore = (m_postSeparator) ? m_postSeparator : before;
     QModelIndex sourceIndex = indexToSource(index);
     
     if(!descendantFromRoot(sourceIndex))
@@ -319,37 +340,57 @@ void ModelMenu::Private::insertIndex(const QModelIndex &index, QAction *before)
     
     if(m_actionForIndex.contains(sourceIndex))
     {
-        q->insertAction(before, q->actionForIndex(sourceIndex));
-        return;
+        if(m_maxRows != -1 && size >= m_maxRows && m_searchActive)
+            return;
+        addedAction = q->actionForIndex(sourceIndex);
+        q->insertAction(tempBefore, addedAction);
     }
-    
-    else if (q->isFolder(sourceIndex)) {
-        lastAddedAction = createSubmenu(index, before);
-    } else {
+    else if (q->isFolder(sourceIndex))
+    {
+        addedAction = createSubmenu(index, before);
+    } else
+    {
         if (m_menuRole[SeparatorRole] != 0
             && index.data(m_menuRole[SeparatorRole]).toBool())
-            lastAddedAction = q->insertSeparator(before);
-        else {
-            q->insertAction(before, lastAddedAction = makeAction(index));
+        {
+            addedAction = new QAction(q);
+            addedAction->setSeparator(true);
         }
-        actionAdded(lastAddedAction);
+        else
+        {
+            addedAction = makeAction(index);
+        }
+        actionAdded(addedAction);
+        
+        if(m_maxRows != -1 && size >= m_maxRows && m_searchActive)
+            return;
+        q->insertAction(tempBefore, addedAction);
     }
     
-    int size = q->actions().size();
-    if(q->columnCount() > 1 && m_maxRows > size)
+    int maxHeight = maxMenuHeight();
+    
+    if(q->sizeHint().height() > maxHeight)
     {
+        if(addedAction)
+            q->removeAction(addedAction);
         m_maxRows = size;
     }
 }
 
+int ModelMenu::Private::maxMenuHeight()
+{
+    int max = QApplication::desktop()->availableGeometry((QApplication::desktop()->screenNumber(q))).height();
+    int top = q->parentWidget()->geometry().topLeft().y();
+    
+    return qMax(max / 2, max - top) - 30;
+}
 void ModelMenu::Private::populateMenu()
 {
+    kDebug();
     if (!currentModel())
         return;
     
     int end = currentModel()->rowCount(currentRootIndex());
-    if (m_maxRows != -1)
-        end = qMin(m_maxRows, end);
     
     for (int i = 0; i < end; ++i) {
         QModelIndex index = currentModel()->index(i, 0, currentRootIndex());
@@ -436,7 +477,8 @@ void ModelMenu::Private::dataChanged ( const QModelIndex & topLeft, const QModel
 }
 
 void ModelMenu::Private::rowsInserted ( const QModelIndex & parent, int start, int end )
-{   
+{
+    kDebug();
     if(!q->isVisible())
     {
         m_dirty = true;
@@ -470,12 +512,13 @@ void ModelMenu::Private::rowsInserted ( const QModelIndex & parent, int start, i
     // the actions will be appended
     const QModelIndex& index = parent.child(start - 1, 0);
     QAction* before = q->actionForIndex(indexToSource(index));
+    
     for(int i = start; i <= end; i++)
     {
         const QModelIndex& index = parent.child(i, 0);
         insertIndex(index, before);
-        
     }
+    emit q->rowCountChanged(m_actionForIndex.values().count());
 }
 
 void ModelMenu::Private::rowsAboutTobeRemoved ( const QModelIndex & parent, int start, int end )
@@ -501,6 +544,7 @@ void ModelMenu::Private::rowsAboutTobeRemoved ( const QModelIndex & parent, int 
             q->removeAction(action);
         }
     }
+    emit q->rowCountChanged(m_actionForIndex.values().count());
 }
 
 void ModelMenu::Private::modelReset (bool force)
@@ -511,8 +555,8 @@ void ModelMenu::Private::modelReset (bool force)
         return;
     }
     
+    int prevCountActions = q->actions().count();
     QListIterator<QAction*> it(m_actionForIndex.values());
-    QList<QAction*> actionsToDelete(m_actionForIndex.values());
     while (it.hasNext())
     {
         QAction* action = it.next();
@@ -524,10 +568,13 @@ void ModelMenu::Private::modelReset (bool force)
         q->removeAction(action);
     }
 
+    m_maxRows = -1;
     populateMenu();
-    
     m_dirty = false;
-        
+    
+    int postCountActions = q->actions().count();
+    if(prevCountActions != postCountActions)
+        emit q->rowCountChanged(m_actionForIndex.values().count());
 }
 
 //@endcond
@@ -630,7 +677,14 @@ bool ModelMenu::setShowSearchLine(bool newSearchLine)
         d->m_searchLineAction = new QWidgetAction(this);
         d->m_searchLine = new ModelMenuSearchLine(this);
         d->m_searchLineAction->setDefaultWidget(d->m_searchLine);
-        addAction(d->m_searchLineAction);
+        if(d->m_preActions.empty())
+        {
+            addAction(d->m_searchLineAction, PreModelItems);
+        } else
+        {
+            insertAction(d->m_preActions.first(), d->m_searchLineAction);
+            d->m_preActions.prepend(d->m_searchLineAction);
+        }
     }
     else
     {
@@ -732,6 +786,60 @@ bool ModelMenu::isFolder(const QModelIndex& index) const
 QAction *ModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
 {
     return new QAction(icon, text, parent);
+}
+
+
+
+void ModelMenu::addAction(QAction *action, MenuItemLocation location)
+{
+    if(location == PreModelItems)
+    {
+        d->m_preActions.append(action);
+        
+        if(d->m_preActions.empty())
+        {
+            d->m_preSeparator = new QAction(this);
+            d->m_preSeparator->setSeparator(true);
+            insertAction(d->m_postSeparator, d->m_preSeparator);
+            d->modelReset();
+        }
+        insertAction(d->m_preSeparator, action);
+        
+    } else if (location == PostModelItems)
+    {
+        d->m_postActions.append(action);
+        
+        if(d->m_postActions.empty())
+        {
+            d->m_postSeparator = new QAction(this);
+            d->m_postSeparator->setSeparator(true);
+            QWidget::addAction(d->m_postSeparator);
+        }
+        QWidget::addAction(action);
+    }
+}
+
+void ModelMenu::removeAction(QAction* action, MenuItemLocation location)
+{
+    if(location == PreModelItems)
+    {
+        removeAction(action);
+        d->m_preActions.removeOne(action);
+        if(d->m_preActions.empty())
+        {
+            delete d->m_preSeparator;
+            d->m_preSeparator = 0;
+        }
+    } else if (location == PostModelItems)
+    {
+        removeAction(action);
+        d->m_postActions.removeOne(action);
+        if(d->m_postActions.empty())
+        {
+            delete d->m_postSeparator;
+            d->m_postSeparator = 0;
+        }
+    }
 }
 
 QModelIndex ModelMenu::index(QAction *action)

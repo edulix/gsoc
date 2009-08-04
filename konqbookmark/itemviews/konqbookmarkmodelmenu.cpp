@@ -67,6 +67,7 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
     : ModelMenu(parent),  d( new Private(this) )
 {
     setModel(model);
+    setFlags(flags() | OneColumnFlag);
     setShowSearchLine(true);
     d->m_KonqBookmarkMenuHelper = KonqBookmarkMenuHelper;
     

@@ -86,16 +86,16 @@ void Bookmarks::setupActions()
     (void) KStandardAction::copy(actn, SLOT( slotCopy() ), actionCollection());
     (void) KStandardAction::paste(actn, SLOT( slotPaste() ), actionCollection());
 
-//     Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
-//     Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
-//     Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
-//     KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, this);
-//     
-//     KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");
-//     actnBookmarksMenu->setIcon(KIcon("bookmarks"));
-//     actnBookmarksMenu->setText(i18n("Bookmarks"));
-//     actnBookmarksMenu->setShortcut(Qt::Key_B);
-//     actnBookmarksMenu->setMenu(bookmarksMenu);
+    Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
+    Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
+    Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
+    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, this);
+    
+    KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");
+    actnBookmarksMenu->setIcon(KIcon("bookmarks"));
+    actnBookmarksMenu->setText(i18n("Bookmarks"));
+    actnBookmarksMenu->setShortcut(Qt::Key_B);
+    actnBookmarksMenu->setMenu(bookmarksMenu);
     
     // actions
     KAction* actnDelete = actionCollection()->addAction("delete");

@@ -66,6 +66,12 @@ public:
     };
     enum { MenuRolesSize = 2 };
     
+    enum MenuItemLocation
+    {
+        PreModelItems = 0x1,
+        PostModelItems = 0x2
+    };
+    
     ModelMenu(QWidget *parent = 0);
     ModelMenu(ModelMenu *parentMenu = 0);
     virtual ~ModelMenu();
@@ -91,10 +97,37 @@ public:
     QSortFilterProxyModel* searchModel();
         
     bool setShowSearchLine(bool showSearchLine);
+    
     bool showSearchLine() const;
+    
     ModelMenuSearchLine *searchLine();
+    
+    void removeAction(QAction* action)
+    {
+        QMenu::removeAction(action);
+    }
+    
 protected:
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
+    
+    /**
+     * With this helper function inherited classes can add actions that will
+     * appear in the menu either before or after the real model menu actions.
+     * This is function is normally called in the constructor.
+     *
+     * @note It will trigger a modelReset() internal call (all currentnly added
+     * model actions will be removed and einserted correctly) if it's the first
+     * preAction added, so it's best if you call to this function before the
+     * menu is shown.
+     */
+    void addAction(QAction *action, MenuItemLocation location);
+    
+    
+    /**
+     * Call this if you want to remove any action added with @ref addAction(action, location).
+     * It will trigger take care of removing any separator if needed.
+     */
+    void removeAction(QAction* action, MenuItemLocation location);
     
     /**
      * Returns whether an index corresponds to a folder or not. This is needed
@@ -123,8 +156,26 @@ protected:
     bool searchActive() const;
     
 Q_SIGNALS:
+    /**
+     * Emitted when one of this menu's actions have been activated
+     */
     void activated(const QModelIndex &index);
+    
+    /**
+     * Emitted when we change from one root index to another.
+     * Note: This is NOT emitted when the data in the model changes but the
+     * QModelIndex remains being the same.
+     */
     void rootChanged(const QModelIndex &rootIndex);
+    
+    /**
+     * Emitted when the number of model items in the menu changes. Useful if
+     * in your inheritted class you want to activate/deactivate some actions
+     * depending of the number of rows; for example, an "Open in
+     * Tabs" action does not make sense if the root item for tihs menu has no
+     * child.
+     */
+    void rowCountChanged(const int& count);
 
 private:
     class Private;
