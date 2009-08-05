@@ -155,6 +155,21 @@ protected:
     bool setSearchActive(bool searchActive);
     bool searchActive() const;
     
+    /**
+     * Current model changes. When searching is activated, currentModel() returns
+     * m_searchModel, otherwise it returns m_model.
+     */
+    QAbstractItemModel* currentModel() const;
+    
+    /**
+     * When search is activated currentModel() is m_search which contains all
+     * the indexes in a plain list without any hierarchy other than all of them
+     * have QModelIndex() as parent so that's what currentRootIndex() returns if
+     * search is active. OTherwise returns m_root.
+     */
+    QModelIndex currentRootIndex();
+
+    
 Q_SIGNALS:
     /**
      * Emitted when one of this menu's actions have been activated

@@ -166,16 +166,24 @@ public:
     /// The filtered for the model above
     QSortFilterProxyModel *m_searchModel;
     
+    /// we'll show all the children of this index in our menu
     QPersistentModelIndex m_root;
+    
     QPoint m_dragStartPos;
     int m_menuRole[MenuRolesSize];
     int m_flags;
-    ModelMenu *m_parentMenu;
+    
     /// Dirty is true if there are pending changes (as changes are only applied
     /// dynamically when menu is visible).
     bool m_dirty;
     bool m_searchActive;
+    
+    /// Owner of this private class
     ModelMenu *q;
+    
+    /// Parent of q
+    ModelMenu *m_parentMenu;
+    
     bool m_showSearchLine;
     ModelMenuSearchLine *m_searchLine;
     QWidgetAction *m_searchLineAction;
@@ -186,10 +194,10 @@ public:
     /// Actions shown before the model's actions
     QList<QAction*> m_preActions;
     QAction *m_preSeparator;
-    QAction *m_postSeparator;
     
     /// Actions shown after the model's actions
     QList<QAction*> m_postActions;
+    QAction *m_postSeparator;
 };
 
 ModelMenu::Private::Private(ModelMenu *parentMenu)
@@ -199,10 +207,10 @@ ModelMenu::Private::Private(ModelMenu *parentMenu)
     m_proxyModel(0),
     m_searchModel(0),
     m_flags(IsRootFlag),
-    m_parentMenu(0),
     m_dirty(false),
     m_searchActive(false),
     q(parentMenu),
+    m_parentMenu(0),
     m_showSearchLine(false),
     m_searchLine(0),
     m_searchLineAction(0),
@@ -219,10 +227,10 @@ ModelMenu::Private::Private(ModelMenu *parentMenu, Private* copy)
     m_proxyModel(copy->m_proxyModel),
     m_searchModel(copy->m_searchModel),
     m_flags(IsRootFlag),
-    m_parentMenu(0),
     m_dirty(false),
     m_searchActive(false),
     q(parentMenu),
+    m_parentMenu(0),
     m_showSearchLine(false),
     m_searchLine(0),
     m_searchLineAction(0),
@@ -788,7 +796,15 @@ QAction *ModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *
     return new QAction(icon, text, parent);
 }
 
+QAbstractItemModel* ModelMenu::currentModel() const
+{
+    return d->currentModel();
+}
 
+QModelIndex ModelMenu::currentRootIndex()
+{
+    return d->currentRootIndex();
+}
 
 void ModelMenu::addAction(QAction *action, MenuItemLocation location)
 {

@@ -31,6 +31,7 @@
 
 #include <kactioncollection.h>
 #include <konqbookmarkmenu.h>
+#include <akonadi/collection.h>
 
 class KonqBookmarkMenuHelper;
 class KONQBOOKMARK_EXPORT KonqBookmarkModelMenu : public ModelMenu
@@ -45,21 +46,37 @@ protected:
     virtual ModelMenu *createBaseMenu();
     
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
+    
     virtual KMenu * contextMenu(const QModelIndex& index);
+    
+    virtual bool isFolder(const QModelIndex& index) const;
     
 protected Q_SLOTS:
     /**
-     * Received from QActions when selected.
+     * Received from QActions when activated.
      */
-    virtual void openBookmark(Qt::MouseButtons mb, Qt::KeyboardModifiers km);
+    void openBookmark(const QModelIndex& index);
+    
+    /**
+     * @short Set ups necessary helper actions in the menu.
+     *
+     * Called when the number of items changes in the model and also by the
+     * constructor.
+     */ 
+    void updateActions(const int& count);
     
 private:
+    /**
+     * Shared initialization functions by the constructors.
+     */
+    void init();
+    
     class Private;
     Private* const d;
     
     Q_PRIVATE_SLOT(d, void setChildAsRoot(const QModelIndex& index))
+    Q_PRIVATE_SLOT(d, void slotOpenFolderInTabs())
 };
-
 
 class KONQBOOKMARK_EXPORT KonqBookmarkMenuHelper
 {
@@ -70,12 +87,17 @@ public:
     virtual KonqBookmark currentPlace() const = 0;
     virtual bool supportsTabs() const { return false; }
     virtual QList<KonqBookmark> currentPlacesList() const { return QList<KonqBookmark>(); }
+    virtual bool enableOption(QString option) const = 0;
     
     virtual void openInNewTabs(const QList<KUrl> &urls) { Q_UNUSED(urls); }
     
-    virtual void openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km) = 0;
+    virtual void openBookmark(const KUrl& url) = 0;
     virtual void openInNewTab(const KUrl &url) = 0;
     virtual void openInNewWindow(const KUrl &url) = 0;
+    
+    virtual void createNewFolder(Akonadi::Collection parent) = 0;
+    virtual void addBookmark(Akonadi::Collection parent) = 0;
 };
+
 
 #endif // KONQBOOKMARK_MODEL_MENU_H
