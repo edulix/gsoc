@@ -49,17 +49,25 @@ public:
     void setChildAsRoot(const QModelIndex& index);
     
     void updateOpenInTabs(const int& count);
-    void updateEditBookmarks(const int& count);
-    void updateNewFolder(const int& count);
-    void updateAddBookmark(const int& count);
+    void updateEditBookmarks();
+    void updateNewFolder();
+    void updateAddBookmark();
     
     void slotOpenFolderInTabs();
     void slotNewFolder();
     void slotAddBookmark();
+    void slotEditBookmarks();
     
 public:
     KonqBookmarkMenuHelper *m_helper;
+    
+    // This is used to "export" our actions into an actionlist
+    // we got in the constructor. So that the program can show our 
+    // actions in their shortcut dialog
+    KActionCollection * m_actionCollection;
+    
     KonqBookmarkModelMenu *q;
+    
     QHash<QString, QAction *> m_helperActions;
 };
 
@@ -107,30 +115,33 @@ void KonqBookmarkModelMenu::Private::updateOpenInTabs(const int& count)
     openFolderInTabs->setIcon(KIcon("tab-new"));
     openFolderInTabs->setToolTip(i18n("Open all bookmarks in this folder as a new tab."));
     connect( openFolderInTabs, SIGNAL(triggered(bool)), q, SLOT(slotOpenFolderInTabs()));
+    
+    MenuItemLocation location = (q->flags() & IsRootFlag) ? PreModelItems : PostModelItems;
     q->addAction(openFolderInTabs, PreModelItems);
     m_helperActions["openintabs"] = openFolderInTabs;
 }
 
 
-void KonqBookmarkModelMenu::Private::updateEditBookmarks(const int& count)
+void KonqBookmarkModelMenu::Private::updateEditBookmarks()
 {
-    Q_UNUSED(count);
-    
     // If not supported then we have nothing to do
     if( !m_helper || !m_helper->enableOption("editbookmarks") || !KAuthorized::authorizeKAction("bookmarks") )
         return;
 
     QString title = i18n("Edit Bookmarks...");
 
-    KAction * editBookmarks = new KAction(title, q);
-    editBookmarks->setIcon(KIcon("edit_bookmarks"));
+    KAction* editBookmarks = m_actionCollection->addAction(
+        KStandardAction::EditBookmarks,
+        "edit_bookmarks",
+        q,
+        SLOT( slotEditBookmarks() )
+    );
     editBookmarks->setToolTip(i18n("Edit your bookmark collection in a separate window"));
-    connect( editBookmarks, SIGNAL(triggered(bool)), q, SLOT(slotEditBookmarks()));
     q->addAction(editBookmarks, PreModelItems);
     m_helperActions["openintabs"] = editBookmarks;
 }
 
-void KonqBookmarkModelMenu::Private::updateNewFolder(const int& /*count*/)
+void KonqBookmarkModelMenu::Private::updateNewFolder()
 {
     // If not supported then we have nothing to do
     if( !m_helper || !m_helper->enableOption("newfolder") || !KAuthorized::authorizeKAction("bookmarks") )
@@ -142,23 +153,25 @@ void KonqBookmarkModelMenu::Private::updateNewFolder(const int& /*count*/)
     newBookmarkFolder->setIcon(KIcon("folder-new"));
     newBookmarkFolder->setToolTip(i18n("Create a new bookmark folder in this menu"));
     connect( newBookmarkFolder, SIGNAL(triggered(bool)), q, SLOT(slotNewFolder()));
+    
+    MenuItemLocation location = (q->flags() & IsRootFlag) ? PreModelItems : PostModelItems;
     q->addAction(newBookmarkFolder, PreModelItems);
     m_helperActions["openintabs"] = newBookmarkFolder;
 }
 
-void KonqBookmarkModelMenu::Private::updateAddBookmark(const int& /*count*/)
+void KonqBookmarkModelMenu::Private::updateAddBookmark()
 {
     // If not supported then we have nothing to do
     if( !m_helper || !m_helper->enableOption("addbookmark") || !KAuthorized::authorizeKAction("bookmarks") )
         return;
 
-    QString title = i18n("Add Bookmark...");
-
-    KAction *addBookmark = new KAction(title, q);
-    addBookmark->setIcon(KIcon("addbookmark"));
-    addBookmark->setToolTip(i18n("Add Bookmark to current bookmark"));
-    addBookmark->setShortcut( QKeySequence() );
-    connect( addBookmark, SIGNAL(triggered(bool)), q, SLOT(slotAddBookmark()));
+    KAction *addBookmark = m_actionCollection->addAction(
+        KStandardAction::AddBookmark,
+        "add_bookmark",
+        q,
+        SLOT(slotAddBookmark()));
+        
+    MenuItemLocation location = (q->flags() & IsRootFlag) ? PreModelItems : PostModelItems;
     q->addAction(addBookmark, PreModelItems);
     m_helperActions["addbookmark"] = addBookmark;
 }
@@ -206,15 +219,24 @@ void KonqBookmarkModelMenu::Private::slotAddBookmark()
     
     m_helper->addBookmark(collection);
 }
+
+void KonqBookmarkModelMenu::Private::slotEditBookmarks()
+{
+    if(!m_helper)
+        return;
+    
+    m_helper->editBookmarks();
+}
 //@endcond
 
-KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *KonqBookmarkMenuHelper, QWidget *parent)
+KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkMenuHelper, KActionCollection* actionCollection, QWidget *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
     setModel(model);
     setFlags(flags() | OneColumnFlag);
     setShowSearchLine(true);
-    d->m_helper = KonqBookmarkMenuHelper;
+    d->m_helper = konqBookmarkMenuHelper;
+    d->m_actionCollection = actionCollection;
     
     // We want to set "Konqueror Bookmarks" as root
     connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
@@ -223,10 +245,12 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
     init();
 }
 
-KonqBookmarkModelMenu::KonqBookmarkModelMenu(KonqBookmarkMenuHelper *konqBookmarkMenuHelper, KonqBookmarkModelMenu *parent)
+KonqBookmarkModelMenu::KonqBookmarkModelMenu(KonqBookmarkMenuHelper *konqBookmarkMenuHelper, KActionCollection* actionCollection, KonqBookmarkModelMenu *parent)
     : ModelMenu(parent),  d( new Private(this) )
 {
     d->m_helper = konqBookmarkMenuHelper;
+    d->m_actionCollection = actionCollection;
+    
     connect(this, SIGNAL(activated(const QModelIndex &)), this, SLOT(openBookmark(const QModelIndex &)));
         
     init();
@@ -245,7 +269,7 @@ KonqBookmarkModelMenu::~KonqBookmarkModelMenu()
 
 ModelMenu *KonqBookmarkModelMenu::createBaseMenu()
 {
-    return new KonqBookmarkModelMenu(d->m_helper, this);
+    return new KonqBookmarkModelMenu(d->m_helper, d->m_actionCollection, this);
 }
 
 QAction *KonqBookmarkModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
@@ -271,17 +295,17 @@ void KonqBookmarkModelMenu::updateActions(const int& count)
 {
     if(flags() & IsRootFlag)
     {
-//         addAddBookmark();
+        d->updateAddBookmark();
 //         addAddBookmarksList();
-        d->updateNewFolder(count);
-        d->updateEditBookmarks(count);
+        d->updateNewFolder();
+        d->updateEditBookmarks();
     }
     else
     {
         d->updateOpenInTabs(count);
-    //         addAddBookmark();
+        d->updateAddBookmark();
     //         addAddBookmarksList();
-        d->updateNewFolder(count);
+        d->updateNewFolder();
     }
 }
 
@@ -294,8 +318,5 @@ bool KonqBookmarkModelMenu::isFolder(const QModelIndex& index) const
         qVariantValue<Akonadi::Collection>(index.data(Akonadi::EntityTreeModel::CollectionRole));
     return collection.isValid();
 }
-
-
-
 
 #include "konqbookmarkmodelmenu.moc"

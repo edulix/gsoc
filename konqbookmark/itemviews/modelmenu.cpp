@@ -810,9 +810,10 @@ void ModelMenu::addAction(QAction *action, MenuItemLocation location)
 {
     if(location == PreModelItems)
     {
+        bool wasEmpty = d->m_preActions.empty();
         d->m_preActions.append(action);
         
-        if(d->m_preActions.empty())
+        if(wasEmpty)
         {
             d->m_preSeparator = new QAction(this);
             d->m_preSeparator->setSeparator(true);
@@ -823,14 +824,14 @@ void ModelMenu::addAction(QAction *action, MenuItemLocation location)
         
     } else if (location == PostModelItems)
     {
-        d->m_postActions.append(action);
-        
         if(d->m_postActions.empty())
         {
             d->m_postSeparator = new QAction(this);
             d->m_postSeparator->setSeparator(true);
             QWidget::addAction(d->m_postSeparator);
         }
+        
+        d->m_postActions.append(action);
         QWidget::addAction(action);
     }
 }

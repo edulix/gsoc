@@ -89,7 +89,7 @@ void Bookmarks::setupActions()
     Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
     Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
     Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
-    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, this);
+    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, actionCollection(), this);
     
     KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");
     actnBookmarksMenu->setIcon(KIcon("bookmarks"));

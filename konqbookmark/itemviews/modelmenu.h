@@ -53,7 +53,7 @@ public:
     enum Flag
     {
         NoOptionsFlag = 0x0,
-        OneColumnFlag = 0x1, // TODO
+        OneColumnFlag = 0x1, // TODO: at the moment this is qstyle dependent..
         IsRootFlag = 0x2,
         CustomFlag = 0xF
     };
@@ -69,7 +69,7 @@ public:
     enum MenuItemLocation
     {
         PreModelItems = 0x1,
-        PostModelItems = 0x2
+        PostModelItems = 0x2 // TODO: doesn't work
     };
     
     ModelMenu(QWidget *parent = 0);

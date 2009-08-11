@@ -34,14 +34,17 @@
 #include <akonadi/collection.h>
 
 class KonqBookmarkMenuHelper;
+class KActionCollection;
 class KONQBOOKMARK_EXPORT KonqBookmarkModelMenu : public ModelMenu
 {
     Q_OBJECT
 public:
-    KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, QWidget *parent = 0);
+    KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBookmarkMenuHelper *konqBookmarkOwner, KActionCollection *actionCollection, QWidget *parent = 0);
+    
     virtual ~KonqBookmarkModelMenu();
+
 protected:
-    KonqBookmarkModelMenu(KonqBookmarkMenuHelper *konqBookmarkOwner, KonqBookmarkModelMenu *parent = 0);
+    KonqBookmarkModelMenu(KonqBookmarkMenuHelper *konqBookmarkOwner, KActionCollection *actionCollection, KonqBookmarkModelMenu *parent = 0);
     // return the QMenu that is used to populate sub menu's
     virtual ModelMenu *createBaseMenu();
     
@@ -76,6 +79,9 @@ private:
     
     Q_PRIVATE_SLOT(d, void setChildAsRoot(const QModelIndex& index))
     Q_PRIVATE_SLOT(d, void slotOpenFolderInTabs())
+    Q_PRIVATE_SLOT(d, void slotAddBookmark())
+    Q_PRIVATE_SLOT(d, void slotNewFolder())
+    Q_PRIVATE_SLOT(d, void slotEditBookmarks())
 };
 
 class KONQBOOKMARK_EXPORT KonqBookmarkMenuHelper
@@ -97,6 +103,7 @@ public:
     
     virtual void createNewFolder(Akonadi::Collection parent) = 0;
     virtual void addBookmark(Akonadi::Collection parent) = 0;
+    virtual void editBookmarks() = 0;
 };
 
 
