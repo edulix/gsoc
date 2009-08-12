@@ -55,11 +55,9 @@ namespace Konqueror
         
         virtual KonqBookmark* bookmark(const QUrl& url);
         virtual KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
-        virtual KonqBookmark* bookmark(const Place* place);
         
         virtual KonqHistoryEntry* historyEntry(const QUrl& url);
         virtual KonqHistoryEntry* historyEntry(const KonqBookmark* konqBookmark);
-        virtual KonqHistoryEntry* historyEntry(const Place* place);
         
         virtual Place* place(const QUrl& url);
         virtual Place* place(const KonqBookmark* konqBookmark);
@@ -73,6 +71,9 @@ namespace Konqueror
     private:
         class Private;
         Private* const d;
+        
+        Q_PRIVATE_SLOT(d, void rowsInserted(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void rowsRemoved(const QModelIndex&, int, int))
     };
 }
 #endif // KONQUEROR_PLACESMANAGER_H

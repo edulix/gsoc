@@ -45,28 +45,76 @@ class PlacesManager::Private
 public:
     Private(PlacesManager* parent);
     ~Private();
-    
+
+    void rowsInserted(const QModelIndex& parent, int start, int end);
+    void rowsRemoved(const QModelIndex& parent, int start, int end);
+    bool isFolder(const QModelIndex& index);
+        
     PlacesManager *q;
     
     KonqBookmarkModel *m_bookmarkModel;
     
-    QHash<QUrl, KonqHistoryEntry> m_historyEntries;
-    QHash<QUrl, KonqBookmark> m_bookmarks;
-    QHash<QUrl, Place> m_places;
+    QHash<QUrl, KonqHistoryEntry*> m_historyEntries;
+    QHash<QUrl, KonqBookmark*> m_bookmarks;
+    QHash<QUrl, Place*> m_places;
 };
 
 PlacesManager::Private::Private(PlacesManager* parent)
     : q(parent), m_bookmarkModel(0)
 {
-    Akonadi::Session* session = new Akonadi::Session(QByteArray( "PlacesManager-" ) + QByteArray::number( qrand() ), q);
-    Akonadi::Monitor* monitor = new Akonadi::Monitor( q );
+    Session* session = new Session(QByteArray( "PlacesManager-" ) + QByteArray::number( qrand() ), q);
+    Monitor* monitor = new Monitor( q );
     m_bookmarkModel = new KonqBookmarkModel( session, monitor, q );
+    
+    connect(m_bookmarkModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        q, SLOT(rowsInserted(const QModelIndex&, int, int)));
+        
+    connect(m_bookmarkModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
+        q, SLOT(rowsRemoved(const QModelIndex&, int, int)));
 }
 
 PlacesManager::Private::~Private()
 {
-
+    
 }
+
+bool PlacesManager::Private::isFolder(const QModelIndex& index)
+{
+    if (!index.isValid())
+        return false;
+    
+    Collection collection =  qVariantValue<Collection>(index.data(EntityTreeModel::CollectionRole));
+    return collection.isValid();
+}
+
+void PlacesManager::Private::rowsInserted(const QModelIndex& parent, int start, int end)
+{
+    for(int i = start; i <= end; i++) {
+        QModelIndex index = parent.child(i, 0);
+        if(isFolder(index)) {
+            continue;
+        }
+        
+        KonqBookmark *konqBookmark = new KonqBookmark(index.data(KonqBookmarkModel::UniqueUri).toString());
+        m_bookmarks[konqBookmark->url()] = konqBookmark;
+    }
+}
+
+void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, int end)
+{
+    for(int i = start; i <= end; i++) {
+        QModelIndex index = parent.child(i, 0);
+        if(isFolder(index)) {
+            continue;
+        }
+        QUrl url(index.data(KonqBookmarkModel::Url).toString());
+        if(m_bookmarks.contains(url)) {
+            delete m_bookmarks[url];
+            m_bookmarks.remove(url);
+        }
+    }
+}
+
 //@endcond
 
 PlacesManager::PlacesManager(QObject* parent)
@@ -87,47 +135,64 @@ KonqBookmarkModel* PlacesManager::bookmarkModel()
 
 KonqBookmark* PlacesManager::bookmark(const QUrl& url)
 {
+    if(d->m_bookmarks.contains(url))
+        return d->m_bookmarks[url];
+    
     return 0;
 }
 
 KonqBookmark* PlacesManager::bookmark(const KonqHistoryEntry* historyEntry)
 {
-    return 0;
-}
-
-KonqBookmark* PlacesManager::bookmark(const Place* place)
-{
-    return 0;
+    if(!historyEntry) {
+        return 0;
+    }
+    
+    return bookmark(historyEntry->url);
 }
 
 KonqHistoryEntry* PlacesManager::historyEntry(const QUrl& url)
 {
+    if(d->m_historyEntries.contains(url)) {
+        return d->m_historyEntries[url];
+    }
+    
     return 0;
 }
 
 KonqHistoryEntry* PlacesManager::historyEntry(const KonqBookmark* konqBookmark)
 {
-    return 0;
-}
-
-KonqHistoryEntry* PlacesManager::historyEntry(const Place* place)
-{
-    return 0;
+    if(!konqBookmark) {
+        return 0;
+    }
+    
+    return historyEntry(konqBookmark->url());
 }
 
 Place* PlacesManager::place(const QUrl& url)
 {
+    if(d->m_places.contains(url)) {
+        return d->m_places[url];
+    }
+    
     return 0;
 }
 
 Place* PlacesManager::place(const KonqBookmark* konqBookmark)
 {
-    return 0;
+    if(!konqBookmark) {
+        return 0;
+    }
+    
+    return place(konqBookmark->url());
 }
 
 Place* PlacesManager::place(const KonqHistoryEntry* historyEntry)
 {
-    return 0;
+    if(!historyEntry) {
+        return 0;
+    }
+    
+    return place(historyEntry->url);
 }
 
 QIcon* PlacesManager::icon(const QUrl& url)
