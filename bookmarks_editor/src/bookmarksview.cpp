@@ -48,6 +48,11 @@
 #include <kjob.h>
 
 #include <konqbookmark/konqbookmark.h>
+#include <konqbookmark/kcompletionmodel.h>
+#include <kurlcompletion.h>
+#include <kcompletion.h>
+#include <QStringListModel>
+#include <QStringList>
 #include <konqbookmark/konqbookmarkproxymodel.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/modelwatcher.h>
@@ -125,6 +130,17 @@ BookmarksView::~BookmarksView()
 
 void BookmarksView::createModels()
 {
+    //@testing
+    KUrlCompletion *completion = new KUrlCompletion();
+    ui_bookmarksview_base.kcombobox->setCompletionObject(completion);
+    completion->setDir("file:///home/edulix/");
+ 
+    KCompletionModel *completionModel = new KCompletionModel(this);
+    
+    ui_bookmarksview_base.listView->setModel(completionModel);
+    completionModel->setCompletion(completion);
+    //@end-testing
+    
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
 
     d->mMonitor = new Monitor( this );

@@ -36,6 +36,7 @@ set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
+    itemmodels/kcompletionmodel.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
     kdatawidgetselectionmapper.cpp
@@ -77,6 +78,7 @@ set(konqbookmark_LIB_HDRS
     konqbookmark.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
+    itemmodels/kcompletionmodel.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
     kdatawidgetselectionmapper.h
