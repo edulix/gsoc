@@ -37,6 +37,8 @@ set(konqbookmark_LIB_SRCS
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
     itemmodels/kcompletionmodel.cpp
+    itemmodels/place.cpp
+    itemmodels/placesmanager.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
     kdatawidgetselectionmapper.cpp
@@ -61,6 +63,7 @@ target_link_libraries(konqbookmark
     akonadi_next
     ontologies
     kfile
+    konq # for konq_historyentry. Anyway konqbookmark will have to move to libkonq in the future
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}
@@ -79,6 +82,8 @@ set(konqbookmark_LIB_HDRS
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
     itemmodels/kcompletionmodel.h
+    itemmodels/place.h
+    itemmodels/placesmanager.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
     kdatawidgetselectionmapper.h

@@ -30,6 +30,22 @@
 class QStringList;
 class KUrl;
 
+/**
+ * @brief A wrapper model for KCompletion objects.
+ *
+ * This is a convenience readonly model useful when you want to represent under
+ * the well-known interface of a QAbstractItemModel the data of a KCompletion
+ * object.
+ * 
+ * Works by listening to the KCompletion signals and applying the modifications
+ * to the model. So when new matches are found, those are reflected in the
+ * completion model, and similarly when matches are removed from the completion
+ * object the same happens in the model.
+ * 
+ * The only column this model has shows the text for the match. Inherit from 
+ * this model and reimplement data() and columnCount() if you want to change 
+ * that behaviour.
+ */
 class KONQBOOKMARK_EXPORT KCompletionModel : public QAbstractItemModel
 {
     Q_OBJECT

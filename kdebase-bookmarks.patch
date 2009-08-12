@@ -1,0 +1,511 @@
+Index: apps/konqueror/src/konqmainwindow.h
+===================================================================
+--- apps/konqueror/src/konqmainwindow.h	(revisión: 1005720)
++++ apps/konqueror/src/konqmainwindow.h	(copia de trabajo)
+@@ -84,6 +84,7 @@
+ }
+ 
+ class KonqExtendedBookmarkOwner;
++class KonqExtendedBookmarkMenuHelper;
+ 
+ 
+ class KONQ_TESTS_EXPORT KonqMainWindow : public KParts::MainWindow, public KonqFrameContainerBase
+@@ -113,6 +114,13 @@
+      * Filters the URL and calls the main openUrl method.
+      */
+     void openFilteredUrl(const QString& url, const KonqOpenURLRequest& req);
++    
++    /**
++     * Functions called by KonqExtendedBookmarkOwner and KonqExtendedBookmarkMenuHelper.
++     */
++    void openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km);
++    void openBookmark(const KUrl& url);
++    void openInNewTabs(const QList<KUrl> &urls);
+ 
+     /**
+      * Convenience overload for openFilteredUrl(url, req)
+@@ -706,6 +714,7 @@
+ 
+   KBookmarkMenu* m_pBookmarkMenu;
+   KonqExtendedBookmarkOwner *m_pBookmarksOwner;
++  KonqExtendedBookmarkMenuHelper *m_pBookmarksMenuHelper;
+   KActionCollection* m_bookmarksActionCollection;
+   bool m_bookmarkBarInitialized;
+ 
+Index: apps/konqueror/src/konqmainwindow.cpp
+===================================================================
+--- apps/konqueror/src/konqmainwindow.cpp	(revisión: 1005720)
++++ apps/konqueror/src/konqmainwindow.cpp	(copia de trabajo)
+@@ -43,6 +43,16 @@
+ #include "konqueror_interface.h"
+ #include "delayedinitializer.h"
+ #include "konqextendedbookmarkowner.h"
++#include <config-konqbookmark.h>
++#ifdef HAVE_KONQBOOKMARK
++#include <akonadi/monitor.h>
++#include <akonadi/session.h>
++#include <akonadi/control.h>
++#include <Nepomuk/ResourceManager> 
++#include <konqbookmark/konqbookmark.h>
++#include <konqbookmark/konqbookmarkmodel.h>
++#include "konqextendedbookmarkmenuhelper.h"
++#endif
+ #include "konqframevisitor.h"
+ #include "konqbookmarkbar.h"
+ #include "konqundomanager.h"
+@@ -174,6 +184,13 @@
+    m_pKonqMainWindow = w;
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++KonqExtendedBookmarkMenuHelper::KonqExtendedBookmarkMenuHelper(KonqMainWindow *w)
++{
++    m_pKonqMainWindow = w;
++}
++#endif
++
+ KonqMainWindow::KonqMainWindow( const KUrl &initialURL, const QString& xmluiFile)
+     : KParts::MainWindow()
+     , m_paClosedItems(0)
+@@ -3821,7 +3838,25 @@
+   // Bookmarks menu
+   m_pamBookmarks = new KBookmarkActionMenu(s_bookmarkManager->root(),
+                                               i18n( "&Bookmarks" ), this);
+-  actionCollection()->addAction( "bookmarks", m_pamBookmarks );
++  #ifndef HAVE_KONQBOOKMARK
++    actionCollection()->addAction( "bookmarks", m_pamBookmarks );
++  #else
++    Nepomuk::ResourceManager::instance()->init();
++    
++    if ( !Akonadi::Control::start() ) {
++        kError() << "Unable to start Akonadi server";
++    }
++    
++    Akonadi::Session *session = new Akonadi::Session(QByteArray( "KonqMainWindow-" ) + QByteArray::number( qrand() ), this);
++    Akonadi::Monitor *monitor = new Akonadi::Monitor( this );
++    Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
++    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, new     
++        KonqExtendedBookmarkMenuHelper(this), actionCollection(), this);
++    
++    KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarks");
++    actnBookmarksMenu->setText(i18n("Bookmarks"));
++    actnBookmarksMenu->setMenu(bookmarksMenu);
++  #endif
+ 
+   // The actual menu needs a different action collection, so that the bookmarks
+   // don't appear in kedittoolbar
+@@ -3925,10 +3960,22 @@
+ 
+ void KonqExtendedBookmarkOwner::openBookmark(const KBookmark & bm, Qt::MouseButtons mb, Qt::KeyboardModifiers km)
+ {
+-    kDebug(1202) << bm.url() << km << mb;
++    m_pKonqMainWindow->openBookmark(bm.url(), mb, km);
++}
+ 
+-    const QString url = bm.url().url();
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openBookmark(const KUrl& url)
++{
++    Qt::MouseButtons mb;
++    Qt::KeyboardModifiers km;
++    m_pKonqMainWindow->openBookmark(url, mb, km);
++}
++#endif
+ 
++void KonqMainWindow::openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km)
++{
++    kDebug(1202) << url << km << mb;
++
+     KonqOpenURLRequest req;
+     req.browserArgs.setNewTab(true);
+     req.newTabInFront = KonqSettings::newTabsInFront();
+@@ -3939,17 +3986,17 @@
+     }
+ 
+     if( km & Qt::ControlModifier ) { // Ctrl Left/MMB
+-        m_pKonqMainWindow->openFilteredUrl( url, req);
++        openFilteredUrl( url.url(), req );
+     } else if( mb & Qt::MidButton ) {
+         if(KonqSettings::mmbOpensTab()) {
+-            m_pKonqMainWindow->openFilteredUrl( url, req);
++            openFilteredUrl( url.url(), req );
+         } else {
+-            KUrl finalURL = KonqMisc::konqFilteredURL( m_pKonqMainWindow, url );
++            KUrl finalURL = KonqMisc::konqFilteredURL( this, url.url() );
+             KonqMisc::createNewWindow( finalURL );
+         }
+     }
+     else {
+-        m_pKonqMainWindow->openFilteredUrl( url, false );
++        openFilteredUrl( url.url(), false );
+     }
+ }
+ 
+@@ -4373,6 +4420,16 @@
+    return m_pKonqMainWindow->currentView()->url().url();
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++KonqBookmark KonqExtendedBookmarkMenuHelper::currentPlace() const
++{
++    KonqBookmark bookmark;
++    bookmark.setTitle(m_pKonqMainWindow->currentTitle());
++    bookmark.setUrl(m_pKonqMainWindow->currentView()->url());
++    return bookmark;
++}
++#endif
++
+ QString KonqMainWindow::currentProfile() const
+ {
+    return m_pViewManager->currentProfile();
+@@ -4403,6 +4460,13 @@
+   return true;
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++bool KonqExtendedBookmarkMenuHelper::supportsTabs() const
++{
++  return true;
++}
++#endif
++
+ QList<QPair<QString, QString> > KonqExtendedBookmarkOwner::currentBookmarkList() const
+ {
+   QList<QPair<QString, QString> > list;
+@@ -4420,6 +4484,27 @@
+   return list;
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++QList<KonqBookmark> KonqExtendedBookmarkMenuHelper::currentPlacesList() const
++{
++  QList<KonqBookmark> list;
++  KonqFrameTabs* tabContainer = m_pKonqMainWindow->viewManager()->tabContainer();
++
++  foreach ( KonqFrameBase* frame, tabContainer->childFrameList() )
++  {
++    if ( !frame || !frame->activeChildView() )
++      continue;
++    if( frame->activeChildView()->locationBarURL().isEmpty() )
++      continue;
++    KonqBookmark konqBookmark;
++    konqBookmark.setTitle(frame->activeChildView()->caption());
++    konqBookmark.setUrl(frame->activeChildView()->url());
++    list << konqBookmark;
++  }
++  return list;
++}
++#endif
++
+ QString KonqExtendedBookmarkOwner::currentTitle() const
+ {
+    return m_pKonqMainWindow->currentTitle();
+@@ -4427,6 +4512,18 @@
+ 
+ void KonqExtendedBookmarkOwner::openInNewTab(const KBookmark &bm)
+ {
++    m_pKonqMainWindow->openBookmark(bm.url());
++}
++
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewTab(const KUrl &url)
++{
++    m_pKonqMainWindow->openBookmark(url);
++}
++#endif
++
++void KonqMainWindow::openBookmark(const KUrl &url)
++{
+   bool newTabsInFront = KonqSettings::newTabsInFront();
+   if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+     newTabsInFront = !newTabsInFront;
+@@ -4437,11 +4534,23 @@
+   req.openAfterCurrentPage = false;
+   req.forceAutoEmbed = true;
+ 
+-  m_pKonqMainWindow->openUrl( 0, bm.url(), QString(), req );
++  openUrl( 0, url.url(), QString(), req );
+ }
+ 
+ void KonqExtendedBookmarkOwner::openFolderinTabs(const KBookmarkGroup &grp)
+ {
++  m_pKonqMainWindow->openInNewTabs(grp.groupUrlList());
++}
++
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewTabs(const QList<KUrl> &urls)
++{
++  m_pKonqMainWindow->openInNewTabs(urls);
++}
++#endif
++
++void KonqMainWindow::openInNewTabs(const QList<KUrl> &urls)
++{
+   bool newTabsInFront = KonqSettings::newTabsInFront();
+   if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+     newTabsInFront = !newTabsInFront;
+@@ -4451,30 +4560,29 @@
+   req.openAfterCurrentPage = false;
+   req.forceAutoEmbed = true;
+ 
+-  const QList<KUrl> list = grp.groupUrlList();
+-  if (list.isEmpty())
++  if (urls.isEmpty())
+     return;
+ 
+-  if (list.size() > 20) {
+-    if(KMessageBox::questionYesNo(m_pKonqMainWindow,
+-				  i18n("You have requested to open more than 20 bookmarks in tabs. "
++  if (urls.size() > 20) {
++    if(KMessageBox::questionYesNo(this,
++                  i18n("You have requested to open more than 20 bookmarks in tabs. "
+                                        "This might take a while. Continue?"),
+-				  i18n("Open bookmarks folder in new tabs")) != KMessageBox::Yes)
++                  i18n("Open bookmarks folder in new tabs")) != KMessageBox::Yes)
+       return;
+   }
+ 
+-  QList<KUrl>::ConstIterator it = list.constBegin();
+-  QList<KUrl>::ConstIterator end = list.constEnd();
++  QList<KUrl>::ConstIterator it = urls.constBegin();
++  QList<KUrl>::ConstIterator end = urls.constEnd();
+   --end;
+   for (; it != end; ++it )
+   {
+-    m_pKonqMainWindow->openUrl( 0, *it, QString(), req );
++    openUrl( 0, *it, QString(), req );
+   }
+   if ( newTabsInFront )
+   {
+     req.newTabInFront = true;
+   }
+-  m_pKonqMainWindow->openUrl( 0, *end, QString(), req );
++  openUrl( 0, *end, QString(), req );
+ }
+ 
+ void KonqExtendedBookmarkOwner::openInNewWindow(const KBookmark &bm)
+@@ -4482,6 +4590,13 @@
+   KonqMisc::createNewWindow( bm.url(), KParts::OpenUrlArguments() );
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewWindow(const KUrl &url)
++{
++  KonqMisc::createNewWindow( url, KParts::OpenUrlArguments() );
++}
++#endif
++
+ QString KonqMainWindow::currentTitle() const
+ {
+   return m_currentView ? m_currentView->caption() : QString();
+Index: apps/konqueror/src/CMakeLists.txt
+===================================================================
+--- apps/konqueror/src/CMakeLists.txt	(revisión: 1005720)
++++ apps/konqueror/src/CMakeLists.txt	(copia de trabajo)
+@@ -1,3 +1,13 @@
++macro_optional_find_package(KonqBookmark)
++macro_log_feature(KonqBookmark_FOUND "KonqBookmark" "KonqBookmark" "http://www.kde.org" FALSE "" "New KonquerorBookmarks System based on Nepomuk and Akonadi")
++macro_bool_to_01(KonqBookmark_FOUND HAVE_KONQBOOKMARK)
++configure_file(config-konqbookmark.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-konqbookmark.h )
++
++if(HAVE_KONQBOOKMARK)
++    find_package(KdepimLibs REQUIRED)
++    find_package(Nepomuk REQUIRED)
++endif(HAVE_KONQBOOKMARK)
++
+ if(KDE4_BUILD_TESTS)
+     # only with this definition will the KONQ_TESTS_EXPORT macro do something
+     add_definitions(-DCOMPILING_TESTS)
+@@ -12,8 +22,13 @@
+ # TODO KDE_MALLINFO_FIELD_usmblks
+ configure_file(config-konqueror.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-konqueror.h )
+ 
+-# For crc32 in konqhistorymanager.cpp
+-include_directories( ${ZLIB_INCLUDE_DIR} )
++# ZLIB For crc32 in konqhistorymanager.cpp
++# KDEPIMIBS and NEPOMUK for KonqBookmark
++include_directories(
++    ${ZLIB_INCLUDE_DIR}
++    ${KDEPIMLIBS_INCLUDE_DIRS} 
++    ${NEPOMUK_INCLUDE_DIRS}
++)
+ 
+ ########### libkonquerorprivate, shared with sidebar modules ###############
+ 
+@@ -90,7 +105,14 @@
+   target_link_libraries(kdeinit_konqueror ${X11_LIBRARIES})
+ endif (UNIX)
+ 
++if (HAVE_KONQBOOKMARK)
++  target_link_libraries(kdeinit_konqueror
++    konqbookmark
++    ${KDEPIMLIBS_AKONADI_LIBS}
++    ${NEPOMUK_LIBRARIES})
++endif (HAVE_KONQBOOKMARK)
+ 
++
+ if (NOT WIN32)
+     install(TARGETS kdeinit_konqueror  ${INSTALL_TARGETS_DEFAULT_ARGS} )
+ endif (NOT WIN32)
+Index: apps/lib/konq/CMakeLists.txt
+===================================================================
+--- apps/lib/konq/CMakeLists.txt	(revisión: 1005720)
++++ apps/lib/konq/CMakeLists.txt	(copia de trabajo)
+@@ -49,6 +49,9 @@
+ 
+ install( FILES directory_bookmarkbar.desktop   DESTINATION  ${DATA_INSTALL_DIR}/kbookmark )
+ install( FILES
++ konq_historyentry.h
++ konq_historyloader.h
++ konq_historyprovider.h
+  konq_popupmenu.h
+  konq_popupmenuinformation.h
+  konq_popupmenuplugin.h
+Index: apps/CMakeLists.txt
+===================================================================
+--- apps/CMakeLists.txt	(revisión: 1005720)
++++ apps/CMakeLists.txt	(copia de trabajo)
+@@ -34,10 +34,10 @@
+ endif ( Q_WS_MAC )
+ 
+ if ( Q_WS_X11 )
+-  add_subdirectory( kinfocenter )
++#  add_subdirectory( kinfocenter )
+   add_subdirectory( nsplugins )
+   add_subdirectory( konsole )
+-  add_subdirectory( kdepasswd )
++  #add_subdirectory( kdepasswd )
+ endif ( Q_WS_X11 )
+ macro_optional_add_subdirectory( doc )
+ 
+Index: workspace/plasma/runners/nepomuksearch/nepomuksearchrunner.cpp
+===================================================================
+--- workspace/plasma/runners/nepomuksearch/nepomuksearchrunner.cpp	(revisión: 1005720)
++++ workspace/plasma/runners/nepomuksearch/nepomuksearchrunner.cpp	(copia de trabajo)
+@@ -30,6 +30,8 @@
+ 
+ #include <Nepomuk/Resource>
+ #include <Nepomuk/ResourceManager>
++#include <nepomuk/ontologies/bookmark.h>
++#include <nepomuk/ontologies/dataobject.h>
+ 
+ #include <Soprano/Vocabulary/NAO>
+ 
+@@ -77,6 +79,8 @@
+ 
+     m_actions = new KFileItemActions(this);
+     addSyntax(Plasma::RunnerSyntax(":q:", i18n("Finds files, documents and other content that matches :q: using the desktop search system.")));
++    
++    kDebug();
+ }
+ 
+ 
+@@ -132,6 +136,12 @@
+     if (res.hasType( Soprano::Vocabulary::NAO::Tag())) {
+         url.setProtocol("nepomuksearch");
+         url.setPath(QString("/hasTag:\"%1\"").arg(res.genericLabel()));
++    } else if(res.hasType(Nepomuk::Bookmark::resourceTypeUri())) {
++        Nepomuk::Bookmark bookmark(res);
++        if(!bookmark.bookmarkses().empty())
++            url = bookmark.bookmarkses().first().label();
++        else
++            url = res.resourceUri();
+     } else {
+         url = res.resourceUri();
+     }
+@@ -141,6 +151,7 @@
+ 
+ QList<QAction*> Nepomuk::SearchRunner::actionsForMatch(const Plasma::QueryMatch &match)
+ {
++    kDebug() << "YEAHHHHHHHHHHHHHHH";
+     //Unlike other runners, the actions generated here are likely to see
+     //little reuse. Hence, we will clear the actions then generate new
+     //ones per iteration to avoid excessive memory consumption.
+@@ -155,7 +166,19 @@
+ 
+     Nepomuk::Resource res = match.data().value<Nepomuk::Resource>();
+ 
+-    KUrl url(res.resourceUri());
++    kDebug() << res.resourceUri();
++    KUrl url;
++    
++    if(res.hasType(Nepomuk::Bookmark::resourceTypeUri())) {
++        Nepomuk::Bookmark bookmark(res);
++        if(!bookmark.bookmarkses().empty())
++            url = bookmark.bookmarkses().first().label();
++        else
++            url = res.resourceUri();
++    } else {
++        url = res.resourceUri();
++    }
++    
+     KIO::UDSEntry entry;
+     if (!KIO::NetAccess::stat(url.path(), entry, 0)) {
+         return QList<QAction*>();
+Index: workspace/plasma/runners/nepomuksearch/queryclientwrapper.cpp
+===================================================================
+--- workspace/plasma/runners/nepomuksearch/queryclientwrapper.cpp	(revisión: 1005720)
++++ workspace/plasma/runners/nepomuksearch/queryclientwrapper.cpp	(copia de trabajo)
+@@ -25,6 +25,8 @@
+ 
+ #include <Nepomuk/Resource>
+ #include <Nepomuk/Types/Class>
++#include <nepomuk/ontologies/bookmark.h>
++#include <nepomuk/ontologies/dataobject.h>
+ 
+ #include <Soprano/Vocabulary/Xesam>
+ 
+@@ -97,21 +99,31 @@
+         match.setRelevance(normalizeScore(result.score()));
+ 
+         Nepomuk::Resource res(result.resourceUri());
+-
+-        QString type;
++        
++        // Defaults
++        QString text = res.genericLabel();
++        QString subtext = Nepomuk::Types::Class(res.resourceType()).label();
++        QString s = res.genericIcon();
++        KIcon icon = KIcon(s.isEmpty() ? QString("nepomuk") : s);
++        
+         if (res.hasType(Soprano::Vocabulary::Xesam::File()) ||
+             res.resourceUri().scheme() == "file") {
+-            type = KMimeType::findByUrl(res.resourceUri())->comment();
+-        } else {
+-            type = Nepomuk::Types::Class(res.resourceType()).label();
++            subtext = KMimeType::findByUrl(res.resourceUri())->comment();
++        } else if(res.hasType(Nepomuk::Bookmark::resourceTypeUri())) {
++            Nepomuk::Bookmark bookmark(res);
++            if(!bookmark.titles().empty())
++                text = bookmark.titles().first();
++            
++            if(!bookmark.bookmarkses().empty())
++                subtext = bookmark.bookmarkses().first().label();
++        
++            icon = KIcon(s.isEmpty() ? QString("bookmarks") : s);
+         }
+ 
+-        match.setText(res.genericLabel());
+-        match.setSubtext(type);
++        match.setText(text);
++        match.setSubtext(subtext);
++        match.setIcon(icon);
+ 
+-        QString s = res.genericIcon();
+-        match.setIcon(KIcon(s.isEmpty() ? QString("nepomuk") : s));
+-
+         match.setData(qVariantFromValue(res));
+         match.setId(res.resourceUri().toString());
+         matches << match;
+Index: workspace/plasma/runners/nepomuksearch/CMakeLists.txt
+===================================================================
+--- workspace/plasma/runners/nepomuksearch/CMakeLists.txt	(revisión: 1005720)
++++ workspace/plasma/runners/nepomuksearch/CMakeLists.txt	(copia de trabajo)
+@@ -25,6 +25,7 @@
+   ${KDE4_PLASMA_LIBS}
+   nepomukquery
+   nepomukqueryclient
++  ontologies
+ )
+ 
+ install(
