@@ -37,8 +37,9 @@ set(konqbookmark_LIB_SRCS
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
     itemmodels/kcompletionmodel.cpp
-    itemmodels/place.cpp
-    itemmodels/placesmanager.cpp
+    place.cpp
+    placesmanager.cpp
+    placequerymatch.cpp
     watchitemcreatejob.cpp
     watchcollectioncreatejob.cpp
     kdatawidgetselectionmapper.cpp
@@ -82,8 +83,9 @@ set(konqbookmark_LIB_HDRS
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
     itemmodels/kcompletionmodel.h
-    itemmodels/place.h
-    itemmodels/placesmanager.h
+    place.h
+    placesmanager.h
+    placequerymatch.h
     watchitemcreatejob.h
     watchcollectioncreatejob.h
     kdatawidgetselectionmapper.h

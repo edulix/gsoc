@@ -39,6 +39,7 @@ public:
     
     KonqHistoryEntry *m_historyEntry;
     KonqBookmark *m_konqBookmark;
+    QUrl m_url;
 };
 
 Place::Private::Private(Place *parent)
@@ -57,6 +58,12 @@ Place::Place(KonqHistoryEntry* historyEntry, KonqBookmark *konqBookmark, QObject
 {
     d->m_historyEntry = historyEntry;
     d->m_konqBookmark = konqBookmark;
+}
+
+Place::Place(const QUrl& url, QObject* parent)
+    : QObject(parent), d(new Private(this))
+{
+    d->m_url = url;
 }
 
 Place::~Place()
@@ -82,6 +89,16 @@ bool Place::operator==(const Place& other) const
     return other.url() == url();
 }
 
+void Place::setHistoryEntry(KonqHistoryEntry* historyEntry)
+{
+    d->m_historyEntry = historyEntry;
+}
+        
+void Place::setBookmark(KonqBookmark *konqBookmark)
+{
+    d->m_konqBookmark = konqBookmark;
+}
+
 QString Place::title() const
 {
     if(d->m_historyEntry)
@@ -100,6 +117,9 @@ QUrl Place::url() const
     
     if(d->m_konqBookmark)
         return d->m_konqBookmark->url();
+    
+    if(!d->m_url.isEmpty() && d->m_url.isValid())
+        return d->m_url;
     
     return QUrl();
 }

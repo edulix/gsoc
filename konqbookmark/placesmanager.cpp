@@ -21,19 +21,20 @@
 #include "placesmanager.h"
 #include "place.h"
 #include "konqbookmark.h"
-#include "konqbookmarkmodel.h"
+#include "itemmodels/konqbookmarkmodel.h"
 
 #include <konq_historyentry.h>
+#include <kglobal.h>
 
 #include <akonadi/monitor.h>
 #include <akonadi/session.h>
 
-#include <QHash>
-#include <QUrl>
 #include <QByteArray>
 
 using namespace Konqueror;
 using namespace Akonadi;
+
+PlacesManager* PlacesManager::s_self = 0;
 
 /**
  * Private class that helps to provide binary compatibility between releases.
@@ -59,7 +60,7 @@ public:
     QHash<QUrl, Place*> m_places;
 };
 
-PlacesManager::Private::Private(PlacesManager* parent)
+PlacesManager::Private::Private(PlacesManager *parent)
     : q(parent), m_bookmarkModel(0)
 {
     Session* session = new Session(QByteArray( "PlacesManager-" ) + QByteArray::number( qrand() ), q);
@@ -97,6 +98,15 @@ void PlacesManager::Private::rowsInserted(const QModelIndex& parent, int start, 
         
         KonqBookmark *konqBookmark = new KonqBookmark(index.data(KonqBookmarkModel::UniqueUri).toString());
         m_bookmarks[konqBookmark->url()] = konqBookmark;
+        
+        // Update/insert place
+        Place *place = q->place(konqBookmark->url());
+        if(!place) {
+            KonqHistoryEntry *historyEntry = q->historyEntry(konqBookmark->url());
+            m_places[konqBookmark->url()] = new Place(historyEntry, konqBookmark, q);
+        } else {
+            place->setBookmark(konqBookmark);
+        }
     }
 }
 
@@ -109,6 +119,20 @@ void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, i
         }
         QUrl url(index.data(KonqBookmarkModel::Url).toString());
         if(m_bookmarks.contains(url)) {
+            
+            // Update/remove place
+            Place *place = q->place(url);
+            
+            // if history entry is null, just remove this place (otherwise we
+            // would end up with a place with both bookmark and history entry
+            // unset). Otherwise, we just update the place.
+            if(!place->historyEntry()) {
+                delete m_places[url];
+                m_places.remove(url);
+            } else {
+                m_places[url]->setBookmark(0);
+            }
+            
             delete m_bookmarks[url];
             m_bookmarks.remove(url);
         }
@@ -117,8 +141,8 @@ void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, i
 
 //@endcond
 
-PlacesManager::PlacesManager(QObject* parent)
-    : QObject(parent), d(new Private(this))
+PlacesManager::PlacesManager()
+    : QObject(0), d(new Private(this))
 {
     
 }
@@ -126,6 +150,17 @@ PlacesManager::PlacesManager(QObject* parent)
 PlacesManager::~PlacesManager()
 {
     delete d;
+}
+
+PlacesManager* PlacesManager::self()
+{
+    if(s_self) {
+        return s_self;
+    }
+    
+    s_self = new PlacesManager();
+    
+    return s_self;
 }
 
 KonqBookmarkModel* PlacesManager::bookmarkModel()
@@ -174,7 +209,11 @@ Place* PlacesManager::place(const QUrl& url)
         return d->m_places[url];
     }
     
-    return 0;
+    // Create an "orphan" place (with no history entry o konqBookmark attached)
+    Place *place = new Place(url);
+    d->m_places[url] = place;
+    
+    return place;
 }
 
 Place* PlacesManager::place(const KonqBookmark* konqBookmark)
@@ -197,22 +236,56 @@ Place* PlacesManager::place(const KonqHistoryEntry* historyEntry)
 
 QIcon* PlacesManager::icon(const QUrl& url)
 {
+    Q_UNUSED(url);
     return 0;
 }
 
 QIcon* PlacesManager::icon(const KonqBookmark* konqBookmark)
 {
-    return 0;
+    if(!konqBookmark) {
+        return 0;
+    }
+    
+    return icon(konqBookmark->url());
 }
 
 QIcon* PlacesManager::icon(const KonqHistoryEntry* historyEntry)
 {
-    return 0;
+    if(!historyEntry) {
+        return 0;
+    }
+    
+    return icon(historyEntry->url);
 }
 
 QIcon* PlacesManager::icon(const Place* place)
 {
-    return 0;
+    if(!place) {
+        return 0;
+    }
+    
+    return icon(place->url());
+}
+
+
+QHash<QUrl, KonqHistoryEntry*>& PlacesManager::historyEntries()
+{
+    return d->m_historyEntries;
+}
+
+QHash<QUrl, KonqBookmark*>& PlacesManager::bookmarks()
+{
+    return d->m_bookmarks;
+}
+
+QHash<QUrl, Place*>& PlacesManager::places()
+{
+    return d->m_places;
+}
+
+void PlacesManager::setSelf(PlacesManager *manager)
+{
+    s_self = manager;
 }
 
 #include "placesmanager.moc"

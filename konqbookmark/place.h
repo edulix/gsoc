@@ -39,7 +39,7 @@ namespace Konqueror
     {
         Q_OBJECT
         friend class PlacesManager;
-    private:
+    protected:
         /**
          * Creates a Konqueror Place object given an history entry and a
          * konqueror bookmark.  A Place is used to refer to an URI that the user
@@ -66,6 +66,18 @@ namespace Konqueror
          * already expired.
          */
         Place(KonqHistoryEntry* historyEntry, KonqBookmark *konqBookmark, QObject* parent = 0);
+        
+        /**
+         * @brief Creates a place with no history entry o konqBookmark attached.
+         * 
+         * Useful if you need to create a place for a match in a PlaceCompletionModel
+         * where the place has not been visited or bookmarked.
+         */
+        Place(const QUrl &url, QObject* parent = 0);
+        
+        void setHistoryEntry(KonqHistoryEntry* historyEntry);
+        
+        void setBookmark(KonqBookmark *konqBookmark);
         
     public:
         /**
@@ -100,7 +112,7 @@ namespace Konqueror
         QUrl url() const;
         
         /**
-         * Use something like PlacesManager::icon(place);
+         * Use PlacesManager::icon(place) instead.
          */
 //         QIcon icon() const;
         
