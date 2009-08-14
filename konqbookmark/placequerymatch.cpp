@@ -45,6 +45,12 @@ PlaceQueryMatch::Private::~Private()
 
 }
 
+PlaceQueryMatch::PlaceQueryMatch()
+    : Place(), d(new Private(this))
+{
+
+}
+
 PlaceQueryMatch::PlaceQueryMatch(const Place& place)
     : Place(place), d(new Private(this))
 {

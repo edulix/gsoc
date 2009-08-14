@@ -203,7 +203,7 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
         case LastModified:
         case LastVisited:
         default:
-            return QString("");
+            return QVariant();
         }
     // return QVariant for Qt::CheckState otherwise checkboxes are shown for most columns (except name)
     case Qt::CheckStateRole:

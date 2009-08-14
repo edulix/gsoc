@@ -25,6 +25,7 @@
 #include "place.h"
 
 #include <QVariant>
+#include <QMetaType>
 
 namespace Konqueror
 {
@@ -37,11 +38,12 @@ namespace Konqueror
      * match has some properties like its relevance or the  query to which it's
      * related.
      */
-    class PlaceQueryMatch : public Place
+    class KONQBOOKMARK_EXPORT PlaceQueryMatch : public Place
     {
         Q_OBJECT
 
     public:
+        PlaceQueryMatch();
         PlaceQueryMatch(const Place& place);
         virtual ~PlaceQueryMatch();
         
@@ -82,5 +84,7 @@ namespace Konqueror
         Private* const d;
     };
 }
+
+Q_DECLARE_METATYPE(Konqueror::PlaceQueryMatch)
 
 #endif // KONQUEROR_PLACE_QUERY_MATCH_H

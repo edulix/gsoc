@@ -65,7 +65,7 @@ namespace Konqueror
          * not have a KonqHistoryEntry to refer to it because it might have
          * already expired.
          */
-        Place(KonqHistoryEntry* historyEntry, KonqBookmark *konqBookmark, QObject* parent = 0);
+        Place(KonqHistoryEntry* historyEntry = 0, KonqBookmark *konqBookmark = 0, QObject* parent = 0);
         
         /**
          * @brief Creates a place with no history entry o konqBookmark attached.

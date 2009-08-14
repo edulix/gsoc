@@ -226,10 +226,8 @@ QVariant KCompletionModel::data(const QModelIndex &index, int role) const
     switch( role ) {
     case Qt::DisplayRole:
     case Qt::EditRole:
-        switch( index.column() ) {
-        default:
-            return d->m_strings.at(index.row());
-        }
+    case CompletionMatchRole:
+        return d->m_strings.at(index.row());
     }
     return QVariant();
 }

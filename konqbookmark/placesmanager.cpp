@@ -47,10 +47,13 @@ public:
     Private(PlacesManager* parent);
     ~Private();
 
-    void rowsInserted(const QModelIndex& parent, int start, int end);
-    void rowsRemoved(const QModelIndex& parent, int start, int end);
+    void slotBookmarksInserted(const QModelIndex& parent, int start, int end);
+    void slotBookmarksRemoved(const QModelIndex& parent, int start, int end);
     bool isFolder(const QModelIndex& index);
-        
+    void slotHistoryEntryAdded(const KonqHistoryEntry &entry);
+    void slotHistoryEntryRemoved(const KonqHistoryEntry &entry);
+    void slotHistoryCleared();
+    
     PlacesManager *q;
     
     KonqBookmarkModel *m_bookmarkModel;
@@ -62,16 +65,16 @@ public:
 
 PlacesManager::Private::Private(PlacesManager *parent)
     : q(parent), m_bookmarkModel(0)
-{
+{   
     Session* session = new Session(QByteArray( "PlacesManager-" ) + QByteArray::number( qrand() ), q);
     Monitor* monitor = new Monitor( q );
     m_bookmarkModel = new KonqBookmarkModel( session, monitor, q );
     
     connect(m_bookmarkModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-        q, SLOT(rowsInserted(const QModelIndex&, int, int)));
+        q, SLOT(slotBookmarksrowsInserted(const QModelIndex&, int, int)));
         
     connect(m_bookmarkModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
-        q, SLOT(rowsRemoved(const QModelIndex&, int, int)));
+        q, SLOT(slotBookmarks(const QModelIndex&, int, int)));
 }
 
 PlacesManager::Private::~Private()
@@ -88,7 +91,7 @@ bool PlacesManager::Private::isFolder(const QModelIndex& index)
     return collection.isValid();
 }
 
-void PlacesManager::Private::rowsInserted(const QModelIndex& parent, int start, int end)
+void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = parent.child(i, 0);
@@ -110,7 +113,7 @@ void PlacesManager::Private::rowsInserted(const QModelIndex& parent, int start, 
     }
 }
 
-void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, int end)
+void PlacesManager::Private::slotBookmarksRemoved(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = parent.child(i, 0);
@@ -123,14 +126,15 @@ void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, i
             // Update/remove place
             Place *place = q->place(url);
             
-            // if history entry is null, just remove this place (otherwise we
-            // would end up with a place with both bookmark and history entry
-            // unset). Otherwise, we just update the place.
-            if(!place->historyEntry()) {
+            Q_ASSERT(place != 0);
+            
+            // if history entry is null and the url is not set either, just 
+            // remove this place (otherwise we would end up with a place with 
+            // both bookmark and history entry unset). Otherwise, we just update the place.
+            m_places[url]->setBookmark(0);
+            if(!place->historyEntry() && place->url().isEmpty()) {
                 delete m_places[url];
                 m_places.remove(url);
-            } else {
-                m_places[url]->setBookmark(0);
             }
             
             delete m_bookmarks[url];
@@ -139,6 +143,37 @@ void PlacesManager::Private::rowsRemoved(const QModelIndex& parent, int start, i
     }
 }
 
+void PlacesManager::Private::slotHistoryEntryAdded(const KonqHistoryEntry &entry)
+{
+    KonqHistoryEntry *historyEntry = new KonqHistoryEntry(entry);
+    m_historyEntries[entry.url] = historyEntry;
+    
+    if(m_places.contains(entry.url)) {
+        m_places[entry.url]->setHistoryEntry(historyEntry);
+    }
+}
+
+void PlacesManager::Private::slotHistoryEntryRemoved(const KonqHistoryEntry &entry)
+{
+    if(!m_historyEntries.contains(entry.url)) {
+        return;
+    }
+    
+    // If the history entry is registered, the related place should be there too
+    Q_ASSERT(m_places.contains(entry.url));
+    
+    delete m_historyEntries[entry.url];
+    m_historyEntries.remove(entry.url);
+    
+    m_places[entry.url]->setHistoryEntry(0);
+}
+
+void PlacesManager::Private::slotHistoryCleared()
+{
+    foreach(KonqHistoryEntry* entry, m_historyEntries) {
+        slotHistoryEntryRemoved(*entry);
+    }
+}
 //@endcond
 
 PlacesManager::PlacesManager()
@@ -190,6 +225,9 @@ KonqHistoryEntry* PlacesManager::historyEntry(const QUrl& url)
     if(d->m_historyEntries.contains(url)) {
         return d->m_historyEntries[url];
     }
+ 
+    QHash<QUrl, KonqHistoryEntry *> myhash;
+    myhash[QUrl()] = 0;
     
     return 0;
 }
@@ -268,24 +306,14 @@ QIcon* PlacesManager::icon(const Place* place)
 }
 
 
-QHash<QUrl, KonqHistoryEntry*>& PlacesManager::historyEntries()
-{
-    return d->m_historyEntries;
-}
-
-QHash<QUrl, KonqBookmark*>& PlacesManager::bookmarks()
-{
-    return d->m_bookmarks;
-}
-
-QHash<QUrl, Place*>& PlacesManager::places()
-{
-    return d->m_places;
-}
-
 void PlacesManager::setSelf(PlacesManager *manager)
 {
     s_self = manager;
+}
+
+bool PlacesManager::hasInstance()
+{
+    return s_self != 0;
 }
 
 #include "placesmanager.moc"

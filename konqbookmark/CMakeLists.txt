@@ -37,6 +37,7 @@ set(konqbookmark_LIB_SRCS
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
     itemmodels/kcompletionmodel.cpp
+    itemmodels/aggregatedplacesquerymodel.cpp
     place.cpp
     placesmanager.cpp
     placequerymatch.cpp
@@ -83,6 +84,7 @@ set(konqbookmark_LIB_HDRS
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
     itemmodels/kcompletionmodel.h
+    itemmodels/aggregatedplacesquerymodel.h
     place.h
     placesmanager.h
     placequerymatch.h

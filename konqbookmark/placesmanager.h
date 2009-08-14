@@ -55,7 +55,7 @@ namespace Konqueror
      * PlacesManager::self();
      * @endcode
      */
-    class PlacesManager : public QObject
+    class KONQBOOKMARK_EXPORT PlacesManager : public QObject
     {
         Q_OBJECT
     public:
@@ -66,15 +66,15 @@ namespace Konqueror
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
         
-        virtual KonqBookmark* bookmark(const QUrl& url);
-        virtual KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
+        KonqBookmark* bookmark(const QUrl& url);
+        KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
         
-        virtual KonqHistoryEntry* historyEntry(const QUrl& url);
-        virtual KonqHistoryEntry* historyEntry(const KonqBookmark* konqBookmark);
+        KonqHistoryEntry* historyEntry(const QUrl& url);
+        KonqHistoryEntry* historyEntry(const KonqBookmark* konqBookmark);
         
-        virtual Place* place(const QUrl& url);
-        virtual Place* place(const KonqBookmark* konqBookmark);
-        virtual Place* place(const KonqHistoryEntry* historyEntry);
+        Place* place(const QUrl& url);
+        Place* place(const KonqBookmark* konqBookmark);
+        Place* place(const KonqHistoryEntry* historyEntry);
         
         virtual QIcon* icon(const QUrl& url);
         virtual QIcon* icon(const KonqBookmark* konqBookmark);
@@ -86,25 +86,21 @@ namespace Konqueror
         virtual ~PlacesManager();
         
         /**
-         * These three protected methods provide access to the hash tables
-         * containing the items. Useful if you want to reimplement how those
-         * tables are being filled. 
-         */
-        QHash<QUrl, KonqHistoryEntry*>& historyEntries();
-        QHash<QUrl, KonqBookmark*>& bookmarks();
-        QHash<QUrl, Place*>& places();
-        
-        /**
          * If you create a custom PlacesManager and want self() to refer to it,
          * call to setSelf(this) in the constructor of you custom PlacesManager.
          */
         static void setSelf(PlacesManager *manager);
+        static bool hasInstance();
+        
     private:
         static PlacesManager *s_self;
         Private* const d;
         
-        Q_PRIVATE_SLOT(d, void rowsInserted(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void rowsRemoved(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotHistoryEntryAdded(const KonqHistoryEntry &))
+        Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))
+        Q_PRIVATE_SLOT(d, void slotHistoryCleared())
     };
 }
 #endif // KONQUEROR_PLACESMANAGER_H

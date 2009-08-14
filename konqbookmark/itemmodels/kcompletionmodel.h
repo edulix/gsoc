@@ -51,8 +51,10 @@ class KONQBOOKMARK_EXPORT KCompletionModel : public QAbstractItemModel
     Q_OBJECT
     
 public:
-    enum Column { Default = 0 };
-    enum {ColumnCount = 1 };
+    enum Roles {
+        CompletionMatchRole = Qt::UserRole + 1
+    };
+    enum {ColumnCount = 1 }; // Qt::DisplayRole
     KCompletionModel(QObject * parent);
     virtual ~KCompletionModel();
     
