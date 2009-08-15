@@ -49,6 +49,7 @@
 
 #include <konqbookmark/konqbookmark.h>
 #include <konqbookmark/kcompletionmodel.h>
+#include <konqbookmark/aggregatedplacesquerymodel.h>
 #include <kurlcompletion.h>
 #include <kcompletion.h>
 #include <QStringListModel>
@@ -136,9 +137,12 @@ void BookmarksView::createModels()
     completion->setDir("file:///home/edulix/");
  
     KCompletionModel *completionModel = new KCompletionModel(this);
-    
-    ui_bookmarksview_base.listView->setModel(completionModel);
     completionModel->setCompletion(completion);
+    
+    Konqueror::AggregatedPlacesQueryModel* aggregatedModel = new Konqueror::AggregatedPlacesQueryModel(this);
+    aggregatedModel->addSourceModel(completionModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, 0, "url completions");
+    
+    ui_bookmarksview_base.listView->setModel(aggregatedModel);
     //@end-testing
     
     Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);

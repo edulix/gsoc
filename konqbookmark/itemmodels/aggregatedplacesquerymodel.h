@@ -74,12 +74,14 @@ namespace Konqueror
         
         virtual ~AggregatedPlacesQueryModel();
         
-        void addSourceModel(QAbstractItemModel *model, SearchMode mode, int placeUrlRole);
+        void addSourceModel(QAbstractItemModel *model, SearchMode mode, int placeUrlRole, QString name);
         
         void removeSourceModel(QAbstractItemModel *model);
         
         virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
+        virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+        
         virtual QVariant data(const QModelIndex &index, int role) const;
         
         virtual QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
