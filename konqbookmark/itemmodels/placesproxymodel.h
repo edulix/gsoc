@@ -22,7 +22,7 @@
 #define PLACES_PROXY_MODEL_H
 
 #include "konqbookmark_export.h"
-#include "placequerymatch.h"
+#include "place.h"
 
 #include <QSortFilterProxyModel>
 #include <QObject>
@@ -33,17 +33,13 @@ namespace Konqueror
      * Given a model that supports the Place::PlaceUrlRole this model proxies it
      * converting it in a descendant model.
      * 
-     * Each index will have a PlaceQueryMatch which corresponds to the url for
-     * that index extracted from the source model with the PlaceUrl role. The
-     * relevance of the place will be recalculated when you call to @p setQuery.
+     * The RelevanceRole datafor each index will return a qreal corresponding 
+     * with the relevance of the index with the query term.
      */
     class KONQBOOKMARK_EXPORT PlacesProxyModel : public QSortFilterProxyModel
-    {        
+    {
         Q_OBJECT
     public:
-        enum {
-            RelevanceRole = Qt::UserRole + 60
-        };
         
         PlacesProxyModel(QObject *parent = 0);
         virtual ~PlacesProxyModel();

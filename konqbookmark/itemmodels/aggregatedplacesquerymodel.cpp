@@ -20,7 +20,6 @@
 
 #include "aggregatedplacesquerymodel.h"
 #include "place.h"
-#include "placequerymatch.h"
 
 #include <QHash>
 #include <QVariant>
@@ -296,7 +295,7 @@ QVariant AggregatedPlacesQueryModel::data(const QModelIndex &index, int role) co
     }
     
     switch(role) {
-    case PlaceQueryMatch::PlaceQueryMatchRole:
+    case Place::PlaceRelevanceRole:
         return QVariant(); // TODO
     case Place::PlaceUrlRole:
         return mapToSource(index).data(role);

@@ -161,7 +161,7 @@ void PlacesProxyModel::Private::slotModelAboutToBeReset()
 PlacesProxyModel::PlacesProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent), d(new Private(this))
 {
-    setSortRole(RelevanceRole);
+    setSortRole(Place::PlaceRelevanceRole);
     
     connect(this, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(slotRowsInserted(const QModelIndex&, int, int)));
@@ -207,7 +207,7 @@ QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
 {    
     switch( role )
     {
-    case RelevanceRole:
+    case Place::PlaceRelevanceRole:
         if(!d->m_relevance.contains(index)) {
             d->updateRelevance(index);
         }

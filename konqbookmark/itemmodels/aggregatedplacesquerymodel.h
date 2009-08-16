@@ -49,7 +49,7 @@ namespace Konqueror
          * QModelIndex.
          */
         enum Roles {
-            PlaceQueryMatchRole = Qt::UserRole + 1 // TODO
+            RelevanceRole = Qt::UserRole + 60 // TODO
         };
         
         enum {ColumnCount = 1 };
