@@ -19,22 +19,31 @@
 */
 
 #include "bookmarksview.h"
+#include "modeltest.h"
 #include "settings.h"
 
 
 #include <QTimer>
 #include <QLabel>
 #include <QHeaderView>
+#include <QDirModel>
 #include <QString>
 #include <QAction>
 #include <QDataWidgetMapper>
 #include <QItemDelegate>
+#include <QStringListModel>
+#include <QStringList>
 
 #include <kmessagebox.h>
 #include <kselectionproxymodel.h>
+#include <kdescendantsproxymodel.h>
 #include <klocale.h>
 #include <kmenu.h>
 #include <klineedit.h>
+#include <kurlcompletion.h>
+#include <kcompletion.h>
+#include <kjob.h>
+
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
 #include <akonadi/collectioncreatejob.h>
@@ -45,17 +54,14 @@
 #include <akonadi/entitytreemodel.h>
 #include <akonadi/entityfilterproxymodel.h>
 #include <akonadi/item.h>
-#include <kjob.h>
 
 #include <konqbookmark/konqbookmark.h>
 #include <konqbookmark/kcompletionmodel.h>
-#include <konqbookmark/aggregatedplacesquerymodel.h>
-#include <kurlcompletion.h>
-#include <kcompletion.h>
-#include <QStringListModel>
-#include <QStringList>
+#include <konqbookmark/kaggregatedmodel.h>
 #include <konqbookmark/konqbookmarkproxymodel.h>
 #include <konqbookmark/konqbookmarkmodel.h>
+#include <konqbookmark/placesproxymodel.h>
+#include <konqbookmark/placesmanager.h>
 #include <konqbookmark/modelwatcher.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
 #include <konqbookmark/kdatawidgetselectionmapper.h>
@@ -136,12 +142,16 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.kcombobox->setCompletionObject(completion);
     completion->setDir("file:///home/edulix/");
  
-    KCompletionModel *completionModel = new KCompletionModel(this);
+    KCompletionModel *completionModel = Konqueror::PlacesManager::self()->urlCompletionModel();
     completionModel->setCompletion(completion);
     
-    Konqueror::AggregatedPlacesQueryModel* aggregatedModel = new Konqueror::AggregatedPlacesQueryModel(this);
-    aggregatedModel->addSourceModel(completionModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, "url completions");
-    
+    KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
+    aggregatedModel->addSourceModel(completionModel, "url completions");
+    QStringListModel *stringListModel = new QStringListModel(this);
+    QStringList stringList;
+    stringList << "a" << "b" << "c";
+    stringListModel->setStringList(stringList);
+    aggregatedModel->addSourceModel(stringListModel, "strings");
     ui_bookmarksview_base.listView->setModel(aggregatedModel);
     //@end-testing
     
@@ -165,7 +175,12 @@ void BookmarksView::createModels()
     d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel( this );
     d->mBookmarkProxyModel->setSourceModel(selectionProxy);
     
-    aggregatedModel->addSourceModel(d->mBookmarkProxyModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, "bookmarks");
+    Konqueror::PlacesProxyModel* placesProxyModel = new Konqueror::PlacesProxyModel(this);
+    placesProxyModel->setSourceModel(d->mBookmarkProxyModel);
+    connect(ui_bookmarksview_base.kcombobox->lineEdit(), SIGNAL(textChanged(const QString&)),
+        placesProxyModel, SLOT(setQuery(const QString &)));
+    
+    aggregatedModel->addSourceModel(placesProxyModel, "bookmarks");
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );

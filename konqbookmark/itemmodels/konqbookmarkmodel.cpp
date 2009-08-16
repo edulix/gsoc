@@ -126,7 +126,7 @@ QVariant KonqBookmarkModel::getHeaderData( int section, Qt::Orientation orientat
 Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
-        return Qt::ItemIsEnabled;
+        return Qt::ItemIsDropEnabled;
 
     return EntityTreeModel::flags(index) | Qt::ItemIsEditable;
 }
@@ -180,7 +180,7 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
             case LastVisited:
                 return konqBookmark.lastVisited();
             default:
-                return QVariant();
+                return QString();
                 break;
             }
             break;
@@ -216,7 +216,7 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
         case LastModified:
         case LastVisited:
         default:
-            return QVariant();
+            return QString();
         }
     // return QVariant for Qt::CheckState otherwise checkboxes are shown for most columns (except name)
     case Qt::CheckStateRole:

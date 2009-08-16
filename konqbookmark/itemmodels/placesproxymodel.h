@@ -30,8 +30,10 @@
 namespace Konqueror
 {
     /**
-     * Given a model that supports the Place::PlaceUrlRole this model proxies it
-     * converting it in a descendant model.
+     * This is a model which returns sorted by relevance order the list of
+     * places related to a query string. The only requirement is that the source
+     * model syncs its list of places with PlacesManager and provides the
+     * Place::PlaceUrlRole role for its indexes.
      * 
      * The RelevanceRole datafor each index will return a qreal corresponding 
      * with the relevance of the index with the query term.
@@ -39,13 +41,11 @@ namespace Konqueror
     class KONQBOOKMARK_EXPORT PlacesProxyModel : public QSortFilterProxyModel
     {
         Q_OBJECT
-    public:
-        
+    public:        
         PlacesProxyModel(QObject *parent = 0);
         virtual ~PlacesProxyModel();
         
-        virtual void setQuery(QVariant query);
-        virtual QVariant query() const;
+        QVariant query() const;
         
         /** 
          * Reimplemented because we won't use directly the given source model,
@@ -54,12 +54,17 @@ namespace Konqueror
         virtual void setSourceModel(QAbstractItemModel* sourceModel);
         virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
         
+    public Q_SLOTS:
+        void setQuery(QString query);
+        void setQuery(QVariant query);
+        
     protected:
         virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const;
         
     private:
         class Private;
         Private* const d;
+        Q_DISABLE_COPY(PlacesProxyModel)
         
         Q_PRIVATE_SLOT(d, void slotRowsInserted(const QModelIndex&, int, int))
         Q_PRIVATE_SLOT(d, void slotRowsRemoved(const QModelIndex&, int, int))

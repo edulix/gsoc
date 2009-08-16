@@ -3,6 +3,7 @@ set(bookmarks_SRCS
     main.cpp
     bookmarksview.cpp
     actionsimpl.cpp
+    modeltest.cpp
 )
 # Exceptions are needed to be able to use item.setPayload()
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}" ) 

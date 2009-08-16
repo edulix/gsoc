@@ -22,6 +22,7 @@
 #include "placesmanager.h"
 
 #include <kdescendantsproxymodel.h>
+#include <kdebug.h>
 
 #include <QString>
 #include <QHash>
@@ -54,7 +55,8 @@ class PlacesProxyModel::Private
 public:
     Private(PlacesProxyModel *parent);
     ~Private();
-
+    
+    int matches(Place* place);
     bool updateRelevance(const QModelIndex& index);
     Place* placeFromIndex(const QModelIndex& index);
     
@@ -92,19 +94,24 @@ Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex& index)
     return place;
 }
 
+int PlacesProxyModel::Private::matches(Place* place)
+{
+    int matches = 0;
+    matches += place->title().count(m_strQuery, Qt::CaseInsensitive);
+    matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
+    matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
+    matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
+    return matches;
+}
+
 bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
 {   
     Place* place = placeFromIndex(index);
     QDateTime currentTime = QDateTime::currentDateTime();
     
     qreal relevance = 0;
-    int matches = 0;
+    int matches = this->matches(place);
     int weight = 0;
-    
-    matches += place->title().count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
     
     int days = place->lastVisited().daysTo(currentTime);
     
@@ -162,18 +169,19 @@ PlacesProxyModel::PlacesProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent), d(new Private(this))
 {
     setSortRole(Place::PlaceRelevanceRole);
+    setSortCaseSensitivity(Qt::CaseInsensitive);
     
     connect(this, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(slotRowsInserted(const QModelIndex&, int, int)));
         
-    connect(this, SLOT(rowsRemoved(const QModelIndex&, int, int)),
+    connect(this, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
         this, SLOT(slotRowsRemoved(const QModelIndex&, int, int)));
         
     connect(this, SIGNAL(modelAboutToBeReset()),
-        this, SLOT(slotModelAboutTobeReset()));
+        this, SLOT(slotModelAboutToBeReset()));
         
     connect(this, SIGNAL(layoutAboutToBeChanged()),
-        this, SLOT(slotModelAboutTobeReset()));
+        this, SLOT(slotModelAboutToBeReset()));
 }
 
 PlacesProxyModel::~PlacesProxyModel()
@@ -181,9 +189,17 @@ PlacesProxyModel::~PlacesProxyModel()
     delete d;
 }
 
+void PlacesProxyModel::setQuery(QString query)
+{
+    kDebug() << "query";
+    d->m_strQuery = query;
+    // HACK:: triggers a call to d->filter_changed();
+    setFilterKeyColumn(0);
+}
+
 void PlacesProxyModel::setQuery(QVariant query)
 {
-    d->m_strQuery = query.toString();
+    setQuery(query);
 }
 
 QVariant PlacesProxyModel::query() const
@@ -200,7 +216,7 @@ void PlacesProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
     d->m_descendantsModel = new KDescendantsProxyModel(this);
     d->m_descendantsModel->setSourceModel(d->m_sourceModel);
     
-    QSortFilterProxyModel::setSourceModel(sourceModel);
+    QSortFilterProxyModel::setSourceModel(d->m_descendantsModel);
 }
 
 QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
@@ -219,7 +235,24 @@ QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
 
 bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
-    return sourceModel()->index(source_row, 0, source_parent).data(Place::PlaceUrlRole) != QVariant();
+    QModelIndex sourceIndex = sourceModel()->index(source_row, 0, source_parent);
+    
+    if(!sourceIndex.isValid() || sourceModel()->hasChildren(sourceIndex)) {
+        return false;
+    }
+    
+    QVariant variant = sourceIndex.data(Place::PlaceUrlRole);
+    if(variant == QVariant()) {
+        return false;
+    }
+    
+    QUrl url = variant.toString();
+    Place* place = PlacesManager::self()->place(url);
+        
+    // Places manager should have all the places!
+    Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");    
+    
+    return d->matches(place) > 0;
 }
 
 #include "placesproxymodel.moc"

@@ -18,7 +18,7 @@
    Boston, MA 02110-1301, USA.
 */
 
-#include "aggregatedplacesquerymodel.h"
+#include "kaggregatedmodel.h"
 #include "place.h"
 
 #include <QHash>
@@ -37,44 +37,43 @@ using namespace Konqueror;
  * @internal
  */
 //@cond PRIVATE
-class AggregatedPlacesQueryModel::Private
+class KAggregatedModel::Private
 {
 public:
-    Private(AggregatedPlacesQueryModel* parent);
+    Private(KAggregatedModel* parent);
     ~Private();
     
     void dataChanged(const QModelIndex& sourceTopLeft, const QModelIndex& sourceBottomRight);
     void layoutChanged();
     void modelReset();
-    void rowsAboutToBeInserted(const QModelIndex& sourceParent, int start, int end);
-    void rowsAboutToBeRemoved(const QModelIndex& sourceParent, int start, int end);
     void rowsInserted(const QModelIndex& sourceParent, int start, int end);
     void rowsRemoved(const QModelIndex& sourceParent, int start, int end);
     
-    AggregatedPlacesQueryModel* q;
+    KAggregatedModel* q;
     QList<const QAbstractItemModel*> m_sourceModels;
     QHash<const QAbstractItemModel*, QString> m_sourceModelNames;
+    QHash<const QAbstractItemModel*, int> m_sourceModelDisplayColumns;
+    QHash<const QAbstractItemModel*, QList<QPersistentModelIndex> > m_decendants;
     
     QHash<QString, QPersistentModelIndex> m_sourceIndexes;
     QHash<QPersistentModelIndex, QString*> m_reverseSourceIndexes;
-    
+    bool m_removingIndexesFlag;
     QHash<QPersistentModelIndex, QPersistentModelIndex> m_parents;
-    QHash<const QAbstractItemModel*, QList<QPersistentModelIndex> > m_decendents;
 };
 
-AggregatedPlacesQueryModel::Private::Private(AggregatedPlacesQueryModel* parent)
-    : q(parent)
+KAggregatedModel::Private::Private(KAggregatedModel* parent)
+    : q(parent), m_removingIndexesFlag(false)
 {
     
 }
 
-AggregatedPlacesQueryModel::Private::~Private()
+KAggregatedModel::Private::~Private()
 {
 
 }
 
 
-void AggregatedPlacesQueryModel::Private::dataChanged(const QModelIndex& sourceTopLeft,
+void KAggregatedModel::Private::dataChanged(const QModelIndex& sourceTopLeft,
     const QModelIndex& sourceBottomRight)
 {
     QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
@@ -83,90 +82,76 @@ void AggregatedPlacesQueryModel::Private::dataChanged(const QModelIndex& sourceT
     emit q->dataChanged(topLeft, bottomRight);
 }
 
-void AggregatedPlacesQueryModel::Private::layoutChanged()
-{
-    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
-    int row = m_sourceModels.indexOf(sourceModel);
-    
-    // Instead of emitting a full layoutChanged(), we remove and repopulate only the
-    // branch of the tree related to this model
-    q->beginRemoveRows(QModelIndex(), row, row);
-    q->endRemoveRows();
-    q->beginInsertRows(QModelIndex(), row, row);
-    q->endInsertRows();
+void KAggregatedModel::Private::layoutChanged()
+{   
+    emit q->layoutChanged();
 }
 
-void AggregatedPlacesQueryModel::Private::modelReset()
+void KAggregatedModel::Private::modelReset()
 {
     layoutChanged();
 }
 
-
-void AggregatedPlacesQueryModel::Private::rowsAboutToBeInserted(const QModelIndex& sourceParent, int start, int end)
+void KAggregatedModel::Private::rowsInserted(const QModelIndex& sourceParent, int start, int end)
 {
-    kDebug() << sourceParent << start << end;
     
     QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
     QModelIndex parent = q->mapFromSource(sourceParent, sourceModel);
-    kDebug() << sourceModel << parent;
     
     q->beginInsertRows(parent, start, end);
-}
-
-
-void AggregatedPlacesQueryModel::Private::rowsAboutToBeRemoved(const QModelIndex& sourceParent, int start, int end)
-{
-    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
-    QModelIndex parent = q->mapFromSource(sourceParent, sourceModel);
-    
-    q->beginRemoveRows(parent, start, end);
-}
-
-
-void AggregatedPlacesQueryModel::Private::rowsInserted(const QModelIndex& sourceParent, int start, int end)
-{
-    kDebug() << sourceParent << start << end;
-    
-//     Q_UNUSED(sourceParent);
-//     Q_UNUSED(start);
-//     Q_UNUSED(end);
     q->endInsertRows();
 }
 
 
-void AggregatedPlacesQueryModel::Private::rowsRemoved(const QModelIndex& sourceParent, int start, int end)
+void KAggregatedModel::Private::rowsRemoved(const QModelIndex& sourceParent, int start, int end)
 {
-    // TODO ?
-    Q_UNUSED(sourceParent);
-    Q_UNUSED(start);
-    Q_UNUSED(end);
+    
+    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
+    QModelIndex parent = q->mapFromSource(sourceParent, sourceModel);
+ 
+    m_removingIndexesFlag = true;
+    q->beginRemoveRows(parent, start, end);
+    
+    
+    for(int i = start; i <= end; i++) {
+        QModelIndex sourceIndex = sourceModel->index(i, 0, sourceParent);
+        m_reverseSourceIndexes.remove(sourceIndex);
+        m_parents.remove(sourceIndex);
+        
+        QString* internalId = m_reverseSourceIndexes[sourceIndex];
+        if(internalId) {
+            m_sourceIndexes.remove(*internalId);
+            delete internalId;
+        }
+    }
+    
     q->endRemoveRows();
+    m_removingIndexesFlag = false;
 }
 //@endcond
     
-AggregatedPlacesQueryModel::AggregatedPlacesQueryModel(QObject* parent)
+KAggregatedModel::KAggregatedModel(QObject* parent)
     : QAbstractItemModel(parent), d(new Private(this))
 {
 
 }
     
-AggregatedPlacesQueryModel::~AggregatedPlacesQueryModel()
+KAggregatedModel::~KAggregatedModel()
 {
     delete d;
 }
     
-void AggregatedPlacesQueryModel::addSourceModel(QAbstractItemModel *sourceModel,
-    SearchMode mode, QString name)
-{
-    Q_UNUSED(mode);
-    
-    kDebug() << sourceModel;
-    
+void KAggregatedModel::addSourceModel(QAbstractItemModel *sourceModel, QString name, int displayColumn)
+{   
     if(d->m_sourceModels.contains(sourceModel)) {
         return;
     }
     
     d->m_sourceModelNames[sourceModel] = name;
+    
+    if(displayColumn != -1) {
+        d->m_sourceModelDisplayColumns[sourceModel] = displayColumn;
+    }
     
     int row = d->m_sourceModels.count();
     beginInsertRows(QModelIndex(), row, row);
@@ -184,12 +169,6 @@ void AggregatedPlacesQueryModel::addSourceModel(QAbstractItemModel *sourceModel,
     connect(sourceModel, SIGNAL(modelReset()),
         this, SLOT(modelReset()));
         
-    connect(sourceModel, SIGNAL(rowsAboutToBeInserted(const QModelIndex&, int, int)),
-        this, SLOT(rowsAboutToBeInserted(const QModelIndex&, int, int)));
-        
-    connect(sourceModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex&, int, int)),
-        this, SLOT(rowsAboutToBeRemoved(const QModelIndex&, int, int)));
-        
     connect(sourceModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(rowsInserted(const QModelIndex&, int, int)));
         
@@ -197,7 +176,7 @@ void AggregatedPlacesQueryModel::addSourceModel(QAbstractItemModel *sourceModel,
         this, SLOT(rowsRemoved(const QModelIndex&, int, int)));
 }
 
-void AggregatedPlacesQueryModel::removeSourceModel(QAbstractItemModel *sourceModel)
+void KAggregatedModel::removeSourceModel(QAbstractItemModel *sourceModel)
 {
     if(!d->m_sourceModels.contains(sourceModel)) {
         return;
@@ -230,41 +209,40 @@ void AggregatedPlacesQueryModel::removeSourceModel(QAbstractItemModel *sourceMod
     
     d->m_sourceModels.removeOne(sourceModel);
     
-    foreach(QPersistentModelIndex sourceIndex, d->m_decendents[sourceModel]) {
+    foreach(QPersistentModelIndex sourceIndex, d->m_decendants[sourceModel]) {
         d->m_parents.remove(sourceIndex);
         
         QString* internalId = d->m_reverseSourceIndexes[sourceIndex];
         d->m_sourceIndexes.remove(*internalId);
+        d->m_parents.remove(sourceIndex);
         d->m_reverseSourceIndexes.remove(sourceIndex);
         delete internalId;
     }
     
-    d->m_decendents.remove(sourceModel);
+    d->m_decendants.remove(sourceModel);
     d->m_sourceModelNames.remove(sourceModel);
+    d->m_sourceModelDisplayColumns.remove(sourceModel);
     
     endRemoveRows();
 }
 
-int AggregatedPlacesQueryModel::rowCount(const QModelIndex &parent) const
+int KAggregatedModel::rowCount(const QModelIndex &parent) const
 {   
     // If it's invalid we want to count the top level indexes i.e. the models
     if(!parent.isValid()) {
-        kDebug() << parent << "d->m_sourceModels.count():" << d->m_sourceModels.count();
         return d->m_sourceModels.count();
     }
     
     const QAbstractItemModel *sourceModel = sourceOf(parent);
     
     if(!sourceModel) {
-        kDebug() << parent << "zero:" << 0;
         return 0;
     }
     
-    kDebug() << parent << "sourceModel->rowCount(mapToSource(parent)): " << sourceModel->rowCount(mapToSource(parent));
     return sourceModel->rowCount(mapToSource(parent));
 }
 
-QVariant AggregatedPlacesQueryModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant KAggregatedModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if ( role == Qt::DisplayRole && orientation == Qt::Horizontal )
     {
@@ -279,44 +257,44 @@ QVariant AggregatedPlacesQueryModel::headerData(int section, Qt::Orientation ori
     return QVariant();
 }
 
-QVariant AggregatedPlacesQueryModel::data(const QModelIndex &index, int role) const
+QVariant KAggregatedModel::data(const QModelIndex &index, int role) const
 {
     
     if(!index.isValid()) {
-        kDebug() << "!index.isValid() : QVariant()" << index;
         return QVariant();
     }
     
     const QAbstractItemModel *sourceModel = sourceOf(index);
     
     if(!sourceModel) {
-        kDebug() << "!sourceModel : QVariant()" << index;
         return QVariant();
     }
     
+    int col  = 0;
     switch(role) {
-    case Place::PlaceRelevanceRole:
-        return QVariant(); // TODO
-    case Place::PlaceUrlRole:
-        return mapToSource(index).data(role);
     case Qt::DisplayRole:
-    case Qt::EditRole:
-        // top level, show name
         if(!index.parent().isValid()) {
             return d->m_sourceModelNames[sourceModel];
         }
         
-        kDebug() << index << role;
-        kDebug() << "mapToSource(index).data()" << mapToSource(index) << mapToSource(index).data();
-        return mapToSource(index).data();
+        if(!d->m_sourceModelDisplayColumns.contains(sourceModel)) {
+            return mapToSource(index).data(role);
+        }
+        
+        col = d->m_sourceModelDisplayColumns[sourceModel];
+        
+        return mapToSource(index).child(0, col).data();
     default:
-        return QVariant();
+        return mapToSource(index).data(role);
     }
 }
     
-QModelIndex AggregatedPlacesQueryModel::index(int row, int column, const QModelIndex& parent) const
-{   
-    kDebug() << row << column << parent;
+QModelIndex KAggregatedModel::index(int row, int column, const QModelIndex& parent) const
+{      
+    if(column != 0) {
+        return QModelIndex();
+    }
+    
     if(!parent.isValid()) {
         if(row < 0 || row > d->m_sourceModels.count()) {
             return QModelIndex();
@@ -330,59 +308,53 @@ QModelIndex AggregatedPlacesQueryModel::index(int row, int column, const QModelI
         return QModelIndex();
     }
     
-    if(column < 0 || column > 1) {
-        return QModelIndex();
-    }
-    
     QModelIndex sourceParent = mapToSource(parent);
     QPersistentModelIndex sourceIndex = sourceModel->index(row, column, sourceParent);
     QString *internalId;  //TODO: free the QString mallocs
     if(d->m_reverseSourceIndexes.contains(sourceIndex)) {
-        kDebug()  << "notnew" << d->m_reverseSourceIndexes[sourceIndex];
         internalId = d->m_reverseSourceIndexes[sourceIndex];
     } else {
+        if(d->m_removingIndexesFlag) {
+            return QModelIndex();
+        }
         internalId = new QString(KRandom::randomString( 10 ));
-        kDebug() << "new" << internalId << *internalId;
     }
     
     QModelIndex ret = createIndex(row, column, reinterpret_cast<void*>(internalId));
-    kDebug() << ret.internalPointer();
-    internalId = reinterpret_cast<QString*>(ret.internalPointer());
-    kDebug() << internalId << *internalId << ret;
-    kDebug() << "sourceIndex =" << sourceIndex;
     
-    if(!d->m_reverseSourceIndexes.contains(sourceIndex)) {
-        kDebug() << "filling";
+    if(!d->m_reverseSourceIndexes.contains(sourceIndex) && !d->m_removingIndexesFlag) {
         d->m_reverseSourceIndexes[sourceIndex] = internalId;
-        Q_ASSERT(d->m_reverseSourceIndexes.contains(sourceIndex));
         d->m_sourceIndexes[*internalId] = sourceIndex;
-        d->m_parents[ret] = parent;
-        d->m_decendents[sourceModel].append(ret);
+        d->m_parents[sourceIndex] = parent;
+        d->m_decendants[sourceModel].append(ret);
     }
     return ret;
 }
     
-QModelIndex AggregatedPlacesQueryModel::parent(const QModelIndex& index) const
-{   
-    if(!index.isValid() || !d->m_parents.contains(index)) {
-        kDebug() << "!index.isValid() || !d->m_parents.contains(index)" << index << d->m_parents.contains(index);
+QModelIndex KAggregatedModel::parent(const QModelIndex& index) const
+{
+    if(!index.isValid()) {
         return QModelIndex();
     }
     
-    return d->m_parents[index];
+    QModelIndex sourceIndex = mapToSource(index);
+    
+    if(!sourceIndex.isValid() || !d->m_parents.contains(sourceIndex)) {
+        return QModelIndex();
+    }
+ 
+    return d->m_parents[sourceIndex];
 }
     
-int AggregatedPlacesQueryModel::columnCount(const QModelIndex& index) const
+int KAggregatedModel::columnCount(const QModelIndex& index) const
 {
     Q_UNUSED(index);
     return ColumnCount;
 }
         
-QModelIndex AggregatedPlacesQueryModel::mapFromSource(const QModelIndex& sourceIndex,
+QModelIndex KAggregatedModel::mapFromSource(const QModelIndex& sourceIndex,
     const QAbstractItemModel *sourceModel) const
-{
-    kDebug() << sourceIndex << sourceModel;
-    
+{   
     const QAbstractItemModel* sModel = sourceModel;
     if(!sourceIndex.isValid()) {
         if(!sourceModel) {
@@ -397,8 +369,6 @@ QModelIndex AggregatedPlacesQueryModel::mapFromSource(const QModelIndex& sourceI
     }
     
     sModel = sourceIndex.model();
-    
-    kDebug() << "sModel: " << sModel;
     
     Q_ASSERT(sourceModel != 0 && sModel == sourceModel);
     
@@ -423,56 +393,39 @@ QModelIndex AggregatedPlacesQueryModel::mapFromSource(const QModelIndex& sourceI
     return ret;
 }
 
-QModelIndex AggregatedPlacesQueryModel::mapToSource(const QModelIndex& index) const
+QModelIndex KAggregatedModel::mapToSource(const QModelIndex& index) const
 {   
     if(!index.isValid()) {
         return QModelIndex();
     }
-    
-    if(!index.parent().isValid()) {
-        return QModelIndex();
-    }
 
-    QString* internalId = reinterpret_cast<QString*>(index.internalPointer());
-    
-    kDebug() << index << internalId;
-    
+    QString* internalId = reinterpret_cast<QString*>(index.internalPointer()); 
 
     if(!internalId) {
         return QModelIndex();
     }
     
-    kDebug() << *internalId;
-    
     if(!d->m_sourceIndexes.contains(*internalId)) {
-        kDebug() << "not found";
         return QModelIndex();
     }
-    
     return d->m_sourceIndexes[*internalId];
 }
 
-const QAbstractItemModel* AggregatedPlacesQueryModel::sourceOf(const QModelIndex& index) const
+const QAbstractItemModel* KAggregatedModel::sourceOf(const QModelIndex& index) const
 {
-    kDebug() << index;
     if(!index.isValid()) {
-        kDebug() << "!index.isValid()";
         return 0;
     }
     
     if(!index.parent().isValid()) {
         if(index.row() < 0 || index.row() >= d->m_sourceModels.count()) {
-            kDebug() << "index.row() = " << index.row();
             return 0;
         }
-        kDebug() << "d->m_sourceModels.at(index.row())" << d->m_sourceModels.at(index.row()) << index.row();
         
         return d->m_sourceModels.at(index.row());
     }
     
     QModelIndex sourceIndex =  mapToSource(index);
-    
-    kDebug() << "sourceIndex = " << sourceIndex;
     
     if(!sourceIndex.isValid()) {
         return 0;
@@ -481,4 +434,4 @@ const QAbstractItemModel* AggregatedPlacesQueryModel::sourceOf(const QModelIndex
     return sourceIndex.model();
 }
 
-#include "aggregatedplacesquerymodel.moc"
+#include "kaggregatedmodel.moc"

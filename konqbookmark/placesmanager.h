@@ -33,6 +33,7 @@
 
 class KonqHistoryEntry;
 class KonqBookmark;
+class KCompletionModel;
 
 namespace Akonadi {
     class KonqBookmarkModel;
@@ -65,7 +66,7 @@ namespace Konqueror
         static PlacesManager* self();
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
-        // TODO: add urlcompletion places! addUrl() ?
+        virtual KCompletionModel* urlCompletionModel();
         
         KonqBookmark* bookmark(const QUrl& url);
         KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
@@ -99,9 +100,13 @@ namespace Konqueror
         
         Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex&, int, int))
         Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex&, int, int))
+        
         Q_PRIVATE_SLOT(d, void slotHistoryEntryAdded(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryCleared())
+        
+        Q_PRIVATE_SLOT(d, void slotUrlsInserted(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotUrlsRemoved(const QModelIndex&, int, int))
     };
 }
 #endif // KONQUEROR_PLACESMANAGER_H

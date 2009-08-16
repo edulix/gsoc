@@ -22,8 +22,11 @@
 #include "place.h"
 #include "konqbookmark.h"
 #include "itemmodels/konqbookmarkmodel.h"
+#include "itemmodels/kcompletionmodel.h"
 
 #include <konq_historyentry.h>
+#include <kurlcompletion.h>
+#include <kcompletion.h>
 #include <kglobal.h>
 
 #include <akonadi/monitor.h>
@@ -49,14 +52,19 @@ public:
 
     void slotBookmarksInserted(const QModelIndex& parent, int start, int end);
     void slotBookmarksRemoved(const QModelIndex& parent, int start, int end);
-    bool isFolder(const QModelIndex& index);
+    
+    void slotUrlsInserted(const QModelIndex& parent, int start, int end);
+    void slotUrlsRemoved(const QModelIndex& parent, int start, int end);
+    
     void slotHistoryEntryAdded(const KonqHistoryEntry &entry);
     void slotHistoryEntryRemoved(const KonqHistoryEntry &entry);
+    bool isFolder(const QModelIndex& index);
     void slotHistoryCleared();
     
     PlacesManager *q;
     
-    KonqBookmarkModel *m_bookmarkModel;
+    KonqBookmarkModel *m_bookmarksModel;
+    KCompletionModel *m_urlCompletionModel;
     
     QHash<QUrl, KonqHistoryEntry*> m_historyEntries;
     QHash<QUrl, KonqBookmark*> m_bookmarks;
@@ -64,22 +72,30 @@ public:
 };
 
 PlacesManager::Private::Private(PlacesManager *parent)
-    : q(parent), m_bookmarkModel(0)
+    : q(parent)
 {   
     Session* session = new Session(QByteArray( "PlacesManager-" ) + QByteArray::number( qrand() ), q);
     Monitor* monitor = new Monitor( q );
-    m_bookmarkModel = new KonqBookmarkModel( session, monitor, q );
+    m_bookmarksModel = new KonqBookmarkModel( session, monitor, q );
     
-    connect(m_bookmarkModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-        q, SLOT(slotBookmarksrowsInserted(const QModelIndex&, int, int)));
+    connect(m_bookmarksModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        q, SLOT(slotBookmarksInserted(const QModelIndex&, int, int)));
         
-    connect(m_bookmarkModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
-        q, SLOT(slotBookmarks(const QModelIndex&, int, int)));
+    connect(m_bookmarksModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
+        q, SLOT(slotBookmarksRemoved(const QModelIndex&, int, int)));
+        
+    // TODO modelReset
+    m_urlCompletionModel = new KCompletionModel(q);
+        
+    connect(m_urlCompletionModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        q, SLOT(slotUrlsInserted(const QModelIndex&, int, int)));
+        
+    connect(m_urlCompletionModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
+        q, SLOT(slotUrlsRemoved(const QModelIndex&, int, int)));
 }
 
 PlacesManager::Private::~Private()
 {
-    
 }
 
 bool PlacesManager::Private::isFolder(const QModelIndex& index)
@@ -94,7 +110,7 @@ bool PlacesManager::Private::isFolder(const QModelIndex& index)
 void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
-        QModelIndex index = parent.child(i, 0);
+        QModelIndex index = m_bookmarksModel->index(i, 0, parent);
         if(isFolder(index)) {
             continue;
         }
@@ -104,10 +120,7 @@ void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, in
         
         // Update/insert place
         Place *place = q->place(konqBookmark->url());
-        if(!place) {
-            KonqHistoryEntry *historyEntry = q->historyEntry(konqBookmark->url());
-            m_places[konqBookmark->url()] = new Place(historyEntry, konqBookmark, q);
-        } else {
+        if(place) {
             place->setBookmark(konqBookmark);
         }
     }
@@ -116,7 +129,7 @@ void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, in
 void PlacesManager::Private::slotBookmarksRemoved(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
-        QModelIndex index = parent.child(i, 0);
+        QModelIndex index = m_bookmarksModel->index(i, 0, parent);
         if(isFolder(index)) {
             continue;
         }
@@ -143,6 +156,44 @@ void PlacesManager::Private::slotBookmarksRemoved(const QModelIndex& parent, int
     }
 }
 
+void PlacesManager::Private::slotUrlsInserted(const QModelIndex& parent, int start, int end)
+{
+    for(int i = start; i <= end; i++) {
+        QModelIndex index = parent.child(i, 0);
+        if(isFolder(index)) {
+            continue;
+        }
+        
+        QUrl url = index.data().toString();
+        
+        // Update/insert place
+        Place *place = q->place(url);
+        if(!place) {
+            m_places[url] = new Place(url, q);
+        }
+    }
+}
+
+void PlacesManager::Private::slotUrlsRemoved(const QModelIndex& parent, int start, int end)
+{
+    for(int i = start; i <= end; i++) {
+        QModelIndex index = parent.child(i, 0);
+        if(isFolder(index)) {
+            continue;
+        }
+        
+        QUrl url = index.data().toString();
+        
+        // Remove
+        Place *place = q->place(url);
+        if(place && !place->bookmark() && !place->historyEntry()) {
+            delete m_places[url];
+            m_places.remove(url);
+        }
+    }
+}
+
+
 void PlacesManager::Private::slotHistoryEntryAdded(const KonqHistoryEntry &entry)
 {
     KonqHistoryEntry *historyEntry = new KonqHistoryEntry(entry);
@@ -165,7 +216,14 @@ void PlacesManager::Private::slotHistoryEntryRemoved(const KonqHistoryEntry &ent
     delete m_historyEntries[entry.url];
     m_historyEntries.remove(entry.url);
     
-    m_places[entry.url]->setHistoryEntry(0);
+    if(m_places.contains(entry.url) &&  !m_bookmarks[entry.url]
+        && m_places[entry.url]->url() == QUrl())
+    {
+        delete m_places[entry.url];
+        m_places.remove(entry.url);
+    } else {
+        m_places[entry.url]->setHistoryEntry(0);
+    }
 }
 
 void PlacesManager::Private::slotHistoryCleared()
@@ -200,8 +258,14 @@ PlacesManager* PlacesManager::self()
 
 KonqBookmarkModel* PlacesManager::bookmarkModel()
 {
-    return d->m_bookmarkModel;
+    return d->m_bookmarksModel;
 }
+
+KCompletionModel* PlacesManager::urlCompletionModel()
+{
+    return d->m_urlCompletionModel;
+}
+
 
 KonqBookmark* PlacesManager::bookmark(const QUrl& url)
 {

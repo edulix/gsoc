@@ -63,7 +63,7 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
 
     KCompletion* completion() const;
-    void setCompletion(KCompletion* completion);
+    virtual void setCompletion(KCompletion* completion);
     
     virtual QModelIndex index(int, int, const QModelIndex&) const;
     virtual QModelIndex parent(const QModelIndex&) const;
