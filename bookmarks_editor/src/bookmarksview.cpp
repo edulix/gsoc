@@ -140,7 +140,7 @@ void BookmarksView::createModels()
     completionModel->setCompletion(completion);
     
     Konqueror::AggregatedPlacesQueryModel* aggregatedModel = new Konqueror::AggregatedPlacesQueryModel(this);
-    aggregatedModel->addSourceModel(completionModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, 0, "url completions");
+    aggregatedModel->addSourceModel(completionModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, "url completions");
     
     ui_bookmarksview_base.listView->setModel(aggregatedModel);
     //@end-testing
@@ -164,6 +164,8 @@ void BookmarksView::createModels()
     
     d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel( this );
     d->mBookmarkProxyModel->setSourceModel(selectionProxy);
+    
+    aggregatedModel->addSourceModel(d->mBookmarkProxyModel, Konqueror::AggregatedPlacesQueryModel::AutomaticSearchMode, "bookmarks");
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );

@@ -19,6 +19,7 @@
 
 #include "konqbookmarkmodel.h"
 #include "konqbookmark.h"
+#include "place.h"
 
 #include <akonadi/collection.h>
 #include <akonadi/item.h>
@@ -147,6 +148,8 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
                 return SmallIcon( QLatin1String( "bookmarks" ) );
             }
             return QVariant();
+        case Konqueror::Place::PlaceUrlRole:
+            return konqBookmark.url().toString();
         case Qt::DisplayRole:
         case Qt::EditRole:
             switch( column )
@@ -170,6 +173,7 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
             case LastVisited:
                 return konqBookmark.lastVisited();
             default:
+                return QVariant();
                 break;
             }
             break;
@@ -188,6 +192,8 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
             return SmallIcon( QLatin1String( "folder" ) );
         }
         return QVariant();
+    case Konqueror::Place::PlaceUrlRole:
+            return QVariant();
     case Qt::DisplayRole:
     case Qt::EditRole:
         switch( column )

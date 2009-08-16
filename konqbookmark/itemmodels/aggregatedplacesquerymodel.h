@@ -74,7 +74,7 @@ namespace Konqueror
         
         virtual ~AggregatedPlacesQueryModel();
         
-        void addSourceModel(QAbstractItemModel *model, SearchMode mode, int placeUrlRole, QString name);
+        void addSourceModel(QAbstractItemModel *model, SearchMode mode, QString name);
         
         void removeSourceModel(QAbstractItemModel *model);
         

@@ -157,10 +157,9 @@ AggregatedPlacesQueryModel::~AggregatedPlacesQueryModel()
 }
     
 void AggregatedPlacesQueryModel::addSourceModel(QAbstractItemModel *sourceModel,
-    SearchMode mode, int placeUrlRole, QString name)
+    SearchMode mode, QString name)
 {
     Q_UNUSED(mode);
-    Q_UNUSED(placeUrlRole);
     
     kDebug() << sourceModel;
     
@@ -297,8 +296,10 @@ QVariant AggregatedPlacesQueryModel::data(const QModelIndex &index, int role) co
     }
     
     switch(role) {
-    case PlaceQueryMatchRole:
+    case PlaceQueryMatch::PlaceQueryMatchRole:
         return QVariant(); // TODO
+    case Place::PlaceUrlRole:
+        return mapToSource(index).data(role);
     case Qt::DisplayRole:
     case Qt::EditRole:
         // top level, show name
@@ -381,6 +382,8 @@ int AggregatedPlacesQueryModel::columnCount(const QModelIndex& index) const
 QModelIndex AggregatedPlacesQueryModel::mapFromSource(const QModelIndex& sourceIndex,
     const QAbstractItemModel *sourceModel) const
 {
+    kDebug() << sourceIndex << sourceModel;
+    
     const QAbstractItemModel* sModel = sourceModel;
     if(!sourceIndex.isValid()) {
         if(!sourceModel) {
@@ -396,7 +399,9 @@ QModelIndex AggregatedPlacesQueryModel::mapFromSource(const QModelIndex& sourceI
     
     sModel = sourceIndex.model();
     
-    Q_ASSERT(sourceModel != 0 && sModel != sourceModel);
+    kDebug() << "sModel: " << sModel;
+    
+    Q_ASSERT(sourceModel != 0 && sModel == sourceModel);
     
     if(!d->m_sourceModels.contains(sModel)) {
         return QModelIndex();
@@ -441,7 +446,6 @@ QModelIndex AggregatedPlacesQueryModel::mapToSource(const QModelIndex& index) co
     kDebug() << *internalId;
     
     if(!d->m_sourceIndexes.contains(*internalId)) {
-        
         kDebug() << "not found";
         return QModelIndex();
     }

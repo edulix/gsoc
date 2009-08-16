@@ -43,6 +43,12 @@ namespace Konqueror
         Q_OBJECT
 
     public:
+        enum
+        {
+            /// Role to be used in models returning an PlaceQueryMAtch
+            PlaceQueryMatchRole = Place::PlaceUrlRole + 1
+        };
+        
         PlaceQueryMatch();
         PlaceQueryMatch(const Place& place);
         virtual ~PlaceQueryMatch();

@@ -80,6 +80,12 @@ namespace Konqueror
         void setBookmark(KonqBookmark *konqBookmark);
         
     public:
+        enum
+        {
+            /// Role to be used in models returning an url which reffers to a
+            /// place
+            PlaceUrlRole = Qt::UserRole + 50
+        };
         /**
          * Destructor.
          */
