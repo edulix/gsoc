@@ -56,16 +56,12 @@ namespace Konqueror
         /**
          * Sets the relevance of this action for the search
          * it was created for.
-         *
-         * @param relevance a number between 0 and 1.
          */
         void setRelevance(qreal relevance);
 
         /**
          * The relevance of this action to the search. By default,
-         * the relevance is 0.5.
-         *
-         * @return a number between 0 and 1
+         * the relevance is 0. The bigger the number, the better.
          */
         qreal relevance() const;
         

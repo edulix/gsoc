@@ -275,6 +275,7 @@ Place* PlacesManager::place(const KonqHistoryEntry* historyEntry)
 QIcon* PlacesManager::icon(const QUrl& url)
 {
     Q_UNUSED(url);
+    
     return 0;
 }
 

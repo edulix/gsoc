@@ -36,7 +36,7 @@ public:
 
 
 PlaceQueryMatch::Private::Private(PlaceQueryMatch *placeQueryMatch)
-    : q(placeQueryMatch)
+    : q(placeQueryMatch), m_relevance(0.5)
 {
 }
 

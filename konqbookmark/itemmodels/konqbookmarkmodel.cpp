@@ -50,10 +50,17 @@
 
 using namespace Akonadi;
 
+/**
+ * Private class that helps to provide binary compatibility between releases.
+ * @internal
+ */
+//@cond PRIVATE
 class KonqBookmarkModel::Private
 {
     public:
 };
+
+//@endcond
 
 KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent )
   : EntityTreeModel( session, monitor, parent ),

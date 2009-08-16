@@ -65,6 +65,7 @@ namespace Konqueror
         static PlacesManager* self();
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
+        // TODO: add urlcompletion places! addUrl() ?
         
         KonqBookmark* bookmark(const QUrl& url);
         KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
