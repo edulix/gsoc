@@ -150,26 +150,16 @@ void BookmarksView::createModels()
     completionModel->setCompletion(completion);
     
     KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
-    new ModelTest(aggregatedModel, this);
     aggregatedModel->addSourceModel(completionModel);
-    QStringListModel *stringListModel = new QStringListModel(this);
-    QStringList stringList;
-    stringList << "a" << "b" << "c";
-    stringListModel->setStringList(stringList);
-    aggregatedModel->addSourceModel(stringListModel);
     ui_bookmarksview_base.listView->setModel(aggregatedModel);
     //@end-testing
     
-    Akonadi::Session *session = new Akonadi::Session(QByteArray( "BookmarksView-" ) + QByteArray::number( qrand() ), this);
-
-    d->mMonitor = new Monitor( this );
-    
-    d->mBookmarkModel = new Akonadi::KonqBookmarkModel( session, d->mMonitor, this );
+    d->mBookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
     
     d->mCollectionProxyModel = new Akonadi::EntityFilterProxyModel( this );
-//     d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
- 
+    d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
+    
     ui_bookmarksview_base.collectionsView->setModel( d->mCollectionProxyModel );
     ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionProxyModel );
     ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel( ui_bookmarksview_base.collectionsView->selectionModel() );
@@ -181,7 +171,7 @@ void BookmarksView::createModels()
     d->mBookmarkProxyModel->setSourceModel(selectionProxy);
     
     Konqueror::PlacesProxyModel* placesProxyModel = new Konqueror::PlacesProxyModel(this);
-    placesProxyModel->setSourceModel(d->mBookmarkProxyModel);
+    placesProxyModel->setSourceModel(d->mBookmarkModel);
     connect(ui_bookmarksview_base.kcombobox->lineEdit(), SIGNAL(textChanged(const QString&)),
         placesProxyModel, SLOT(setQuery(const QString &)));
     

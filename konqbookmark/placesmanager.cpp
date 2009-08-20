@@ -110,13 +110,15 @@ bool PlacesManager::Private::isFolder(const QModelIndex& index)
 void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
-        QModelIndex index = m_bookmarksModel->index(i, 0, parent);
+        QModelIndex index = m_bookmarksModel->index(i, KonqBookmarkModel::UniqueUri, parent);
         if(isFolder(index)) {
             continue;
         }
         
-        KonqBookmark *konqBookmark = new KonqBookmark(index.data(KonqBookmarkModel::UniqueUri).toString());
+        KonqBookmark *konqBookmark = new KonqBookmark(index.data().toString());
         m_bookmarks[konqBookmark->url()] = konqBookmark;
+        
+        kDebug() << konqBookmark->url() << konqBookmark->title();
         
         // Update/insert place
         Place *place = q->place(konqBookmark->url());
@@ -129,11 +131,11 @@ void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, in
 void PlacesManager::Private::slotBookmarksRemoved(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
-        QModelIndex index = m_bookmarksModel->index(i, 0, parent);
+        QModelIndex index = m_bookmarksModel->index(i, KonqBookmarkModel::Url, parent);
         if(isFolder(index)) {
             continue;
         }
-        QUrl url(index.data(KonqBookmarkModel::Url).toString());
+        QUrl url(index.data().toString());
         if(m_bookmarks.contains(url)) {
             
             // Update/remove place
