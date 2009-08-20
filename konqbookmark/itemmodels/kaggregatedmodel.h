@@ -44,7 +44,7 @@ public:
     
     virtual ~KAggregatedModel();
     
-    void addSourceModel(QAbstractItemModel *model, QString displayName = QString(), int displayColumn = -1);
+    void addSourceModel(QAbstractItemModel *model);
     
     void removeSourceModel(QAbstractItemModel *model);
     
@@ -60,11 +60,9 @@ public:
     
     virtual int columnCount(const QModelIndex& index) const;
     
-    virtual QModelIndex mapFromSource(const QModelIndex& sourceIndex, const QAbstractItemModel *sourceModel = 0) const;
+    virtual QModelIndex mapFromSource(const QModelIndex& sourceIndex) const;
     
     virtual QModelIndex mapToSource(const QModelIndex& index) const;
-    
-    virtual const QAbstractItemModel* sourceOf(const QModelIndex& index) const;
 
 private:
     class Private;
@@ -76,6 +74,8 @@ private:
     Q_PRIVATE_SLOT(d, void modelReset())
     Q_PRIVATE_SLOT(d, void rowsInserted(const QModelIndex&, int, int))
     Q_PRIVATE_SLOT(d, void rowsRemoved(const QModelIndex&, int, int))
+    Q_PRIVATE_SLOT(d, void rowsAboutToBeInserted(const QModelIndex&, int, int))
+    Q_PRIVATE_SLOT(d, void rowsAboutToBeRemoved(const QModelIndex&, int, int))
 };
 
 #endif // KAGGREGATED_MODEL_H

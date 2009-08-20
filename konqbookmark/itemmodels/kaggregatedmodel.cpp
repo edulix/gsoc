@@ -46,23 +46,19 @@ public:
     void dataChanged(const QModelIndex& sourceTopLeft, const QModelIndex& sourceBottomRight);
     void layoutChanged();
     void modelReset();
+    void rowsAboutToBeInserted(const QModelIndex& sourceParent, int start, int end);
+    void rowsAboutToBeRemoved(const QModelIndex& sourceParent, int start, int end);
     void rowsInserted(const QModelIndex& sourceParent, int start, int end);
     void rowsRemoved(const QModelIndex& sourceParent, int start, int end);
     
+    int indexRowDiff(const QAbstractItemModel *sourceModel, int sourceRow);
+    
     KAggregatedModel* q;
     QList<const QAbstractItemModel*> m_sourceModels;
-    QHash<const QAbstractItemModel*, QString> m_sourceModelNames;
-    QHash<const QAbstractItemModel*, int> m_sourceModelDisplayColumns;
-    QHash<const QAbstractItemModel*, QList<QPersistentModelIndex> > m_decendants;
-    
-    QHash<QString, QPersistentModelIndex> m_sourceIndexes;
-    QHash<QPersistentModelIndex, QString*> m_reverseSourceIndexes;
-    bool m_removingIndexesFlag;
-    QHash<QPersistentModelIndex, QPersistentModelIndex> m_parents;
 };
 
 KAggregatedModel::Private::Private(KAggregatedModel* parent)
-    : q(parent), m_removingIndexesFlag(false)
+    : q(parent)
 {
     
 }
@@ -76,9 +72,8 @@ KAggregatedModel::Private::~Private()
 void KAggregatedModel::Private::dataChanged(const QModelIndex& sourceTopLeft,
     const QModelIndex& sourceBottomRight)
 {
-    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
-    QModelIndex topLeft = q->mapFromSource(sourceTopLeft, sourceModel);
-    QModelIndex bottomRight = q->mapFromSource(sourceBottomRight, sourceModel);
+    QModelIndex topLeft = q->mapFromSource(sourceTopLeft);
+    QModelIndex bottomRight = q->mapFromSource(sourceBottomRight);
     emit q->dataChanged(topLeft, bottomRight);
 }
 
@@ -92,41 +87,113 @@ void KAggregatedModel::Private::modelReset()
     layoutChanged();
 }
 
-void KAggregatedModel::Private::rowsInserted(const QModelIndex& sourceParent, int start, int end)
+int KAggregatedModel::Private::indexRowDiff(const QAbstractItemModel *sourceModel, int sourceRow)
 {
+    int prevCount = 0;
+    int modelAt = m_sourceModels.indexOf(sourceModel);
+    
+    if(modelAt == -1) {
+        return -1;
+    }
+    
+    foreach(const QAbstractItemModel *model, m_sourceModels) {
+        if(model == sourceModel) {
+            break;
+        }
+        prevCount += model->rowCount(QModelIndex());
+    }
+    
+    return sourceRow + prevCount;
+}
+
+void KAggregatedModel::Private::rowsAboutToBeInserted(const QModelIndex& sourceParent, int sourceStart, int sourceEnd)
+{
+    if(sourceParent.isValid()) {
+        return;
+    }
+    
+    if(sourceStart < 0 || sourceStart > sourceEnd) {
+       return;
+    }
     
     QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
-    QModelIndex parent = q->mapFromSource(sourceParent, sourceModel);
     
-    q->beginInsertRows(parent, start, end);
+    int diff = indexRowDiff(sourceModel, 0);
+    
+    int rowCount = q->rowCount(QModelIndex());
+    if(diff < 0 || sourceStart + diff > rowCount) {
+        return;
+    }
+    int start = sourceStart + diff;
+    int end = sourceEnd + diff;
+    
+    q->beginInsertRows(QModelIndex(), start, end);
+}
+
+void KAggregatedModel::Private::rowsInserted(const QModelIndex& sourceParent, int sourceStart, int sourceEnd)
+{
+    if(sourceParent.isValid()) {
+        return;
+    }
+    
+    if(sourceStart < 0 || sourceStart > sourceEnd) {
+       return;
+    }
+    
+    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
+
+    int diff = indexRowDiff(sourceModel, 0);
+    int rowCount = q->rowCount(QModelIndex());
+    if(diff < 0 || sourceEnd + diff > rowCount) {
+        return;
+    }
+    
     q->endInsertRows();
 }
 
-
-void KAggregatedModel::Private::rowsRemoved(const QModelIndex& sourceParent, int start, int end)
+void KAggregatedModel::Private::rowsAboutToBeRemoved(const QModelIndex& sourceParent, int sourceStart, int sourceEnd)
 {
+    if(sourceParent.isValid()) {
+        return;
+    }
+    
+    if(sourceStart < 0 || sourceStart > sourceEnd) {
+       return;
+    }
     
     QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
-    QModelIndex parent = q->mapFromSource(sourceParent, sourceModel);
- 
-    m_removingIndexesFlag = true;
-    q->beginRemoveRows(parent, start, end);
+
+    int diff = indexRowDiff(sourceModel, 0);
+    int rowCount = q->rowCount(QModelIndex());
+    if(diff < 0 || sourceStart + diff > rowCount) {
+        return;
+    }
     
+    int start = sourceStart + diff;
+    int end = sourceEnd + diff;
     
-    for(int i = start; i <= end; i++) {
-        QModelIndex sourceIndex = sourceModel->index(i, 0, sourceParent);
-        m_reverseSourceIndexes.remove(sourceIndex);
-        m_parents.remove(sourceIndex);
-        
-        QString* internalId = m_reverseSourceIndexes[sourceIndex];
-        if(internalId) {
-            m_sourceIndexes.remove(*internalId);
-            delete internalId;
-        }
+    q->beginRemoveRows(QModelIndex(), start, end);
+}
+
+void KAggregatedModel::Private::rowsRemoved(const QModelIndex& sourceParent, int sourceStart, int sourceEnd)
+{
+    if(sourceParent.isValid()) {
+        return;
+    }
+    
+    if(sourceStart < 0 || sourceStart > sourceEnd) {
+       return;
+    }
+    
+    QAbstractItemModel* sourceModel = qobject_cast<QAbstractItemModel*>(q->sender());
+
+    int diff = indexRowDiff(sourceModel, sourceStart);
+    int rowCount = q->rowCount(QModelIndex());
+    if(diff < 0 || sourceEnd + diff > rowCount) {
+        return;
     }
     
     q->endRemoveRows();
-    m_removingIndexesFlag = false;
 }
 //@endcond
     
@@ -141,20 +208,18 @@ KAggregatedModel::~KAggregatedModel()
     delete d;
 }
     
-void KAggregatedModel::addSourceModel(QAbstractItemModel *sourceModel, QString name, int displayColumn)
-{   
+void KAggregatedModel::addSourceModel(QAbstractItemModel *sourceModel)
+{
+    if(!sourceModel) {
+        return;
+    }
+    
     if(d->m_sourceModels.contains(sourceModel)) {
         return;
     }
     
-    d->m_sourceModelNames[sourceModel] = name;
-    
-    if(displayColumn != -1) {
-        d->m_sourceModelDisplayColumns[sourceModel] = displayColumn;
-    }
-    
-    int row = d->m_sourceModels.count();
-    beginInsertRows(QModelIndex(), row, row);
+    int start = rowCount(QModelIndex());
+    beginInsertRows(QModelIndex(), start, start + sourceModel->rowCount(QModelIndex()));
     
     d->m_sourceModels.append(sourceModel);
     
@@ -169,6 +234,12 @@ void KAggregatedModel::addSourceModel(QAbstractItemModel *sourceModel, QString n
     connect(sourceModel, SIGNAL(modelReset()),
         this, SLOT(modelReset()));
         
+    connect(sourceModel, SIGNAL(rowsAboutToBeInserted(const QModelIndex&, int, int)),
+        this, SLOT(rowsAboutToBeInserted(const QModelIndex&, int, int)));
+        
+    connect(sourceModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex&, int, int)),
+        this, SLOT(rowsAboutToBeRemoved(const QModelIndex&, int, int)));
+        
     connect(sourceModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(rowsInserted(const QModelIndex&, int, int)));
         
@@ -182,64 +253,47 @@ void KAggregatedModel::removeSourceModel(QAbstractItemModel *sourceModel)
         return;
     }
     
-    disconnect(sourceModel, SIGNAL(void dataChanged(const QModelIndex&, const QModelIndex&)),
-        this, SLOT(void dataChanged(const QModelIndex&, const QModelIndex&)));
+    disconnect(sourceModel, SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)),
+        this, SLOT(dataChanged(const QModelIndex&, const QModelIndex&)));
             
-    disconnect(sourceModel, SIGNAL(void layoutChanged()),
-        this, SLOT(void layoutChanged()));
+    disconnect(sourceModel, SIGNAL(layoutChanged()),
+        this, SLOT(layoutChanged()));
         
-    disconnect(sourceModel, SIGNAL(void modelReset()),
-        this, SLOT(void modelReset()));
+    disconnect(sourceModel, SIGNAL(modelReset()),
+        this, SLOT(modelReset()));
         
-    disconnect(sourceModel, SIGNAL(void rowsAboutToBeInserted(const QModelIndex&, int, int)),
-        this, SLOT(void rowsAboutToBeInserted(const QModelIndex&, int, int)));
+    disconnect(sourceModel, SIGNAL(rowsAboutToBeInserted(const QModelIndex&, int, int)),
+        this, SLOT(rowsAboutToBeInserted(const QModelIndex&, int, int)));
         
-    disconnect(sourceModel, SIGNAL(void rowsAboutToBeRemoved(const QModelIndex&, int, int)),
-        this, SLOT(void rowsAboutToBeRemoved(const QModelIndex&, int, int)));
+    disconnect(sourceModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex&, int, int)),
+        this, SLOT(rowsAboutToBeRemoved(const QModelIndex&, int, int)));
         
-    disconnect(sourceModel, SIGNAL(void rowsInserted(const QModelIndex&, int, int)),
-        this, SLOT(void rowsInserted(const QModelIndex&, int, int)));
+    disconnect(sourceModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        this, SLOT(rowsInserted(const QModelIndex&, int, int)));
         
-    disconnect(sourceModel, SIGNAL(void rowsRemoved(const QModelIndex&, int, int)),
-        this, SLOT(void rowsRemoved(const QModelIndex&, int, int)));
+    disconnect(sourceModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
+        this, SLOT(rowsRemoved(const QModelIndex&, int, int)));
     
-    int row = d->m_sourceModels.indexOf(sourceModel);
+    int row = d->indexRowDiff(sourceModel, 0);
+    int rowCount = sourceModel->rowCount(QModelIndex());
     
-    beginRemoveRows(QModelIndex(), row, row);
-    
-    d->m_sourceModels.removeOne(sourceModel);
-    
-    foreach(QPersistentModelIndex sourceIndex, d->m_decendants[sourceModel]) {
-        d->m_parents.remove(sourceIndex);
-        
-        QString* internalId = d->m_reverseSourceIndexes[sourceIndex];
-        d->m_sourceIndexes.remove(*internalId);
-        d->m_parents.remove(sourceIndex);
-        d->m_reverseSourceIndexes.remove(sourceIndex);
-        delete internalId;
-    }
-    
-    d->m_decendants.remove(sourceModel);
-    d->m_sourceModelNames.remove(sourceModel);
-    d->m_sourceModelDisplayColumns.remove(sourceModel);
-    
+    beginRemoveRows(QModelIndex(), row, row + rowCount);
     endRemoveRows();
 }
 
 int KAggregatedModel::rowCount(const QModelIndex &parent) const
-{   
-    // If it's invalid we want to count the top level indexes i.e. the models
-    if(!parent.isValid()) {
-        return d->m_sourceModels.count();
-    }
-    
-    const QAbstractItemModel *sourceModel = sourceOf(parent);
-    
-    if(!sourceModel) {
+{
+    if(parent.isValid()) {
         return 0;
     }
     
-    return sourceModel->rowCount(mapToSource(parent));
+    if(!d->m_sourceModels.isEmpty()) {
+        const QAbstractItemModel *model = d->m_sourceModels.last();
+        
+        return d->indexRowDiff(model, model->rowCount(QModelIndex()));
+    }
+    
+    return 0;
 }
 
 QVariant KAggregatedModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -259,91 +313,40 @@ QVariant KAggregatedModel::headerData(int section, Qt::Orientation orientation, 
 
 QVariant KAggregatedModel::data(const QModelIndex &index, int role) const
 {
-    
     if(!index.isValid()) {
         return QVariant();
     }
     
-    const QAbstractItemModel *sourceModel = sourceOf(index);
-    
-    if(!sourceModel) {
+    const QModelIndex sourceIndex = mapToSource(index);
+    if(!sourceIndex.isValid()) {
         return QVariant();
     }
     
-    int col  = 0;
     switch(role) {
     case Qt::DisplayRole:
-        if(!index.parent().isValid()) {
-            return d->m_sourceModelNames[sourceModel];
-        }
-        
-        if(!d->m_sourceModelDisplayColumns.contains(sourceModel)) {
-            return mapToSource(index).data(role);
-        }
-        
-        col = d->m_sourceModelDisplayColumns[sourceModel];
-        
-        return mapToSource(index).child(0, col).data();
+        return sourceIndex.data(role);
     default:
-        return mapToSource(index).data(role);
+        return QVariant();
     }
 }
     
 QModelIndex KAggregatedModel::index(int row, int column, const QModelIndex& parent) const
-{      
-    if(column != 0) {
+{
+    if(column != 0 || parent.isValid()) {
         return QModelIndex();
     }
     
-    if(!parent.isValid()) {
-        if(row < 0 || row > d->m_sourceModels.count()) {
-            return QModelIndex();
-        }
-        
-        return createIndex(row, column);
-    }
-    const QAbstractItemModel *sourceModel = sourceOf(parent);
-    
-    if(!sourceModel) {
+    if(row < 0 || row > rowCount(QModelIndex())) {
         return QModelIndex();
     }
     
-    QModelIndex sourceParent = mapToSource(parent);
-    QPersistentModelIndex sourceIndex = sourceModel->index(row, column, sourceParent);
-    QString *internalId;  //TODO: free the QString mallocs
-    if(d->m_reverseSourceIndexes.contains(sourceIndex)) {
-        internalId = d->m_reverseSourceIndexes[sourceIndex];
-    } else {
-        if(d->m_removingIndexesFlag) {
-            return QModelIndex();
-        }
-        internalId = new QString(KRandom::randomString( 10 ));
-    }
-    
-    QModelIndex ret = createIndex(row, column, reinterpret_cast<void*>(internalId));
-    
-    if(!d->m_reverseSourceIndexes.contains(sourceIndex) && !d->m_removingIndexesFlag) {
-        d->m_reverseSourceIndexes[sourceIndex] = internalId;
-        d->m_sourceIndexes[*internalId] = sourceIndex;
-        d->m_parents[sourceIndex] = parent;
-        d->m_decendants[sourceModel].append(ret);
-    }
-    return ret;
+    return createIndex(row, column);
 }
     
 QModelIndex KAggregatedModel::parent(const QModelIndex& index) const
 {
-    if(!index.isValid()) {
-        return QModelIndex();
-    }
-    
-    QModelIndex sourceIndex = mapToSource(index);
-    
-    if(!sourceIndex.isValid() || !d->m_parents.contains(sourceIndex)) {
-        return QModelIndex();
-    }
- 
-    return d->m_parents[sourceIndex];
+    Q_UNUSED(index);
+    return QModelIndex();
 }
     
 int KAggregatedModel::columnCount(const QModelIndex& index) const
@@ -352,86 +355,38 @@ int KAggregatedModel::columnCount(const QModelIndex& index) const
     return ColumnCount;
 }
         
-QModelIndex KAggregatedModel::mapFromSource(const QModelIndex& sourceIndex,
-    const QAbstractItemModel *sourceModel) const
+QModelIndex KAggregatedModel::mapFromSource(const QModelIndex& sourceIndex) const
 {   
-    const QAbstractItemModel* sModel = sourceModel;
-    if(!sourceIndex.isValid()) {
-        if(!sourceModel) {
-            return QModelIndex();
-        }
-        
-        if(!d->m_sourceModels.contains(sourceModel)) {
-            return QModelIndex();
-        }
-        
-        return index(d->m_sourceModels.indexOf(sourceModel), 0);
-    }
-    
-    sModel = sourceIndex.model();
-    
-    Q_ASSERT(sourceModel != 0 && sModel == sourceModel);
-    
-    if(!d->m_sourceModels.contains(sModel)) {
+    if(!sourceIndex.isValid() || sourceIndex.parent().isValid()) {
         return QModelIndex();
     }
     
-    QList<int> rows;
-    QList<int> cols;
-    QModelIndex ancestor = sourceIndex;
-    while(ancestor.parent().isValid()) {
-        rows.prepend(ancestor.row());
-        cols.prepend(ancestor.column());
-        ancestor = ancestor.parent();
+    if(!d->m_sourceModels.contains(sourceIndex.model())) {
+        return QModelIndex();
     }
     
-    QModelIndex ret = index(d->m_sourceModels.indexOf(sModel), 0);
-    for(int i = 0; i < rows.count(); i++) {
-        ret = index(rows.at(i), cols.at(i), ret);
-    }
+    int diff = d->indexRowDiff(sourceIndex.model(), sourceIndex.row());
     
-    return ret;
+    return index(diff + sourceIndex.row(), 0);
 }
 
 QModelIndex KAggregatedModel::mapToSource(const QModelIndex& index) const
-{   
-    if(!index.isValid()) {
-        return QModelIndex();
-    }
-
-    QString* internalId = reinterpret_cast<QString*>(index.internalPointer()); 
-
-    if(!internalId) {
-        return QModelIndex();
-    }
-    
-    if(!d->m_sourceIndexes.contains(*internalId)) {
-        return QModelIndex();
-    }
-    return d->m_sourceIndexes[*internalId];
-}
-
-const QAbstractItemModel* KAggregatedModel::sourceOf(const QModelIndex& index) const
 {
     if(!index.isValid()) {
-        return 0;
+        return QModelIndex();
     }
     
-    if(!index.parent().isValid()) {
-        if(index.row() < 0 || index.row() >= d->m_sourceModels.count()) {
-            return 0;
+    int prevRows = 0;
+    
+    foreach(const QAbstractItemModel *model, d->m_sourceModels) {
+        int rowCount = model->rowCount(QModelIndex());
+        if(index.row() < prevRows + rowCount) {
+            return model->index(index.row() - prevRows, 0);
         }
-        
-        return d->m_sourceModels.at(index.row());
+        prevRows += rowCount;
     }
     
-    QModelIndex sourceIndex =  mapToSource(index);
-    
-    if(!sourceIndex.isValid()) {
-        return 0;
-    }
-    
-    return sourceIndex.model();
+    return QModelIndex();
 }
 
 #include "kaggregatedmodel.moc"

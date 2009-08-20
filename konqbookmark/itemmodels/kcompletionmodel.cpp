@@ -269,24 +269,15 @@ void KCompletionModel::setCompletion(KCompletion* completion)
 
 QModelIndex KCompletionModel::index(int row, int column, const QModelIndex& parent) const
 {   
-    if(!parent.isValid())
-    {    
-        if(row < 0 || row >= d->m_strings.size()) {
-            return QModelIndex();
-        }
-        
-        return createIndex(row, column);
+    if(parent.isValid())
+    {
+        return QModelIndex();
     }
-    
-    if(parent.column() != 0) {
+    if(row < 0 || row >= d->m_strings.size() || column != 0) {
         return QModelIndex();
     }
     
-    if(parent.row() < 0 || parent.row() >= d->m_strings.size()) {
-        return QModelIndex();
-    }
-    
-    return createIndex(parent.row(), column);
+    return createIndex(row, column);
 }
 
 QModelIndex KCompletionModel::parent(const QModelIndex& index) const

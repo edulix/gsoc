@@ -193,7 +193,7 @@ void PlacesProxyModel::setQuery(QString query)
 {
     kDebug() << "query";
     d->m_strQuery = query;
-    // HACK:: triggers a call to d->filter_changed();
+    // HACK: triggers a call to d->filter_changed();
     setFilterKeyColumn(0);
 }
 

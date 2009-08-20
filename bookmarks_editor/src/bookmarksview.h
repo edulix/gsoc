@@ -66,6 +66,7 @@ Q_SIGNALS:
     void signalChangeStatusbar(const QString& text);
 
 public Q_SLOTS:
+    void slotYeah();
     void slotDelete();
     void slotAddFolder(const QString &folderName);
     

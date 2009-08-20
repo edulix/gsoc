@@ -261,6 +261,7 @@ void ModelTest::parent()
     if (model->rowCount(topIndex1) > 0) {
         QModelIndex childIndex = model->index(0, 0, topIndex);
         QModelIndex childIndex1 = model->index(0, 0, topIndex1);
+        kDebug() << childIndex << childIndex << topIndex << topIndex1;
         Q_ASSERT(childIndex != childIndex1);
     }
 
@@ -341,7 +342,7 @@ void ModelTest::checkChildren(const QModelIndex &parent, int currentDepth)
             Q_ASSERT(index.column() == c);
             // While you can technically return a QVariant usually this is a sign
             // of an bug in data()  Disable if this really is ok in your model.
-            Q_ASSERT(model->data(index, Qt::DisplayRole).isValid() == true);
+//             Q_ASSERT(model->data(index, Qt::DisplayRole).isValid() == true);
 
             // If the next test fails here is some somewhat useful debug you play with.
             /*

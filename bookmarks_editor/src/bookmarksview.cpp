@@ -135,6 +135,10 @@ BookmarksView::~BookmarksView()
 {
 }
 
+void BookmarksView::slotYeah() {
+    kDebug();
+}
+
 void BookmarksView::createModels()
 {
     //@testing
@@ -146,12 +150,13 @@ void BookmarksView::createModels()
     completionModel->setCompletion(completion);
     
     KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
-    aggregatedModel->addSourceModel(completionModel, "url completions");
+    new ModelTest(aggregatedModel, this);
+    aggregatedModel->addSourceModel(completionModel);
     QStringListModel *stringListModel = new QStringListModel(this);
     QStringList stringList;
     stringList << "a" << "b" << "c";
     stringListModel->setStringList(stringList);
-    aggregatedModel->addSourceModel(stringListModel, "strings");
+    aggregatedModel->addSourceModel(stringListModel);
     ui_bookmarksview_base.listView->setModel(aggregatedModel);
     //@end-testing
     
@@ -161,8 +166,8 @@ void BookmarksView::createModels()
     
     d->mBookmarkModel = new Akonadi::KonqBookmarkModel( session, d->mMonitor, this );
     
-    d->mCollectionProxyModel = new Akonadi::EntityFilterProxyModel();
-    d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
+    d->mCollectionProxyModel = new Akonadi::EntityFilterProxyModel( this );
+//     d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
  
     ui_bookmarksview_base.collectionsView->setModel( d->mCollectionProxyModel );
@@ -180,7 +185,7 @@ void BookmarksView::createModels()
     connect(ui_bookmarksview_base.kcombobox->lineEdit(), SIGNAL(textChanged(const QString&)),
         placesProxyModel, SLOT(setQuery(const QString &)));
     
-    aggregatedModel->addSourceModel(placesProxyModel, "bookmarks");
+    aggregatedModel->addSourceModel(placesProxyModel);
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );
