@@ -58,8 +58,7 @@ public:
     
     void slotHistoryEntryAdded(const KonqHistoryEntry &entry);
     void slotHistoryEntryRemoved(const KonqHistoryEntry &entry);
-    bool isFolder(const QModelIndex& index);
-    void slotHistoryCleared();
+        void slotHistoryCleared();
     
     PlacesManager *q;
     
@@ -98,24 +97,16 @@ PlacesManager::Private::~Private()
 {
 }
 
-bool PlacesManager::Private::isFolder(const QModelIndex& index)
-{
-    if (!index.isValid())
-        return false;
-    
-    Collection collection =  qVariantValue<Collection>(index.data(EntityTreeModel::CollectionRole));
-    return collection.isValid();
-}
-
 void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, int start, int end)
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = m_bookmarksModel->index(i, KonqBookmarkModel::UniqueUri, parent);
-        if(isFolder(index)) {
+        if(index.data().toString().isEmpty()) {
             continue;
         }
         
         KonqBookmark *konqBookmark = new KonqBookmark(index.data().toString());
+        
         m_bookmarks[konqBookmark->url()] = konqBookmark;
         
         kDebug() << konqBookmark->url() << konqBookmark->title();
@@ -132,9 +123,11 @@ void PlacesManager::Private::slotBookmarksRemoved(const QModelIndex& parent, int
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = m_bookmarksModel->index(i, KonqBookmarkModel::Url, parent);
-        if(isFolder(index)) {
+        
+        if(index.data().toString().isEmpty()) {
             continue;
         }
+        
         QUrl url(index.data().toString());
         if(m_bookmarks.contains(url)) {
             
@@ -162,11 +155,12 @@ void PlacesManager::Private::slotUrlsInserted(const QModelIndex& parent, int sta
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = parent.child(i, 0);
-        if(isFolder(index)) {
-            continue;
-        }
         
         QUrl url = index.data().toString();
+        
+        if(!url.isValid()) {
+            continue;
+        }
         
         // Update/insert place
         Place *place = q->place(url);
@@ -180,11 +174,11 @@ void PlacesManager::Private::slotUrlsRemoved(const QModelIndex& parent, int star
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = parent.child(i, 0);
-        if(isFolder(index)) {
+        QUrl url = index.data().toString();
+        
+        if(!url.isValid()) {
             continue;
         }
-        
-        QUrl url = index.data().toString();
         
         // Remove
         Place *place = q->place(url);

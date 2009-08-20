@@ -18,12 +18,13 @@
     02110-1301, USA.
 */
 
-#include "konqbookmarkproxymodel.h"
+#include "collectionsproxymodel.h"
 #include <akonadi/entitytreemodel.h>
 
+using namespace Konqueror;
 using namespace Akonadi;
 
-KonqBookmarkProxyModel::KonqBookmarkProxyModel( QObject *parent )
+CollectionsProxyModel::CollectionsProxyModel( QObject *parent )
     : QSortFilterProxyModel(parent)
 {
     setDynamicSortFilter(true);
@@ -40,15 +41,8 @@ static int indexTypeHelper(const QModelIndex & index)
     }
 }
 
-bool KonqBookmarkProxyModel::lessThan ( const QModelIndex & left, const QModelIndex & right ) const
+bool CollectionsProxyModel::filterAcceptsRow( int sourceRow, const QModelIndex &sourceParent ) const
 {
-    bool leftIsCollection = indexTypeHelper(left) == EntityTreeModel::CollectionRole;
-    bool rightIsCollection = indexTypeHelper(right) == EntityTreeModel::CollectionRole;
-    
-    if(leftIsCollection && !rightIsCollection)
-        return true;
-    else if(!leftIsCollection && rightIsCollection)
-        return false;
-    else
-        return QSortFilterProxyModel::lessThan(left, right);
+    QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);    
+    return indexTypeHelper(sourceIndex) == EntityTreeModel::CollectionRole;
 }

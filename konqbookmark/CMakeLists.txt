@@ -35,6 +35,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
     itemmodels/konqbookmarkproxymodel.cpp
+    itemmodels/collectionsproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
     itemmodels/kcompletionmodel.cpp
     itemmodels/kaggregatedmodel.cpp
@@ -81,6 +82,7 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 set(konqbookmark_LIB_HDRS
     konqbookmark.h
+    itemmodels/collectionsproxymodel.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
     itemmodels/kcompletionmodel.h

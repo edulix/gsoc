@@ -61,6 +61,7 @@
 #include <konqbookmark/konqbookmarkproxymodel.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/placesproxymodel.h>
+#include <konqbookmark/collectionsproxymodel.h>
 #include <konqbookmark/placesmanager.h>
 #include <konqbookmark/modelwatcher.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
@@ -78,7 +79,7 @@ public:
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
-    Akonadi::EntityFilterProxyModel *mCollectionProxyModel;
+    Konqueror::CollectionsProxyModel *mCollectionProxyModel;
     KDataWidgetSelectionMapper *mMapper;
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
@@ -156,9 +157,8 @@ void BookmarksView::createModels()
     
     d->mBookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
     
-    d->mCollectionProxyModel = new Akonadi::EntityFilterProxyModel( this );
+    d->mCollectionProxyModel = new Konqueror::CollectionsProxyModel( this );
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
-    d->mCollectionProxyModel->addMimeTypeInclusionFilter(Collection::mimeType());
     
     ui_bookmarksview_base.collectionsView->setModel( d->mCollectionProxyModel );
     ui_bookmarksview_base.navigatorBreadCrumb->setModel( d->mCollectionProxyModel );
