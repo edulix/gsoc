@@ -60,8 +60,8 @@ KCompletionView::KCompletionView(QWidget *parent)
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    connect(this, SIGNAL(activated(QModelIndex&)),
-             SLOT(slotActivated(QModelIndex&)));
+    connect(this, SIGNAL(activated(const QModelIndex&)),
+             SLOT(slotActivated(const QModelIndex&)));
 }
 
 KCompletionView::~KCompletionView()
@@ -235,7 +235,7 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
 
 void KCompletionView::popup()
 {
-    if (model() && model()->rowCount(QModelIndex()) == 0) {
+    if (model() && !model()->hasChildren()) {
         hide();
     } else {
         //TODO KDE 4 - Port: ensureCurrentVisible();
@@ -383,25 +383,43 @@ QSize KCompletionView::sizeHint() const
 
 void KCompletionView::down()
 {
-    if(!model()) {
+    if(!model() || !model()->hasChildren()) {
         return;
     }
     
-    QModelIndex current = currentIndex();
-    if(current.isValid() && (current.row() + 1 < model()->rowCount(QModelIndex()))) {
-        setCurrentIndex(model()->index(current.row() + 1, 0));
+    if(selectionModel()->selectedIndexes().empty()) {
+        selectionModel()->select(model()->index(0,0), QItemSelectionModel::SelectCurrent);
+        return;
+    }
+    
+    QModelIndex current = selectionModel()->selectedIndexes().first();
+    if(current.row() + 1 < model()->rowCount()) {
+        selectionModel()->select(model()->index(current.row() + 1, 0), QItemSelectionModel::SelectCurrent);
+    } else {
+        selectionModel()->select(model()->index(0,0), QItemSelectionModel::SelectCurrent);
     }
 }
 
 void KCompletionView::up()
 {
-    if(!model()) {
+    if(!model() || !model()->hasChildren()) {
         return;
     }
     
-    QModelIndex current = currentIndex();
-    if(current.isValid() && current.row() > 0) {
-        setCurrentIndex(model()->index(current.row() - 1, 0));
+    if(selectionModel()->selectedIndexes().empty()) {
+        selectionModel()->select(model()->index(model()->rowCount() - 1, 0), QItemSelectionModel::SelectCurrent);
+        return;
+    }
+    
+    QModelIndex current = selectionModel()->selectedIndexes().first();
+    if(current.row() > 0) {
+        selectionModel()->select(model()->index(current.row() - 1, 0), QItemSelectionModel::SelectCurrent);
+    } else {
+        selectionModel()->select(model()->index(model()->rowCount() - 1,0), QItemSelectionModel::SelectCurrent);
+    }
+    
+    if(!model() || !model()->hasChildren()) {
+        return;
     }
 }
 
@@ -466,59 +484,5 @@ void KCompletionView::canceled()
         hide();
     }
 }
-
-// void KCompletionView::setItems( const QStringList& items )
-// {
-//     bool block = signalsBlocked();
-//     blockSignals( true );
-// 
-//     int rowIndex = 0;
-// 
-//     if (!count()) {
-//         addItems(items);
-//     } else {
-//         // Keep track of whether we need to change anything,
-//         // so we can avoid a repaint for identical updates,
-//         // to reduce flicker
-//         bool dirty = false;
-// 
-//         QStringList::ConstIterator it = items.constBegin();
-//         const QStringList::ConstIterator itEnd = items.constEnd();
-// 
-//         for ( ; it != itEnd; ++it) {
-//             if ( rowIndex < count() ) {
-//                 const bool changed = ((KCompletionViewItem*)item(rowIndex))->reuse( *it );
-//                 dirty = dirty || changed;
-//             } else {
-//                 dirty = true;
-//                 // Inserting an item is a way of making this dirty
-//                 addItem(*it);
-//             }
-//             rowIndex++;
-//         }
-// 
-//         // If there is an unused item, mark as dirty -> less items now
-//         if (rowIndex < count()) {
-//             dirty = true;
-//         }
-// 
-//         // remove unused items with an index >= rowIndex
-//         for ( ; rowIndex < count() ; ) {
-//             QListWidgetItem* item = takeItem(rowIndex);
-//             Q_ASSERT(item);
-//             delete item;
-//         }
-// 
-//         //TODO KDE4 : Port me
-//         //if (dirty)
-//         //    triggerUpdate( false );
-//     }
-// 
-//     if (isVisible() && size().height() != sizeHint().height())
-//         sizeAndPosition();
-// 
-//     blockSignals(block);
-//     d->down_workaround = true;
-// }
 
 #include "kcompletionview.moc"

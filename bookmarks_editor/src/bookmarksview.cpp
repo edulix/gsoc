@@ -87,6 +87,8 @@ public:
     ModelWatcher *mModelWatcher;
     Akonadi::Monitor *mMonitor;
     BookmarksView *mParent;
+    
+    QSortFilterProxyModel* fpModel;
 };
 
 BookmarksView::Private::Private(BookmarksView *parent)
@@ -138,20 +140,28 @@ BookmarksView::~BookmarksView()
 {
 }
 
+void BookmarksView::slotPopup()
+{
+    kDebug() << "filter reg exp:" << d->fpModel->filterRegExp().pattern() << "\trow count: " << d->fpModel->rowCount();
+}
+
 void BookmarksView::createModels()
 {
     QStringListModel* strlstModel = new QStringListModel(QStringList() << "a" << "b" << "c" << "cd");
-    QSortFilterProxyModel* fpModel = new QSortFilterProxyModel();
-    fpModel->setSourceModel(strlstModel);
-    fpModel->setFilterKeyColumn(-1);
-    fpModel->setDynamicSortFilter(true);
+    d->fpModel = new QSortFilterProxyModel();
+    d->fpModel->setSourceModel(strlstModel);
+    d->fpModel->setFilterKeyColumn(-1);
+    d->fpModel->setDynamicSortFilter(true);
     
-    ui_bookmarksview_base.locationBar->completionView()->setModel(fpModel);
+    ui_bookmarksview_base.locationBar->completionView()->setModel(d->fpModel);
     ui_bookmarksview_base.locationBar->setCompletionMode(KGlobalSettings::CompletionPopup);
 //     ui_bookmarksview_base.locationBar->setView(new QTreeView(ui_bookmarksview_base.locationBar));
     
     connect(ui_bookmarksview_base.locationBar, SIGNAL(textChanged(const QString&)),
-        fpModel, SLOT(setFilterFixedString(const QString&)));
+        d->fpModel, SLOT(setFilterFixedString(const QString&)));
+        
+    connect(ui_bookmarksview_base.locationBar, SIGNAL(textChanged(const QString&)),
+        this, SLOT(slotPopup()));
         
     KCompletionModel *completionModel = Konqueror::PlacesManager::self()->urlCompletionModel();
     completionModel->setCompletion(new KUrlCompletion());

@@ -172,6 +172,7 @@ protected:
     /**
      * This properly sizes and positions the listbox.
      */
+    friend class KLineEditView;
     void sizeAndPosition();
 
     /**
