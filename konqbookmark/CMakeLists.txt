@@ -56,6 +56,10 @@ set(konqbookmark_LIB_SRCS
     itemviews/modelmenu.cpp
     itemviews/ktreeviewsearchline.cpp
     itemviews/modelmenusearchline.cpp
+    itemviews/locationbar.cpp
+    itemviews/kcompletionview.cpp
+    itemviews/klineeditview.cpp
+#     itemviews/placesdelegate.cpp
 #     kbookmarkbridge/kbookmarkimporter.cpp
 )
 
@@ -105,6 +109,10 @@ set(konqbookmark_LIB_HDRS
     itemviews/modelmenu.h
     itemviews/konqbookmarkmodelmenu.h
     itemviews/modelmenusearchline.h
+    itemviews/locationbar.h
+    itemviews/kcompletionview.h
+    itemviews/klineeditview.h
+#     itemviews/placesdelegate.h
 #     kbookmarkbridge/kbookmarkimporter.h
 )
 

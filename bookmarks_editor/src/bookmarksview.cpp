@@ -32,6 +32,7 @@
 #include <QDataWidgetMapper>
 #include <QItemDelegate>
 #include <QStringListModel>
+#include <QTreeView>
 #include <QStringList>
 
 #include <kmessagebox.h>
@@ -43,6 +44,7 @@
 #include <kurlcompletion.h>
 #include <kcompletion.h>
 #include <kjob.h>
+#include <kurl.h>
 
 #include <akonadi/collectionfilterproxymodel.h>
 #include <akonadi/collectionmodel.h>
@@ -56,6 +58,7 @@
 #include <akonadi/item.h>
 
 #include <konqbookmark/konqbookmark.h>
+#include <konqbookmark/kcompletionview.h>
 #include <konqbookmark/kcompletionmodel.h>
 #include <konqbookmark/kaggregatedmodel.h>
 #include <konqbookmark/konqbookmarkproxymodel.h>
@@ -99,8 +102,9 @@ void BookmarksView::Private::expand(const QModelIndex& index)
     if(!index.isValid())
     {
         mParent->ui_bookmarksview_base.bookmarksView->expandAll();
-    } else
+    } else {
         mParent->ui_bookmarksview_base.bookmarksView->expand(index);
+    }
 }
 
 void BookmarksView::Private::selectBookmarkFolder(const QModelIndex& index)
@@ -109,17 +113,15 @@ void BookmarksView::Private::selectBookmarkFolder(const QModelIndex& index)
     
     kDebug() << index << index.data(Akonadi::KonqBookmarkModel::Title);
     
-    if(index.isValid())
-    {
+    if(index.isValid()) {
         QTimer::singleShot(0, mParent, SLOT(selectBookmarkFolder()));
         savedIndex = index;
         
         disconnect(mParent->ui_bookmarksview_base.collectionsView->model(),
             SIGNAL(rowsInserted(const QModelIndex&, int, int)),
             mParent, SLOT(selectBookmarkFolder(const QModelIndex&)));
-    }
-    else if(savedIndex.isValid())
-    {
+            
+    } else if(savedIndex.isValid()) {
         mParent->ui_bookmarksview_base.collectionsView->selectionModel()->
             setCurrentIndex(savedIndex, QItemSelectionModel::SelectCurrent);   
     }
@@ -136,24 +138,23 @@ BookmarksView::~BookmarksView()
 {
 }
 
-void BookmarksView::slotYeah() {
-    kDebug();
-}
-
 void BookmarksView::createModels()
 {
-    //@testing
-    KUrlCompletion *completion = new KUrlCompletion();
-    ui_bookmarksview_base.kcombobox->setCompletionObject(completion);
-    completion->setDir("file:///home/edulix/");
- 
-    KCompletionModel *completionModel = Konqueror::PlacesManager::self()->urlCompletionModel();
-    completionModel->setCompletion(completion);
+    QStringListModel* strlstModel = new QStringListModel(QStringList() << "a" << "b" << "c" << "cd");
+    QSortFilterProxyModel* fpModel = new QSortFilterProxyModel();
+    fpModel->setSourceModel(strlstModel);
+    fpModel->setFilterKeyColumn(-1);
+    fpModel->setDynamicSortFilter(true);
     
-    KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
-    aggregatedModel->addSourceModel(completionModel);
-    ui_bookmarksview_base.listView->setModel(aggregatedModel);
-    //@end-testing
+    ui_bookmarksview_base.locationBar->completionView()->setModel(fpModel);
+    ui_bookmarksview_base.locationBar->setCompletionMode(KGlobalSettings::CompletionPopup);
+//     ui_bookmarksview_base.locationBar->setView(new QTreeView(ui_bookmarksview_base.locationBar));
+    
+    connect(ui_bookmarksview_base.locationBar, SIGNAL(textChanged(const QString&)),
+        fpModel, SLOT(setFilterFixedString(const QString&)));
+        
+    KCompletionModel *completionModel = Konqueror::PlacesManager::self()->urlCompletionModel();
+    completionModel->setCompletion(new KUrlCompletion());
     
     d->mBookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
     
@@ -169,13 +170,6 @@ void BookmarksView::createModels()
     
     d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel( this );
     d->mBookmarkProxyModel->setSourceModel(selectionProxy);
-    
-    Konqueror::PlacesProxyModel* placesProxyModel = new Konqueror::PlacesProxyModel(this);
-    placesProxyModel->setSourceModel(d->mBookmarkModel);
-    connect(ui_bookmarksview_base.kcombobox->lineEdit(), SIGNAL(textChanged(const QString&)),
-        placesProxyModel, SLOT(setQuery(const QString &)));
-    
-    aggregatedModel->addSourceModel(placesProxyModel);
     
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate( this );
     ui_bookmarksview_base.bookmarksView->setModel( d->mBookmarkProxyModel );

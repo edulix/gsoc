@@ -103,17 +103,8 @@
         </layout>
        </item>
        <item>
-        <widget class="KComboBox" name="kcombobox">
-         <property name="editable">
-          <bool>true</bool>
-         </property>
-         <property name="autoCompletion">
-          <bool>false</bool>
-         </property>
+        <widget class="KLineEditView" name="locationBar">
         </widget>
-       </item>
-       <item>
-        <widget class="QTreeView" name="listView"/>
        </item>
        <item>
         <widget class="Akonadi::KonqBookmarkView" name="bookmarksView">
@@ -237,6 +228,12 @@
    <extends>QTreeView</extends>
    <header location="global">konqbookmark/konqbookmarkview.h</header>
   </customwidget>
+  <customwidget>
+   <class>KLineEditView</class>
+   <extends>QLineEdit</extends>
+   <header location="global">konqbookmark/klineeditview.h</header>
+  </customwidget>
+
  </customwidgets>
  <resources/>
  <connections/>
