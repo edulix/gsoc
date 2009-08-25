@@ -137,8 +137,6 @@ public:
 
     ~Private()
     {
-// causes a weird crash in KWord at least, so let Qt delete it for us.
-//        delete completionBox;
     }
 
     void _k_slotSettingsChanged(int category)

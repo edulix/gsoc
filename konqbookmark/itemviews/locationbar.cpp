@@ -36,6 +36,7 @@
 #include <kurlcompletion.h>
 #include <kurl.h>
 #include <klocale.h>
+#include <kiconloader.h>
 
 using namespace Konqueror;
 using namespace Akonadi;
@@ -96,9 +97,10 @@ void LocationBar::init()
     
     KLineEditViewButton* tempButton = new KLineEditViewButton(this);
     tempButton->setCursor(Qt::ArrowCursor);
-    tempButton->setToolTip(i18nc("@action:button Clear current text in the line edit", "Clear text"));
+    tempButton->setToolTip(i18nc("@action:button Bookmarks", "Bookmarks"));
     tempButton->setPixmap(SmallIcon("bookmarks"));
-    addWidget(tempButton, RightSide);
+    addWidget(tempButton, LeftSide);
+    tempButton->animateVisible(true);
 }
 
 LocationBar::~LocationBar()
