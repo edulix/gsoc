@@ -467,6 +467,9 @@ bool KCompletionView::isTabHandling() const
 void KCompletionView::setCancelledText(const QString& text)
 {
     d->cancelText = text;
+    if(d->cancelText.isEmpty()) {
+        kDebug() << "set empty";
+    }
 }
 
 QString KCompletionView::cancelledText() const

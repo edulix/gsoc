@@ -1440,6 +1440,8 @@ KCompletionView * KLineEditView::completionView(bool create)
         d->completionView = new KCompletionView(this);
         d->completionView->setObjectName("completion box");
         d->completionView->setFont(font());
+        connect(d->completionView, SIGNAL(userCancelled(const QString&)),
+                this, SLOT(userCancelled(const QString&)));
     }
 
     return d->completionView;
