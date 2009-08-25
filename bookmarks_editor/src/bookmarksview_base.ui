@@ -103,7 +103,7 @@
         </layout>
        </item>
        <item>
-        <widget class="KLineEditView" name="locationBar">
+        <widget class="Konqueror::LocationBar" name="locationBar">
         </widget>
        </item>
        <item>
@@ -232,6 +232,11 @@
    <class>KLineEditView</class>
    <extends>QLineEdit</extends>
    <header location="global">konqbookmark/klineeditview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Konqueror::LocationBar</class>
+   <extends>QLineEdit</extends>
+   <header location="global">konqbookmark/locationbar.h</header>
   </customwidget>
 
  </customwidgets>

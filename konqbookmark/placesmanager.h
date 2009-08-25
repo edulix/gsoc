@@ -30,6 +30,7 @@
 #include <QIcon>
 #include <QStringList>
 #include <QDateTime>
+#include <QAbstractItemModel>
 
 class KonqHistoryEntry;
 class KonqBookmark;
@@ -67,6 +68,7 @@ namespace Konqueror
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
         virtual KCompletionModel* urlCompletionModel();
+        virtual QAbstractItemModel* historyEntriesModel() { return 0; }
         
         KonqBookmark* bookmark(const QUrl& url);
         KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);

@@ -209,6 +209,10 @@ QVariant PlacesProxyModel::query() const
 
 void PlacesProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
+    if(!sourceModel) {
+        return;
+    }
+    
     // TODO we don't allow yet to change from a model to another
     Q_ASSERT(d->m_sourceModel == 0);
     

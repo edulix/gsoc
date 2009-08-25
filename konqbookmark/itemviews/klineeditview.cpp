@@ -8,6 +8,7 @@
    Copyright (c) 2000, 2001 Dawit Alemayehu <adawit@kde.org>
    Copyright (c) 2000, 2001 Carsten Pfeiffer <pfeiffer@kde.org>
    
+   Copyright (c) 2009 Benjamin C. Meyer  <ben@meyerhome.net>
    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
 
    This library is free software; you can redistribute it and/or
@@ -50,6 +51,21 @@
 #include <QtGui/QClipboard>
 #include <QtGui/QStyleOption>
 #include <QtGui/QToolTip>
+#include <QSpacerItem>
+#include <QHBoxLayout>
+
+SideWidget::SideWidget(QWidget *parent)
+    : QWidget(parent)
+{
+}
+
+bool SideWidget::event(QEvent *event)
+{
+    if (event->type() == QEvent::LayoutRequest) {
+        emit sizeHintChanged();
+    }
+    return QWidget::event(event);
+}
 
 class KLineEditView::Private
 {
@@ -79,8 +95,6 @@ public:
 
         clearButton = 0;
         clickInClear = false;
-        wideEnoughForClear = true;
-        overlap = 0;
 
         // i18n: Placeholder text in line edit widgets is the text appearing
         // before any user input, briefly explaining to the user what to type
@@ -89,6 +103,36 @@ public:
         // for some languages and scripts (e.g. for CJK ideographs).
         QString metaMsg = i18nc("Italic placeholder text in line edits: 0 no, 1 yes", "1");
         italicizePlaceholder = (metaMsg.trimmed() != QString('0'));
+        
+        
+        // Initialize code related to the subwidgets lineedit support
+        m_leftWidget = new SideWidget(q);
+        m_leftWidget->resize(0, 0);
+        m_leftLayout = new QHBoxLayout(m_leftWidget);
+        m_leftLayout->setContentsMargins(0, 0, 0, 0);
+        m_leftLayout->setSizeConstraint(QLayout::SetFixedSize);
+        
+        m_rightWidget = new SideWidget(q);
+        m_rightWidget->resize(0, 0);
+        m_rightLayout = new QHBoxLayout(m_rightWidget);
+        m_rightLayout->setContentsMargins(0, 0, 0, 0);
+        
+        if (q->isRightToLeft()) {
+            m_leftLayout->setDirection(QBoxLayout::RightToLeft);
+            m_rightLayout->setDirection(QBoxLayout::RightToLeft);
+        } else {
+            m_leftLayout->setDirection(QBoxLayout::LeftToRight);
+            m_rightLayout->setDirection(QBoxLayout::LeftToRight);
+        }
+
+        QSpacerItem *horizontalSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+        m_rightLayout->addItem(horizontalSpacer);
+
+        connect(m_leftWidget, SIGNAL(sizeHintChanged()),
+            q, SLOT(updateTextMargins()));
+        connect(m_rightWidget, SIGNAL(sizeHintChanged()),
+            q, SLOT(updateTextMargins()));
+
     }
 
     ~Private()
@@ -149,12 +193,9 @@ public:
     bool possibleTripleClick :1;  // set in mousePressEvent, deleted in tripleClickTimeout
 
     bool clickInClear:1;
-    bool wideEnoughForClear:1;
     KLineEditViewButton *clearButton;
 
     KCompletionView *completionView;
-
-    int overlap;
 
     bool italicizePlaceholder:1;
 
@@ -162,34 +203,12 @@ public:
 
     QMap<KGlobalSettings::Completion, bool> disableCompletionMap;
     KLineEditView* q;
+    
+    SideWidget *m_leftWidget;
+    SideWidget *m_rightWidget;
+    QHBoxLayout *m_leftLayout;
+    QHBoxLayout *m_rightLayout;
 };
-
-// FIXME: Go back to using StyleSheets instead of a proxy style
-// once Qt has been fixed not to mess with widget font when
-// using StyleSheets
-class KLineEditViewStyle : public KdeUiProxyStyle
-{
-public:
-    KLineEditViewStyle(KLineEditView *parent, KLineEditView::Private *lineEditPrivate)
-        : KdeUiProxyStyle(parent), lineEditPrivate(lineEditPrivate) {}
-
-    QRect subElementRect(SubElement element, const QStyleOption *option, const QWidget *widget) const;
-
-    KLineEditView::Private* lineEditPrivate;
-};
-
-QRect KLineEditViewStyle::subElementRect(SubElement element, const QStyleOption *option, const QWidget *widget) const
-{
-    if(element == SE_LineEditContents) {
-        QRect rect = style()->subElementRect(SE_LineEditContents, option, widget);
-
-        const int overlap = lineEditPrivate->overlap;
-        if(option->direction == Qt::LeftToRight) return rect.adjusted(0, 0, -overlap, 0);
-        else return rect.adjusted(overlap, 0, 0, 0);
-    }
-
-    return KdeUiProxyStyle::subElementRect(element, option, widget);
-}
 
 bool KLineEditView::Private::backspacePerformsCompletion = false;
 bool KLineEditView::Private::initialized = false;
@@ -217,6 +236,9 @@ void KLineEditView::init()
 {
     d->possibleTripleClick = false;
     d->bgRole = backgroundRole();
+    d->m_leftLayout->setSpacing(3);
+    d->m_rightLayout->setSpacing(3);
+    updateTextMargins();
 
     // Enable the context menu by default.
     QLineEdit::setContextMenuPolicy(Qt::DefaultContextMenu);
@@ -239,13 +261,89 @@ void KLineEditView::init()
     if(!d->previousHighlightColor.isValid()) {
         d->previousHighlightColor=p.color(QPalette::Normal,QPalette::Highlight);
     }
-    
-    QStyle *lineEditStyle = new KLineEditViewStyle(this, d);
-    lineEditStyle->setParent(this);
-    setStyle(lineEditStyle);
 
     connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(_k_updateUserText(const QString&)));
 
+}
+
+void KLineEditView::addWidget(QWidget *widget, WidgetPosition position)
+{
+    if (!widget) {
+        return;
+    }
+
+    bool rtl = isRightToLeft();
+    if (rtl) {
+        position = (position == LeftSide) ? RightSide : LeftSide;
+    }
+    if (position == LeftSide) {
+        d->m_leftLayout->addWidget(widget);
+    } else {
+        d->m_rightLayout->insertWidget(1, widget);
+    }
+}
+
+void KLineEditView::removeWidget(QWidget *widget)
+{
+    if (!widget) {
+        return;
+    }
+
+    d->m_leftLayout->removeWidget(widget);
+    d->m_rightLayout->removeWidget(widget);
+    widget->hide();
+}
+
+int KLineEditView::textMargin(WidgetPosition position) const
+{
+    int spacing = d->m_rightLayout->spacing();
+    int w = 0;
+    
+    if (position == LeftSide) {
+        w = d->m_leftWidget->sizeHint().width();
+    } else {
+        w = d->m_rightWidget->sizeHint().width();   
+    }
+    
+    if (w == 0) {
+        return 0;
+    }
+    return w + spacing * 2;
+}
+
+void KLineEditView::updateTextMargins()
+{
+    int left = textMargin(LeftSide);
+    int right = textMargin(RightSide);
+    int top = 0;
+    int bottom = 0;
+    setTextMargins(left, top, right, bottom);
+    updateSideWidgetLocations();
+}
+
+void KLineEditView::updateSideWidgetLocations()
+{
+    QStyleOptionFrameV2 opt;
+    initStyleOption(&opt);
+    QRect textRect = style()->subElementRect(QStyle::SE_LineEditContents, &opt, this);
+    int spacing = d->m_rightLayout->spacing();
+    textRect.adjust(spacing, 0, -spacing, 0);
+
+    int left = textMargin(LeftSide);
+    int midHeight = textRect.center().y() + 1;
+
+    if (d->m_leftLayout->count() > 0) {
+        int leftHeight = midHeight - d->m_leftWidget->height() / 2;
+        int leftWidth = d->m_leftWidget->width();
+        if (leftWidth == 0) {
+            leftHeight = midHeight - d->m_leftWidget->sizeHint().height() / 2;
+        }
+        d->m_leftWidget->move(textRect.x(), leftHeight);
+    }
+    textRect.setX(left);
+    textRect.setY(midHeight - d->m_rightWidget->sizeHint().height() / 2);
+    textRect.setHeight(d->m_rightWidget->sizeHint().height());
+    d->m_rightWidget->setGeometry(textRect);
 }
 
 QString KLineEditView::clickMessage() const
@@ -263,16 +361,16 @@ void KLineEditView::setClearButtonShown(bool show)
         d->clearButton = new KLineEditViewButton(this);
         d->clearButton->setCursor(Qt::ArrowCursor);
         d->clearButton->setToolTip(i18nc("@action:button Clear current text in the line edit", "Clear text"));
+        addWidget(d->clearButton, RightSide);
 
         updateClearButtonIcon(text());
-        updateClearButton();
         connect(this, SIGNAL(textChanged(QString)), this, SLOT(updateClearButtonIcon(QString)));
     } else {
         disconnect(this, SIGNAL(textChanged(QString)), this, SLOT(updateClearButtonIcon(QString)));
+        removeWidget(d->clearButton);
         delete d->clearButton;
         d->clearButton = 0;
         d->clickInClear = false;
-        d->overlap = 0;
     }
 }
 
@@ -294,13 +392,14 @@ QSize KLineEditView::clearButtonUsedSize() const
 
 void KLineEditView::updateClearButtonIcon(const QString& text)
 {
+    kDebug();
     if(!d->clearButton || isReadOnly()) {
         return;
     }
 
     int clearButtonState = KIconLoader::DefaultState;
 
-    if(d->wideEnoughForClear && text.length() > 0) {
+    if(text.length() > 0) {
         d->clearButton->animateVisible(true);
     } else {
         d->clearButton->animateVisible(false);
@@ -317,43 +416,6 @@ void KLineEditView::updateClearButtonIcon(const QString& text)
     }
 
     d->clearButton->setVisible(text.length());
-}
-
-void KLineEditView::updateClearButton()
-{
-    if(!d->clearButton || isReadOnly()) {
-        return;
-    }
-
-    const QSize geom = size();
-    const int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth,0,this);
-    const int buttonWidth = d->clearButton->sizeHint().width();
-    const QSize newButtonSize(buttonWidth, geom.height());
-    const QFontMetrics fm(font());
-    const int em = fm.width("m");
-
-    // make sure we have enough room for the clear button
-    // no point in showing it if we can't also see a few characters as well
-    const bool wideEnough = geom.width() > 4 * em + buttonWidth + frameWidth;
-
-    if(newButtonSize != d->clearButton->size()) {
-        d->clearButton->resize(newButtonSize);
-        d->overlap = wideEnough ? buttonWidth + frameWidth : 0;
-    }
-
-    if(layoutDirection() == Qt::LeftToRight) {
-        d->clearButton->move(geom.width() - frameWidth - buttonWidth - 1, 0);
-    } else {
-        d->clearButton->move(frameWidth + 1, 0);
-    }
-
-    if(wideEnough != d->wideEnoughForClear) {
-        // we may (or may not) have been showing the button, but now our
-        // positiong on that matter has shifted, so let's ensure that it
-        // is properly visible (or not)
-        d->wideEnoughForClear = wideEnough;
-        updateClearButtonIcon(text());
-    }
 }
 
 void KLineEditView::setCompletionMode(KGlobalSettings::Completion mode)
@@ -505,7 +567,6 @@ void KLineEditView::setReadOnly(bool readOnly)
 
         if(d->clearButton) {
             d->clearButton->animateVisible(false);
-            d->overlap = 0;
         }
     } else {
         if(!d->squeezedText.isEmpty()) {
@@ -514,7 +575,6 @@ void KLineEditView::setReadOnly(bool readOnly)
         }
 
         setBackgroundRole(d->bgRole);
-        updateClearButton();
     }
 }
 
@@ -653,11 +713,11 @@ bool KLineEditView::copySqueezedText(bool clipboard) const
 
 void KLineEditView::resizeEvent(QResizeEvent * ev)
 {
+    updateSideWidgetLocations();
     if(!d->squeezedText.isEmpty()) {
         setSqueezedText();
     }
 
-    updateClearButton();
     QLineEdit::resizeEvent(ev);
 }
 
@@ -1174,7 +1234,7 @@ void KLineEditView::dropEvent(QDropEvent *e)
 
 bool KLineEditView::event(QEvent* ev)
 {
-    KCursor::autoHideEventFilter(this, ev);
+//     KCursor::autoHideEventFilter(this, ev);
     if(ev->type() == QEvent::ShortcutOverride) {
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
         if(d->overrideShortcut(e)) {
@@ -1211,8 +1271,7 @@ bool KLineEditView::event(QEvent* ev)
                 return true;
             }
         }
-    }
-    if(completionMode() != KGlobalSettings::CompletionNone &&
+    } else if(completionMode() != KGlobalSettings::CompletionNone &&
         ev->type() == QEvent::KeyRelease) {
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
         // handle rotation
@@ -1240,6 +1299,14 @@ bool KLineEditView::event(QEvent* ev)
                 rotateText(KCompletionBase::NextCompletionMatch);
             }
             return true;
+        }
+    } else if(ev->type() == QEvent::LayoutDirectionChange) {
+        if (isRightToLeft()) {
+            d->m_leftLayout->setDirection(QBoxLayout::RightToLeft);
+            d->m_rightLayout->setDirection(QBoxLayout::RightToLeft);
+        } else {
+            d->m_leftLayout->setDirection(QBoxLayout::LeftToRight);
+            d->m_rightLayout->setDirection(QBoxLayout::LeftToRight);
         }
     }
     return QLineEdit::event(ev);
@@ -1551,13 +1618,16 @@ void KLineEditView::paintEvent(QPaintEvent *ev)
         // and then adds a hardcoded 2 pixel interior to that.
         // probably requires fixes to Qt itself to do this cleanly
         // see define horizontalMargin 2 in qlineedit.cpp
-        QStyleOptionFrame opt;
+        QStyleOptionFrameV2 opt;
         initStyleOption(&opt);
-        QRect cr = style()->subElementRect(QStyle::SE_LineEditContents, &opt, this);
-        cr.setLeft(cr.left() + 2);
-        cr.setRight(cr.right() - 2);
+        QRect textRect = style()->subElementRect(QStyle::SE_LineEditContents, &opt, this);
+        int horizontalMargin = 2;
+        textRect.adjust(horizontalMargin, 0, 0, 0);
+        int left = textMargin(LeftSide);
+        int right = textMargin(RightSide);
+        textRect.adjust(left, 0, -right, 0);
 
-        p.drawText(cr, Qt::AlignLeft|Qt::AlignVCenter, d->clickMessage);
+        p.drawText(textRect, Qt::AlignLeft|Qt::AlignVCenter, d->clickMessage);
     }
 }
 

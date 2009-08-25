@@ -21,20 +21,21 @@
 #define KONQUEROR_LOCATION_BAR_H
 
 #include "konqbookmark_export.h"
+#include "klineeditview.h"
 
-#include <QWidget>
-
-#include <klineedit.h>
-#include <kcombobox.h>
+#include <QObject>
 
 namespace Konqueror
 {
-    class KONQBOOKMARK_EXPORT LocationBar : public KComboBox
+    class KONQBOOKMARK_EXPORT LocationBar : public KLineEditView
     {
         Q_OBJECT
     public:
         LocationBar(QWidget* parent = 0);
         virtual ~LocationBar();
+        
+    protected:
+        void init();
         
     private:
         class Private;

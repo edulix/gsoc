@@ -83,8 +83,9 @@ PlacesManager::Private::Private(PlacesManager *parent)
     connect(m_bookmarksModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
         q, SLOT(slotBookmarksRemoved(const QModelIndex&, int, int)));
         
-    // TODO modelReset
     m_urlCompletionModel = new KCompletionModel(q);
+    // FIXME Undefined reference
+//     m_urlCompletionModel->setCompletion(new KUrlCompletion());
         
     connect(m_urlCompletionModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         q, SLOT(slotUrlsInserted(const QModelIndex&, int, int)));

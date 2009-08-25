@@ -1,6 +1,7 @@
 /* This file is part of the KDE libraries
 
    Copyright (C) 2007 Aaron Seigo <aseigo@kde.org>
+   Copyright (c) 2009 Benjamin C. Meyer  <ben@meyerhome.net>
    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
 
    This library is free software; you can redistribute it and/or
@@ -27,6 +28,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QTimeLine>
+#include <QWidget>
 
 #include <kglobalsettings.h>
 
@@ -137,6 +139,19 @@ protected slots:
 private:
     QTimeLine *m_timeline;
     QPixmap m_pixmap;
+};
+
+class SideWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    SideWidget(QWidget *parent = 0);
+
+protected:
+    bool event(QEvent *event);
+    
+Q_SIGNALS:
+    void sizeHintChanged();
 };
 
 #endif // KLINEEDITVIEW_P_H

@@ -68,7 +68,6 @@ Q_SIGNALS:
 public Q_SLOTS:
     void slotAddFolder(const QString &folderName);
     void slotDelete();
-    void slotPopup();
     
 protected Q_SLOTS:
     void slotBookmarkAdded(const QModelIndex &index);

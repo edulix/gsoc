@@ -168,6 +168,10 @@ class KONQBOOKMARK_EXPORT KLineEditView : public QLineEdit, public KCompletionBa
     Q_PROPERTY(bool passwordMode READ passwordMode WRITE setPasswordMode)
 
 public:
+    enum WidgetPosition {
+        LeftSide,
+        RightSide
+    };
 
     /**
      * Constructs a KLineEditView object with a default text, a parent,
@@ -189,6 +193,11 @@ public:
      */
     virtual ~KLineEditView ();
 
+    void addWidget(QWidget *widget, WidgetPosition position);
+    void removeWidget(QWidget *widget);
+    int textMargin(WidgetPosition position) const;
+    void updateSideWidgetLocations();
+    
     /**
      * Sets @p url into the lineedit. It uses KUrl::prettyUrl() so
      * that the url is properly decoded for displaying.
@@ -508,6 +517,9 @@ protected Q_SLOTS:
      * cancels the request. Mostly applies to popup completions.
      */
     void userCancelled(const QString & cancelText);
+    
+    
+    void updateTextMargins();
 
 protected:
 
@@ -632,11 +644,6 @@ private:
      * created or resized.
      */
     void setSqueezedText ();
-
-    /**
-     * updates the geometry of the clear button on resize events
-     **/
-    void updateClearButton();
 
 private:
     class Private;

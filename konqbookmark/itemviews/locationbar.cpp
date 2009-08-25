@@ -18,19 +18,24 @@
 */
 
 #include "locationbar.h"
+#include "kcompletionview.h"
 #include "placesmanager.h"
+#include "klineeditview_p.h"
 #include "itemmodels/kcompletionmodel.h"
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kaggregatedmodel.h"
 #include "itemmodels/placesproxymodel.h"
 
 #include <QAbstractItemView>
+#include <QAbstractItemModel>
 #include <QTreeView>
 #include <QStringListModel>
 #include <QStringList>
+#include <QWidget>
 
 #include <kurlcompletion.h>
 #include <kurl.h>
+#include <klocale.h>
 
 using namespace Konqueror;
 using namespace Akonadi;
@@ -41,8 +46,6 @@ public:
     Private(LocationBar* parent);
     ~Private();
     
-    void slotTextChanged(const QString& text);
-    
     LocationBar* q;
     KAggregatedModel* m_model;
     QAbstractItemView* m_view;
@@ -51,24 +54,6 @@ public:
 LocationBar::Private::Private(LocationBar* parent)
     : q(parent)
 {
-    KCompletionModel *completionModel = PlacesManager::self()->urlCompletionModel();
-//     connect(q, SIGNAL(textChanged(const QString&)),
-//         completionModel, SLOT(slotMakeCompletion(const QString &)));
-    
-    PlacesProxyModel* placesProxyModel = new PlacesProxyModel(q);
-    placesProxyModel->setSourceModel(PlacesManager::self()->bookmarkModel());
-    connect(q, SIGNAL(textChanged(const QString&)),
-        placesProxyModel, SLOT(setQuery(const QString &)));
-        
-    m_model = new KAggregatedModel(q);
-    m_model->addSourceModel(placesProxyModel);
-    m_model->addSourceModel(completionModel);
-    
-//     m_view = new QTreeView(q);
-//     QStringListModel *stringModel = new QStringListModel(q);
-//     stringModel->setStringList(QStringList() << "a" << "b" << "c");
-//     q->setView(m_view);
-//     q->setCompletionObject(completionModel->completion());
 }
 
 LocationBar::Private::~Private()
@@ -77,9 +62,43 @@ LocationBar::Private::~Private()
 }
 
 LocationBar::LocationBar(QWidget* parent)
-    : KComboBox(parent), d(new Private(this))
+    : KLineEditView(parent), d(new Private(this))
 {
+    init();
+}
+
+void LocationBar::init()
+{
+    setCompletionMode(KGlobalSettings::CompletionPopup);
+    setClearButtonShown(true);
     
+    // FIXME for now, only one location bar is supported because of this
+    // completion model. We just need to be able to create new completion models
+    // that automatically connected to places manager, so it's quite easy.
+    KCompletionModel* completionModel = PlacesManager::self()->urlCompletionModel();
+//     connect(this, SIGNAL(textChanged(const QString&)),
+//         completionModel->completion(), SLOT(slotMakeCompletion(const QString &)));
+    
+    PlacesProxyModel* placesProxyModel = new PlacesProxyModel(this);
+    placesProxyModel->setSourceModel(PlacesManager::self()->bookmarkModel());
+    connect(this, SIGNAL(textChanged(const QString&)),
+        placesProxyModel, SLOT(setQuery(const QString &)));
+        
+    PlacesProxyModel* historyProxyModel = new PlacesProxyModel(this);
+    placesProxyModel->setSourceModel(PlacesManager::self()->historyEntriesModel());
+        
+    KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
+    aggregatedModel->addSourceModel(completionModel);
+    aggregatedModel->addSourceModel(historyProxyModel);
+    aggregatedModel->addSourceModel(placesProxyModel);
+    
+    completionView()->setModel(aggregatedModel);
+    
+    KLineEditViewButton* tempButton = new KLineEditViewButton(this);
+    tempButton->setCursor(Qt::ArrowCursor);
+    tempButton->setToolTip(i18nc("@action:button Clear current text in the line edit", "Clear text"));
+    tempButton->setPixmap(SmallIcon("bookmarks"));
+    addWidget(tempButton, RightSide);
 }
 
 LocationBar::~LocationBar()
