@@ -22,10 +22,11 @@
 
 #include "konqbookmark_export.h"
 #include "konqbookmark.h"
-#include "akonadi_next/entitytreeview.h"
+#include "entitytreeview.h"
 
 namespace Akonadi
 {
+    class EntityTreeView;
     class KONQBOOKMARK_EXPORT KonqBookmarkView : public EntityTreeView
     {
     Q_OBJECT

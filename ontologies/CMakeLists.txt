@@ -27,7 +27,7 @@ NEPOMUK_ADD_ONTOLOGY_CLASSES(
     ${CMAKE_CURRENT_SOURCE_DIR}/nfo.rdfs
     VISIBILITY nepomuk)
 
-set(ontologies_LIB_HDRS ${_out_headers})
+set(ontologies_LIB_HDRS ${_out_headers} "nepomuk_export.h")
 kde4_add_library(ontologies SHARED ${ontologies_SRCS})
 
 target_link_libraries(ontologies ${QT_QTCORE_LIBRARY} ${NEPOMUK_LIBRARIES})

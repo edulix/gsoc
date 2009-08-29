@@ -76,7 +76,7 @@ target_link_libraries(konqbookmark
     ${KDE4_KDECORE_LIBS}
     ${KDE4_KDEUI_LIBS}
     ${NEPOMUK_LIBRARIES}
-#     ${SOPRANO_LIBRARIES}
+    ${SOPRANO_LIBRARIES}
 )
 
 set_target_properties(konqbookmark PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
@@ -86,6 +86,7 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 set(konqbookmark_LIB_HDRS
     konqbookmark.h
+    itemviews/entitytreeview.h # from akonadi_next
     itemmodels/collectionsproxymodel.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h

@@ -23,8 +23,6 @@
 
 #include <kxmlguiwindow.h>
 
-#include "ui_prefs_base.h"
-
 class BookmarksView;
 class QPrinter;
 class KToggleAction;

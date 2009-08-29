@@ -221,12 +221,12 @@ void KonqBookmark::setNumVisits(const long visits)
 
 QDateTime KonqBookmark::created() const
 {
-    return d->m_bookmark.property(Soprano::Vocabulary::NAO::naoNamespace().toString() + "created").toDateTime();
+    return d->m_bookmark.property(Soprano::Vocabulary::NAO::created().toString()).toDateTime();
 }
 
 void KonqBookmark::setCreated(const QDateTime& created)
 {
-    d->m_bookmark.setProperty(Soprano::Vocabulary::NAO::naoNamespace().toString() + "created", created);
+    d->m_bookmark.setProperty(Soprano::Vocabulary::NAO::created().toString(), created);
 }
 
 QDateTime KonqBookmark::lastModified() const
