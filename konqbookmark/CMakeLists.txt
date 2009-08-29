@@ -76,7 +76,7 @@ target_link_libraries(konqbookmark
     ${KDE4_KDECORE_LIBS}
     ${KDE4_KDEUI_LIBS}
     ${NEPOMUK_LIBRARIES}
-    ${SOPRANO_LIBRARIES}
+#     ${SOPRANO_LIBRARIES}
 )
 
 set_target_properties(konqbookmark PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})

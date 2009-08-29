@@ -21,7 +21,6 @@ set(nepotest_SRCS
 kde4_add_executable(nepotest ${nepotest_SRCS})
 
 target_link_libraries(nepotest
-    konqbookmark
     ontologies
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}

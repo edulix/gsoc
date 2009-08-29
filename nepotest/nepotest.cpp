@@ -23,7 +23,6 @@
 #include <QUrl>
 
 #include <kdebug.h>
-#include <konqbookmark/konqbookmark.h>
 
 #include <nepomuk/tag.h>
 #include <nepomuk/resource.h>

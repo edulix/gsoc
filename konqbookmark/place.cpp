@@ -20,7 +20,7 @@
 
 #include "place.h"
 #include "konqbookmark.h"
-#include <konq_historyentry.h>
+#include "konq_historyentry.h" // Imported from libkonq
 
 using namespace Konqueror;
 

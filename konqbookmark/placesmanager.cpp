@@ -24,7 +24,7 @@
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kcompletionmodel.h"
 
-#include <konq_historyentry.h>
+#include "konq_historyentry.h" // Imported from libkonq
 #include <kurlcompletion.h>
 #include <kcompletion.h>
 #include <kglobal.h>
