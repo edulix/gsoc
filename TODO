@@ -1,12 +1,7 @@
 TODO:
-
- #1 The KonqBookmarkView delegate is not being triggered for some reason when
-   trying to edit an item.
     
  #2 I've needed to add a disableRevisionCheck() call to the update of items in
    EntityTreeModel because it would otherwise it wouldn't work.
-   
- #3 Access always directly to Nepomuk in konqbookmark. NOT
  
  #4 Nepomuk needs to be able to get resource updates from other processes so that
     our process' cache doesn't get outdated. See ResourceManager::resourceModified
@@ -17,12 +12,6 @@ TODO:
  #6 Wait for EntityTreeView to get out of akonadi_next and into kdepimlibs.
  
  #7 Segfaults with EntityTreeModel.
- 
- #8 Convert KonqBookmark to Awesome::Place or similar? We need to make something
-    more flexible which will allow others use it outside konqueror.
- 
- #9 Fix bookmarks menu.
-
 
 Planning:
  Fix #1, create own model
@@ -33,15 +22,3 @@ Planning:
  * The Akonadi resource is mostly decoupled from KonqBookmark (not completely but 
  that can be done later), so it's reusable. Ideally the akonadi resource should
  only deal with Nepomuk::Resource.
- 
- 
- * How to automatically expand tree
- * How to store the items order in collections
- 
- Volker:
-  * What is the best way to set default current path
- 
- Sebastian Trueg:
-  * Nepomuk resourcedata ache syncing between different processes
-  * Integrate Nepomuk and Akonadi
-  * How to store in Nepomuk the number of Visits of each bookmark

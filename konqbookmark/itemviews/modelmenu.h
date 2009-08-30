@@ -34,7 +34,7 @@ class ModelMenuSearchLine;
 class QAbstractItemModel;
 
 /**
- * @short A QMenu that is dynamically populated and updated from a QAbstractItemModel
+ * @short A QMenu that is dynamically populated and updated using a QAbstractItemModel.
  *
  * This class is similar to an ItemView (uses a QAbstractItemModel as
  * a data source) but inheriting instead from QMenu. Each item in the menu
@@ -69,37 +69,104 @@ public:
     enum MenuItemLocation
     {
         PreModelItems = 0x1,
-        PostModelItems = 0x2 // TODO: doesn't work
+        PostModelItems = 0x2 // TODO: doesn't seem to work fine
     };
-    
+
+    /**
+     * This is the constructor you should use in your application.
+     */
     ModelMenu(QWidget *parent = 0);
-    ModelMenu(ModelMenu *parentMenu = 0);
+    
+    /**
+     * Destructor.
+     */
     virtual ~ModelMenu();
 
-    void setModel(QAbstractItemModel *model);
+    /**
+     * Use this function to set the model this menu will show to the user.
+     */
+    virtual void setModel(QAbstractItemModel *model);
+    
+    /**
+     * @returns the model being used by the menu, or 0 if none.
+     */
     QAbstractItemModel *model() const;
 
+    /**
+     * Sets which is the parent index whose children will be shown in this menu.
+     * If it's invalid then the menu will show the top-level items.
+     */
     void setRootIndex(const QModelIndex &index);
+    
+    /**
+     * @returns the parent index whose children will be shown in this menu. 
+     * QModelIndex() by default.
+     */
     QModelIndex rootIndex() const;
 
+    /**
+     * Stablishes which source role in the model corresponds with which role
+     * in the menu. 
+     *
+     * @note DisplayRole is used for the text of menu entries and DecorationRole
+     * for the icon if any.
+     */
     void setRole(MenuRole menuRole, int modelRole);
+    
+    /**
+     * @see setRole()
+     */
     int role(MenuRole menuRole) const;
 
+    /**
+     * @returns the associated index to an action from this menu or an invalid
+     * index if not found.
+     * @see actionForIndex()
+     */
     QModelIndex index(QAction *action);
-    QModelIndex indexAt(const QPoint& pt);
-    QAction *actionForIndex(const QModelIndex& index);
     
+    /**
+     * Convenience function similar to QWidget::actionAt() but returning the
+     * index of the action at a point inside the menu.
+     */
+    QModelIndex indexAt(const QPoint &pt);
+    
+    /**
+     * Inverse function for @p index(QAction*)
+     */
+    QAction *actionForIndex(const QModelIndex &index);
+    
+    /**
+     * Implement this function if you want your menu to have context menus for
+     * the indexes.
+     */
     virtual KMenu *contextMenu(const QModelIndex& index) { Q_UNUSED(index); return 0; }
 
     void setFlags(Flags flags);
     Flags flags() const;
-    
+
+    /**
+     * This is the model used by quick search.
+     * @see setShowSearchLine(), showSearchLine()
+     */
     QSortFilterProxyModel* searchModel();
-        
+    
+    /**
+     * Activates/Deactivates the quick search line feature. 
+     * 
+     * @note It's always added as the first PreModelItem.
+     */
     bool setShowSearchLine(bool showSearchLine);
     
+    /**
+     * @returns whether the search line feature is active.
+     */
     bool showSearchLine() const;
     
+    /**
+     * @returns a pointer to the search line. If showSearchLine() is false it
+     * will returns 0.
+     */
     ModelMenuSearchLine *searchLine();
     
     void removeAction(QAction* action)
@@ -108,6 +175,12 @@ public:
     }
     
 protected:
+    /**
+     * Constructor used internally to create submenus. 
+     * @internal
+     */
+    ModelMenu(ModelMenu *parentMenu = 0);
+    
     virtual QAction *makeAction(const QIcon &icon, const QString &text, QObject *parent);
     
     /**
@@ -147,12 +220,26 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     
     /**
-     * Search mode can be activated only if we are root.
+     * 
      * 
      * @returns true if search mode was activated
      */
+    
     friend class ModelMenuSearchLine;
+    
+    /**
+     * Search mode can be activated only if it's not a submenu. This protected
+     * method is only called by friend class ModelMenuSearchLine and it's set
+     * to true only if the search line is not empty.
+     * 
+     * When search is active, the model represented by this menu is the
+     * @p searchModel().
+     */
     bool setSearchActive(bool searchActive);
+    
+    /**
+     * 
+     */
     bool searchActive() const;
     
     /**

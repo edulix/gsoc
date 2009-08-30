@@ -149,9 +149,9 @@ public:
      * The following slots are called when the model changes and we need to
      * adopt those changes.
      */
-    void dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight );
-    void rowsInserted ( const QModelIndex & parent, int start, int end );
-    void rowsAboutTobeRemoved ( const QModelIndex & parent, int start, int end );
+    void dataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
+    void rowsInserted(const QModelIndex & parent, int start, int end);
+    void rowsAboutTobeRemoved(const QModelIndex & parent, int start, int end);
     void modelReset (bool force = false);
     int maxMenuHeight();
     
@@ -258,46 +258,51 @@ ModelMenu::Private::~Private()
 
 QAbstractItemModel* ModelMenu::Private::currentModel() const
 {
-    if(q->searchActive())
+    if (q->searchActive()) {
         return m_searchModel;
-    else
+    } else {
         return m_model;
+    }
 }
 
 QModelIndex ModelMenu::Private::currentRootIndex()
 {
-    if(!q->searchActive())
+    if (!q->searchActive()) {
         return m_root;
-    else
+    } else {
         return QModelIndex();
+    }
 }
 
 QModelIndex ModelMenu::Private::indexToSource(const QModelIndex& index)
 {
-    if(q->searchActive())
+    if (q->searchActive()) {
         return m_proxyModel->mapToSource(m_searchModel->mapToSource(index));
-    else
+    } else {
         return index;
+    }
 }
 
 QModelIndex ModelMenu::Private::indexToCurrent(const QModelIndex& index)
 {
-    if(q->searchActive())
+    if (q->searchActive()) {
         return m_searchModel->mapFromSource(m_proxyModel->mapFromSource(index));
-    else
+    } else {
         return index;
+    }
 }
 
 Q_DECLARE_METATYPE(QModelIndex)
 void ModelMenu::Private::slotAboutToShow()
 {
-    modelReset(true);
+    if (m_dirty) {
+        modelReset(true);
+    }
 }
 
 void ModelMenu::Private::slotAboutToHide()
 {
-    if(m_showSearchLine)
-    {
+    if (m_showSearchLine) {
         m_searchLine->clearFocus();
         QFocusEvent event(QEvent::FocusOut);
         QCoreApplication::sendEvent(m_searchLine, &event);
@@ -310,7 +315,7 @@ QAction* ModelMenu::Private::createSubmenu(const QModelIndex &parent, QAction *b
     ModelMenu *modelMenu = q->createBaseMenu();
     // triggered goes all the way up the menu structure
     disconnect(modelMenu, SIGNAL(triggered(QAction*)),
-                modelMenu, SLOT(actionTriggered(QAction*)));
+        modelMenu, SLOT(actionTriggered(QAction*)));
     modelMenu->setTitle(title);
     QIcon icon(parent.data(Qt::DecorationRole).value<QPixmap>());
     modelMenu->setIcon(icon);
@@ -324,16 +329,17 @@ QAction* ModelMenu::Private::createSubmenu(const QModelIndex &parent, QAction *b
 bool ModelMenu::Private::descendantFromRoot(const QModelIndex &index)
 {
     QModelIndex ancestor = index.parent();
-    for(; ancestor.isValid() || ancestor == m_root; ancestor = ancestor.parent())
-        if(ancestor == m_root)
+    for (; ancestor.isValid() || ancestor == m_root; ancestor = ancestor.parent()) {
+        if (ancestor == m_root) {
             return true;
+        }
+    }
         
     return false;
 }
 
 void ModelMenu::Private::insertIndex(const QModelIndex &index, QAction *before)
 {
-    
     Q_ASSERT(currentModel());
     
     
@@ -343,44 +349,40 @@ void ModelMenu::Private::insertIndex(const QModelIndex &index, QAction *before)
     QAction* tempBefore = (m_postSeparator) ? m_postSeparator : before;
     QModelIndex sourceIndex = indexToSource(index);
     
-    if(!descendantFromRoot(sourceIndex))
+    if (!descendantFromRoot(sourceIndex)) {
         return;
+    }
     
-    if(m_actionForIndex.contains(sourceIndex))
-    {
-        if(m_maxRows != -1 && size >= m_maxRows && m_searchActive)
+    if (m_actionForIndex.contains(sourceIndex)) {
+        if (m_maxRows != -1 && size >= m_maxRows && m_searchActive) {
             return;
+        }
         addedAction = q->actionForIndex(sourceIndex);
         q->insertAction(tempBefore, addedAction);
-    }
-    else if (q->isFolder(sourceIndex))
-    {
+    } else if (q->isFolder(sourceIndex)) {
         addedAction = createSubmenu(index, before);
-    } else
-    {
+    } else {
         if (m_menuRole[SeparatorRole] != 0
-            && index.data(m_menuRole[SeparatorRole]).toBool())
-        {
+            && index.data(m_menuRole[SeparatorRole]).toBool()) {
             addedAction = new QAction(q);
             addedAction->setSeparator(true);
-        }
-        else
-        {
+        } else {
             addedAction = makeAction(index);
         }
         actionAdded(addedAction);
         
-        if(m_maxRows != -1 && size >= m_maxRows && m_searchActive)
+        if (m_maxRows != -1 && size >= m_maxRows && m_searchActive) {
             return;
+        }
         q->insertAction(tempBefore, addedAction);
     }
     
     int maxHeight = maxMenuHeight();
     
-    if(q->sizeHint().height() > maxHeight)
-    {
-        if(addedAction)
+    if (q->sizeHint().height() > maxHeight) {
+        if (addedAction) {
             q->removeAction(addedAction);
+        }
         m_maxRows = size;
     }
 }
@@ -392,11 +394,13 @@ int ModelMenu::Private::maxMenuHeight()
     
     return qMax(max / 2, max - top) - 30;
 }
+
 void ModelMenu::Private::populateMenu()
 {
     kDebug();
-    if (!currentModel())
+    if (!currentModel()) {
         return;
+    }
     
     int end = currentModel()->rowCount(currentRootIndex());
     
@@ -416,8 +420,9 @@ void ModelMenu::Private::actionDeleted(QObject* actionObj)
 {
     QAction *action = qobject_cast<QAction*>(actionObj);
     QModelIndex index = q->index(action);
-    if(index.isValid() && m_actionForIndex.contains(index))
+    if (index.isValid() && m_actionForIndex.contains(index)) {
         m_actionForIndex.remove(index);
+    }
 }
 
 QAction *ModelMenu::Private::makeAction(const QModelIndex &index)
@@ -425,14 +430,16 @@ QAction *ModelMenu::Private::makeAction(const QModelIndex &index)
     QIcon icon(index.data(Qt::DecorationRole).value<QPixmap>());
     
     QFontMetrics fm(q->font());
-    if (m_maxWidth == -1)
+    if (m_maxWidth == -1) {
         m_maxWidth = fm.width(QLatin1Char('m')) * 30;
+    }
     QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, m_maxWidth);
     
     QAction *action = q->makeAction(icon, smallText, q);
     
-    if(m_menuRole[StatusBarTextRole] != 0)
+    if (m_menuRole[StatusBarTextRole] != 0) {
         action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+    }
 
     QVariant v;
     v.setValue(indexToSource(index));
@@ -443,14 +450,14 @@ QAction *ModelMenu::Private::makeAction(const QModelIndex &index)
 void ModelMenu::Private::actionTriggered(QAction *action)
 {
     QModelIndex idx = q->index(action);
-    if (idx.isValid())
+    if (idx.isValid()) {
         emit q->activated(idx);
+    }
 }
 
-void ModelMenu::Private::dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight )
+void ModelMenu::Private::dataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight)
 {    
-    if(!q->isVisible())
-    {
+    if (!q->isVisible()) {
         m_dirty = true;
         return;
     }
@@ -458,48 +465,48 @@ void ModelMenu::Private::dataChanged ( const QModelIndex & topLeft, const QModel
     const QModelIndex& top = topLeft.sibling(topLeft.row(), 0);
     
     // Here we assume top.parent() == bottom.parent()
-    if(top.parent() != currentRootIndex())
+    if (top.parent() != currentRootIndex()) {
         return;
+    }
     
-    for(int i = top.row(); i <= bottomRight.row(); i++)
-    {
+    for (int i = top.row(); i <= bottomRight.row(); i++) {
         const QModelIndex& index = top.sibling(i, 0);
         QAction *action = q->actionForIndex(indexToSource(index));
-        if(!action)
+        if (!action) {
             continue;
+        }
         
         QIcon icon(index.data(Qt::DecorationRole).value<QPixmap>());
         action->setIcon(icon);
         
         QFontMetrics fm(q->font());
-        if (m_maxWidth == -1)
+        if (m_maxWidth == -1) {
             m_maxWidth = fm.width(QLatin1Char('m')) * 30;
+        }
         QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, m_maxWidth);
         action->setText(smallText);
         
-        if(m_menuRole[StatusBarTextRole] != 0)
+        if (m_menuRole[StatusBarTextRole] != 0) {
             action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+        }
         
     }
     
 }
 
-void ModelMenu::Private::rowsInserted ( const QModelIndex & parent, int start, int end )
+void ModelMenu::Private::rowsInserted(const QModelIndex & parent, int start, int end)
 {
     kDebug();
-    if(!q->isVisible())
-    {
+    if (!q->isVisible()) {
         m_dirty = true;
         return;
     }
     
-    if(parent.parent() == currentRootIndex())
-    {
+    if (parent.parent() == currentRootIndex()) {
         // We might have to update parent (if it's in our list) to change from
         // being a simple QAction to now get a QMenu
         QAction *action = q->actionForIndex(indexToSource(parent));
-        if(action && !action->menu())
-        {
+        if (action && !action->menu()) {
             QString title = parent.data().toString();
             ModelMenu *modelMenu = q->createBaseMenu();
             // triggered goes all the way up the menu structure
@@ -513,16 +520,16 @@ void ModelMenu::Private::rowsInserted ( const QModelIndex & parent, int start, i
             modelMenu->setModel(m_model);
         }
         return;
-    } else if(parent != currentRootIndex())
+    } else if (parent != currentRootIndex()) {
         return;
+    }
     
     // We'll insert the new actions before this action. If no action is found
     // the actions will be appended
     const QModelIndex& index = parent.child(start - 1, 0);
     QAction* before = q->actionForIndex(indexToSource(index));
     
-    for(int i = start; i <= end; i++)
-    {
+    for (int i = start; i <= end; i++) {
         const QModelIndex& index = parent.child(i, 0);
         insertIndex(index, before);
     }
@@ -531,22 +538,20 @@ void ModelMenu::Private::rowsInserted ( const QModelIndex & parent, int start, i
 
 void ModelMenu::Private::rowsAboutTobeRemoved ( const QModelIndex & parent, int start, int end )
 {
-    if(parent != currentRootIndex())
+    if (parent != currentRootIndex()) {
         return;
+    }
     
-    if(!q->isVisible())
-    {
+    if (!q->isVisible()) {
         m_dirty = true;
         return;
     }
     
-    for(int i = start; i <= end; i++)
-    {
+    for (int i = start; i <= end; i++) {
         // Delete the related actions and let actionDeleted() slot deal with it
         const QModelIndex& index = parent.child(i, 0);
         QAction *action = q->actionForIndex(indexToSource(index));
-        if(action)
-        {
+        if (action) {
             // Remove the action but not delete it. Thus it'll be still there
             // when we need it again
             q->removeAction(action);
@@ -555,21 +560,20 @@ void ModelMenu::Private::rowsAboutTobeRemoved ( const QModelIndex & parent, int 
     emit q->rowCountChanged(m_actionForIndex.values().count());
 }
 
-void ModelMenu::Private::modelReset (bool force)
+void ModelMenu::Private::modelReset(bool force)
 {
-    if(!force && !q->isVisible())
-    {
+    if (!force && !q->isVisible()) {
         m_dirty = true;
         return;
     }
     
     int prevCountActions = q->actions().count();
-    QListIterator<QAction*> it(m_actionForIndex.values());
-    while (it.hasNext())
-    {
+    QListIterator<QAction*> it(q->actions());
+    while (it.hasNext()) {
         QAction* action = it.next();
-        if(!action)
+        if (m_preActions.contains(action) || m_postActions.contains(action)) {
             continue;
+        }
         
         // Remove the action but not delete it. Thus it'll be still there
         // when we need it again
@@ -581,8 +585,9 @@ void ModelMenu::Private::modelReset (bool force)
     m_dirty = false;
     
     int postCountActions = q->actions().count();
-    if(prevCountActions != postCountActions)
+    if (prevCountActions != postCountActions) {
         emit q->rowCountChanged(m_actionForIndex.values().count());
+    }
 }
 
 //@endcond
@@ -606,8 +611,7 @@ ModelMenu::~ModelMenu()
 
 void ModelMenu::setModel(QAbstractItemModel *newModel)
 {
-    if(d->currentModel() == d->m_model && d->m_model)
-    {
+    if (d->currentModel() == d->m_model && d->m_model) {
         disconnect(d->m_model, SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
             this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
         disconnect(d->m_model, SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
@@ -621,8 +625,7 @@ void ModelMenu::setModel(QAbstractItemModel *newModel)
     }
     
     d->m_model = newModel;
-    if(flags() & IsRootFlag)
-    {
+    if (flags() & IsRootFlag) {
         delete d->m_proxyModel;
         delete d->m_searchModel;
         
@@ -655,8 +658,9 @@ QAbstractItemModel *ModelMenu::model() const
 
 void ModelMenu::setRootIndex(const QModelIndex &index)
 {
-    if(d->m_root == index)
+    if (d->m_root == index) {
         return;
+    }
     
     d->m_root = index;
     
@@ -672,30 +676,27 @@ QModelIndex ModelMenu::rootIndex() const
 
 bool ModelMenu::setShowSearchLine(bool newSearchLine)
 {
-    if(!(flags() & IsRootFlag))
+    if (!(flags() & IsRootFlag)) {
         return false;
+    }
     
-    if(d->m_showSearchLine == newSearchLine)
+    if (d->m_showSearchLine == newSearchLine) {
         return d->m_showSearchLine;
+    }
     
     d->m_showSearchLine = newSearchLine;
     
-    if(newSearchLine)
-    {
+    if (newSearchLine) {
         d->m_searchLineAction = new QWidgetAction(this);
         d->m_searchLine = new ModelMenuSearchLine(this);
         d->m_searchLineAction->setDefaultWidget(d->m_searchLine);
-        if(d->m_preActions.empty())
-        {
+        if (d->m_preActions.empty()) {
             addAction(d->m_searchLineAction, PreModelItems);
-        } else
-        {
+        } else {
             insertAction(d->m_preActions.first(), d->m_searchLineAction);
             d->m_preActions.prepend(d->m_searchLineAction);
         }
-    }
-    else
-    {
+    } else {
         d->m_searchLineAction->deleteLater();
         d->m_searchLine = 0;
         d->m_searchLineAction = 0;
@@ -717,30 +718,29 @@ ModelMenuSearchLine* ModelMenu::searchLine()
 
 bool ModelMenu::setSearchActive(bool newSearchActive)
 {
-    if(flags() & IsRootFlag && searchActive() != newSearchActive)
-    {
-        disconnect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-        disconnect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-        disconnect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-        disconnect(d->currentModel(), SIGNAL(modelReset ()),
-            this, SLOT(modelReset ()));
+    if (flags() & IsRootFlag && searchActive() != newSearchActive) {
+        disconnect(d->currentModel(), SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
+            this, SLOT(dataChanged(const QModelIndex &, const QModelIndex &)));
+        disconnect(d->currentModel(), SIGNAL(rowsInserted(const QModelIndex & , int , int)),
+            this, SLOT(rowsInserted(const QModelIndex & , int , int)));
+        disconnect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved (const QModelIndex & , int , int)),
+            this, SLOT(rowsAboutTobeRemoved(const QModelIndex & , int , int)));
+        disconnect(d->currentModel(), SIGNAL(modelReset()),
+            this, SLOT(modelReset()));
         disconnect(d->currentModel(), SIGNAL(layoutChanged()),
             this, SLOT(modelReset()));
             
         d->m_searchActive = newSearchActive;
-        d->modelReset();
+        d->modelReset(true);
         
-        connect(d->currentModel(), SIGNAL(dataChanged ( const QModelIndex &, const QModelIndex & )),
-            this, SLOT(dataChanged ( const QModelIndex &, const QModelIndex & )));
-        connect(d->currentModel(), SIGNAL(rowsInserted ( const QModelIndex & , int , int )),
-            this, SLOT(rowsInserted ( const QModelIndex & , int , int )));
-        connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved ( const QModelIndex & , int , int )),
-            this, SLOT(rowsAboutTobeRemoved ( const QModelIndex & , int , int )));
-        connect(d->currentModel(), SIGNAL(modelReset ()),
-            this, SLOT(modelReset ()));
+        connect(d->currentModel(), SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
+            this, SLOT(dataChanged(const QModelIndex &, const QModelIndex &)));
+        connect(d->currentModel(), SIGNAL(rowsInserted(const QModelIndex & , int , int)),
+            this, SLOT(rowsInserted(const QModelIndex & , int , int)));
+        connect(d->currentModel(), SIGNAL(rowsAboutToBeRemoved(const QModelIndex & , int , int)),
+            this, SLOT(rowsAboutTobeRemoved(const QModelIndex & , int , int)));
+        connect(d->currentModel(), SIGNAL(modelReset()),
+            this, SLOT(modelReset()));
         connect(d->currentModel(), SIGNAL(layoutChanged()),
             this, SLOT(modelReset()));
     }
@@ -808,13 +808,11 @@ QModelIndex ModelMenu::currentRootIndex()
 
 void ModelMenu::addAction(QAction *action, MenuItemLocation location)
 {
-    if(location == PreModelItems)
-    {
+    if (location == PreModelItems) {
         bool wasEmpty = d->m_preActions.empty();
         d->m_preActions.append(action);
         
-        if(wasEmpty)
-        {
+        if (wasEmpty) {
             d->m_preSeparator = new QAction(this);
             d->m_preSeparator->setSeparator(true);
             insertAction(d->m_postSeparator, d->m_preSeparator);
@@ -822,10 +820,8 @@ void ModelMenu::addAction(QAction *action, MenuItemLocation location)
         }
         insertAction(d->m_preSeparator, action);
         
-    } else if (location == PostModelItems)
-    {
-        if(d->m_postActions.empty())
-        {
+    } else if (location == PostModelItems) {
+        if (d->m_postActions.empty()) {
             d->m_postSeparator = new QAction(this);
             d->m_postSeparator->setSeparator(true);
             QWidget::addAction(d->m_postSeparator);
@@ -838,21 +834,17 @@ void ModelMenu::addAction(QAction *action, MenuItemLocation location)
 
 void ModelMenu::removeAction(QAction* action, MenuItemLocation location)
 {
-    if(location == PreModelItems)
-    {
+    if (location == PreModelItems) {
         removeAction(action);
         d->m_preActions.removeOne(action);
-        if(d->m_preActions.empty())
-        {
+        if (d->m_preActions.empty()) {
             delete d->m_preSeparator;
             d->m_preSeparator = 0;
         }
-    } else if (location == PostModelItems)
-    {
+    } else if (location == PostModelItems) {
         removeAction(action);
         d->m_postActions.removeOne(action);
-        if(d->m_postActions.empty())
-        {
+        if (d->m_postActions.empty()) {
             delete d->m_postSeparator;
             d->m_postSeparator = 0;
         }
@@ -861,11 +853,14 @@ void ModelMenu::removeAction(QAction* action, MenuItemLocation location)
 
 QModelIndex ModelMenu::index(QAction *action)
 {
-    if (!action)
+    if (!action) {
         return QModelIndex();
+    }
+    
     QVariant variant = action->data();
-    if (!variant.canConvert<QModelIndex>())
+    if (!variant.canConvert<QModelIndex>()) {
         return QModelIndex();
+    }
 
     return qvariant_cast<QModelIndex>(variant);
 }
@@ -877,16 +872,18 @@ QModelIndex ModelMenu::indexAt(const QPoint& pt)
 
 QAction* ModelMenu::actionForIndex(const QModelIndex& index)
 {
-    if(!d->m_actionForIndex.contains(index))
+    if (!d->m_actionForIndex.contains(index)) {
         return 0;
+    }
     
     return d->m_actionForIndex.value(index);
 }
 
 void ModelMenu::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
         d->m_dragStartPos = event->pos();
+    }
     QMenu::mousePressEvent(event);
 }
 
@@ -897,18 +894,17 @@ void ModelMenu::mouseReleaseEvent(QMouseEvent *event)
 
 void ModelMenu::mouseMoveEvent(QMouseEvent *event)
 {
-    if(!d->currentModel())
+    if (!d->currentModel()) {
         return;
+    }
     
-    if ((event->pos() - d->m_dragStartPos).manhattanLength() > QApplication::startDragDistance())
-    {
+    if ((event->pos() - d->m_dragStartPos).manhattanLength() > QApplication::startDragDistance()) {
         QAction *action = actionAt(d->m_dragStartPos);
         QModelIndex eventIndex = index(action);
         
         if (event->buttons() == Qt::LeftButton
             && eventIndex.isValid()
-            && !isFolder(eventIndex))
-        {
+            && !isFolder(eventIndex)) {
             QDrag *drag = new QDrag(this);
             drag->setMimeData(d->currentModel()->mimeData((QModelIndexList() << eventIndex)));
             QRect actionRect = actionGeometry(action);

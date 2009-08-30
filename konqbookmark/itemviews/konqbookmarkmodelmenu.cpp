@@ -234,7 +234,7 @@ KonqBookmarkModelMenu::KonqBookmarkModelMenu(QAbstractItemModel* model, KonqBook
 {
     setModel(model);
     setFlags(flags() | OneColumnFlag);
-    setShowSearchLine(true);
+    setShowSearchLine(true); // Not complete
     d->m_helper = konqBookmarkMenuHelper;
     d->m_actionCollection = actionCollection;
     

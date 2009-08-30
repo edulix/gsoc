@@ -37,75 +37,77 @@
 //@cond PRIVATE
 class ModelMenuSearchLine::Private {
 public:
-    Private( ModelMenuSearchLine* parent) :
-                                q(parent), proxy(0), searchLine(0)
+    Private(ModelMenuSearchLine* parent) :
+        q(parent), proxy(0), searchLine(0)
     {
-    timer = new QTimer( q );
-    timer->setSingleShot( true );
-    connect( timer, SIGNAL( timeout() ), q, SLOT( slotSearchLineActivate() ) );
+        timer = new QTimer(q);
+        timer->setSingleShot(true);
+        connect(timer, SIGNAL(timeout()), q, SLOT(slotSearchLineActivate()));
     }
+    
     QTimer* timer;
     ModelMenuSearchLine* q;
     QSortFilterProxyModel* proxy;
     KLineEdit* searchLine;
     ModelMenu* m_parent;
 
-    void slotSearchLineChange( const QString& newText );
+    void slotSearchLineChange(const QString& newText);
     void slotSearchLineActivate();
     void slotRootChanged(const QModelIndex &rootIndex);
 };
 
-void ModelMenuSearchLine::Private::slotSearchLineChange( const QString& )
+void ModelMenuSearchLine::Private::slotSearchLineChange(const QString &)
 {
-    timer->start( 300 );
+    timer->start(300);
 }
 
 
 void ModelMenuSearchLine::Private::slotSearchLineActivate()
 {
-    if ( !proxy )
+    if (!proxy) {
         return;
+    }
     
-    kDebug() << "starts";
-    proxy->setFilterFixedString( searchLine->text() );
-    kDebug() << "text = " << searchLine->text();
+    proxy->setFilterFixedString(searchLine->text());
     
     bool activate = !searchLine->text().isEmpty();
-    if(m_parent->searchActive() != activate)
+    if(m_parent->searchActive() != activate) {
         m_parent->setSearchActive(activate);
+    }
 }
 
 void ModelMenuSearchLine::Private::slotRootChanged(const QModelIndex &rootIndex)
 {
     QString rootTitle = rootIndex.data().toString();
-    if(rootTitle.isEmpty())
+    if (rootTitle.isEmpty()) {
         searchLine->setClickMessage(i18n("Search..."));
-    else
+    } else {
         searchLine->setClickMessage(i18n("Search in %1...", rootTitle));
+    }
 }
 
 //@endcond
 
-ModelMenuSearchLine::ModelMenuSearchLine( ModelMenu* parent )
-        : QWidget( parent ), d( new Private( this ) )
+ModelMenuSearchLine::ModelMenuSearchLine(ModelMenu* parent)
+        : QWidget(parent), d(new Private(this))
 {
     d->m_parent = parent;
 
-    d->searchLine = new KLineEdit( this );
-    d->searchLine->setClearButtonShown( true );
+    d->searchLine = new KLineEdit(this);
+    d->searchLine->setClearButtonShown(true);
     d->searchLine->setMinimumWidth(300);
     
     d->slotRootChanged(parent->rootIndex());
     
-    QHBoxLayout* layout = new QHBoxLayout( this );
-    layout->setMargin( 0 );
-    layout->addWidget( d->searchLine );
+    QHBoxLayout* layout = new QHBoxLayout(this);
+    layout->setMargin(0);
+    layout->addWidget(d->searchLine);
     setProxy(parent->searchModel());
 
-    connect( d->searchLine, SIGNAL( textChanged( const QString& ) ),
-             SLOT( slotSearchLineChange( const QString& ) ) );
-    connect( parent, SIGNAL( rootChanged(const QModelIndex &) ),
-             SLOT( slotRootChanged(const QModelIndex & ) ) );
+    connect(d->searchLine, SIGNAL(textChanged(const QString &)),
+        SLOT(slotSearchLineChange(const QString &)));
+    connect(parent, SIGNAL(rootChanged(const QModelIndex &)),
+        SLOT(slotRootChanged(const QModelIndex &)));
 }
 
 ModelMenuSearchLine::~ModelMenuSearchLine()
@@ -113,12 +115,12 @@ ModelMenuSearchLine::~ModelMenuSearchLine()
     delete d;
 }
 
-void ModelMenuSearchLine::setProxy( QSortFilterProxyModel* proxy ) 
+void ModelMenuSearchLine::setProxy(QSortFilterProxyModel* proxy) 
 {
     d->proxy = proxy;
     proxy->setDynamicSortFilter(true);
-    proxy->setFilterKeyColumn( -1 );
-    proxy->setFilterCaseSensitivity( Qt::CaseInsensitive );
+    proxy->setFilterKeyColumn(-1);
+    proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 }
 
 KLineEdit* ModelMenuSearchLine::lineEdit() const

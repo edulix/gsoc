@@ -21,9 +21,9 @@
 #ifndef MODELMENUSEARCHLINE_H
 #define MODELMENUSEARCHLINE_H
 
-#include <kdeui_export.h>
+#include "konqbookmark_export.h"
 
-#include <QtGui/QWidget>
+#include <QWidget>
 
 class KLineEdit;
 class QSortFilterProxyModel;
@@ -32,26 +32,23 @@ class ModelMenu;
 /**
  * @class ModelMenuSearchLine
  *
- * Responsible for the quick search when you are using a QSortFilterProxyModel.
- * This will give you an widget which you can embed in your application, call
- * the setProxy() function to indicate on which QSortFilterProxyModel this 
- * search line should operate.
+ * Responsible for the quick search in ModelMenu. It sets the filter string of
+ * a QSortFilterProxyModel which can be specified with setProxy() method.
  *
  * @author Tom Albers <tomalbers@kde.nl>
  * @author Eduardo Robles Elvira <edulix@gmail.com>
- * @since 4.4
  */
 
-class KDEUI_EXPORT ModelMenuSearchLine
+class KONQBOOKMARK_EXPORT ModelMenuSearchLine
     : public QWidget
 {
     Q_OBJECT
 
 public:
     /**
-     * Contructor
+     * Contructor. Takes as an argument the parent model menu.
      */
-    explicit ModelMenuSearchLine( ModelMenu* parent = 0 );
+    explicit ModelMenuSearchLine(ModelMenu* parent = 0);
 
     /**
      * Destructor
@@ -62,20 +59,21 @@ public:
      * Associate a proxy
      * @param proxy The proxy to operate with.
      */
-    void setProxy( QSortFilterProxyModel* proxy );
+    void setProxy(QSortFilterProxyModel* proxy);
 
     /**
-     * Returns the pointer of the lineedit..
+     * Returns the pointer of the lineedit.
      */
     KLineEdit* lineEdit() const;
 
 private:
     class Private;
     Private* const d;
-    Q_DISABLE_COPY( ModelMenuSearchLine )
-    Q_PRIVATE_SLOT( d, void slotSearchLineChange( const QString& newText ) )
-    Q_PRIVATE_SLOT( d, void slotSearchLineActivate() )
-    Q_PRIVATE_SLOT( d, void slotRootChanged(const QModelIndex &rootIndex) )
+    
+    Q_DISABLE_COPY(ModelMenuSearchLine)
+    Q_PRIVATE_SLOT(d, void slotSearchLineChange(const QString& newText))
+    Q_PRIVATE_SLOT(d, void slotSearchLineActivate())
+    Q_PRIVATE_SLOT(d, void slotRootChanged(const QModelIndex &rootIndex))
 };
 
 #endif //MODELMENUSEARCHLINE_H
