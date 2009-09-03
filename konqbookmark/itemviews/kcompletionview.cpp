@@ -54,14 +54,14 @@ KCompletionView::KCompletionView(QWidget *parent)
 
     setWindowFlags(Qt::ToolTip); // calls setVisible, so must be done after initializations
 
-    setLineWidth(1);
+    setLineWidth(0);
     setFrameStyle(QFrame::Box | QFrame::Plain);
 
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    connect(this, SIGNAL(activated(const QModelIndex&)),
-             SLOT(slotActivated(const QModelIndex&)));
+    connect(this, SIGNAL(activated(const QModelIndex &)),
+        SLOT(slotActivated(const QModelIndex &)));
 }
 
 KCompletionView::~KCompletionView()
@@ -70,42 +70,42 @@ KCompletionView::~KCompletionView()
     delete d;
 }
 
-void KCompletionView::slotActivated(const QModelIndex& index)
+void KCompletionView::slotActivated(const QModelIndex &index)
 {
-    if(!index.isValid()) {
+    if (!index.isValid()) {
         return;
     }
 
     hide();
 }
 
-bool KCompletionView::eventFilter(QObject* o, QEvent* e)
+bool KCompletionView::eventFilter(QObject *o, QEvent *e)
 {
     int type = e->type();
-    QWidget *wid = qobject_cast<QWidget*>(o);
+    QWidget *wid = qobject_cast<QWidget* >(o);
 
-    if(o == this) {
+    if (o == this) {
         return false;
     }
 
-    if(wid && (wid == d->m_parent || wid->windowFlags() & Qt::Window) &&
+    if (wid && (wid == d->m_parent || wid->windowFlags() & Qt::Window) &&
         (type == QEvent::Move || type == QEvent::Resize)) {
         hide();
         return false;
     }
 
-    if(type == QEvent::MouseButtonPress && (wid && !isAncestorOf(wid))) {
+    if (type == QEvent::MouseButtonPress && (wid && !isAncestorOf(wid))) {
         hide();
         e->accept();
         return true;
     }
 
-    if(wid && wid->isAncestorOf(d->m_parent) && isVisible()) {
-        if(type == QEvent::KeyPress) {
+    if (wid && wid->isAncestorOf(d->m_parent) && isVisible()) {
+        if (type == QEvent::KeyPress) {
             QKeyEvent *ev = static_cast<QKeyEvent *>(e);
             switch(ev->key()) {
             case Qt::Key_Backtab:
-                if(d->tabHandling && (ev->modifiers() == Qt::NoButton ||
+                if (d->tabHandling && (ev->modifiers() == Qt::NoButton ||
                     (ev->modifiers() & Qt::ShiftModifier))) {
                     up();
                     ev->accept();
@@ -113,14 +113,14 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
                 }
                 break;
             case Qt::Key_Tab:
-                if(d->tabHandling && (ev->modifiers() == Qt::NoButton)) {
+                if (d->tabHandling && (ev->modifiers() == Qt::NoButton)) {
                     down();
                     // #65877: Key_Tab should complete using the first
                     // (or selected) item, and then offer completions again
                     //TODO change when Location Bar is implemented
-                    if(model() && model()->rowCount(QModelIndex()) == 1) {
-                        KLineEdit* parent = qobject_cast<KLineEdit*>(d->m_parent);
-                        if(parent) {
+                    if (model() && model()->rowCount(QModelIndex()) == 1) {
+                        KLineEdit *parent = qobject_cast<KLineEdit*>(d->m_parent);
+                        if (parent) {
                             parent->doCompletion(currentIndex().data().toString());
                         } else {
                             hide();
@@ -137,7 +137,7 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
             case Qt::Key_Up:
                 // If there is no selected item and we've popped up above
                 // our parent, select the first item when they press up.
-                if(!currentIndex().isValid() ||
+                if (!currentIndex().isValid() ||
                     mapToGlobal(QPoint(0, 0)).y() >
                     d->m_parent->mapToGlobal(QPoint(0, 0)).y()) {
                     up();
@@ -160,23 +160,21 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
                 return true;
             case Qt::Key_Enter:
             case Qt::Key_Return:
-                if(ev->modifiers() & Qt::ShiftModifier) {
+                if (ev->modifiers() & Qt::ShiftModifier) {
                     hide();
                     ev->accept();  // Consume the Enter event
                     return true;
                 }
                 break;
             case Qt::Key_End:
-                if(ev->modifiers() & Qt::ControlModifier)
-                {
+                if (ev->modifiers() & Qt::ControlModifier) {
                     end();
                     ev->accept();
                     return true;
                 }
                 break;
             case Qt::Key_Home:
-                if(ev->modifiers() & Qt::ControlModifier)
-                {
+                if (ev->modifiers() & Qt::ControlModifier) {
                     home();
                     ev->accept();
                     return true;
@@ -184,11 +182,11 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
             default:
                 break;
             }
-        } else if(type == QEvent::ShortcutOverride) {
+        } else if (type == QEvent::ShortcutOverride) {
             // Override any accelerators that match
             // the key sequences we use here...
-            QKeyEvent *ev = static_cast<QKeyEvent *>( e );
-            switch(ev->key()) {
+            QKeyEvent *ev = static_cast<QKeyEvent *>(e);
+            switch (ev->key()) {
             case Qt::Key_Down:
             case Qt::Key_Up:
             case Qt::Key_PageUp:
@@ -201,7 +199,7 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
                 break;
             case Qt::Key_Tab:
             case Qt::Key_Backtab:
-                if(ev->modifiers() == Qt::NoButton ||
+                if (ev->modifiers() == Qt::NoButton ||
                      (ev->modifiers() & Qt::ShiftModifier))
                 {
                     ev->accept();
@@ -210,8 +208,7 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
                 break;
             case Qt::Key_Home:
             case Qt::Key_End:
-                if(ev->modifiers() & Qt::ControlModifier)
-                {
+                if (ev->modifiers() & Qt::ControlModifier) {
                     ev->accept();
                     return true;
                 }
@@ -219,9 +216,9 @@ bool KCompletionView::eventFilter(QObject* o, QEvent* e)
             default:
                 break;
             }
-        } else if(type == QEvent::FocusOut) {
+        } else if (type == QEvent::FocusOut) {
             QFocusEvent* event = static_cast<QFocusEvent*>(e);
-            if(event->reason() != Qt::PopupFocusReason
+            if (event->reason() != Qt::PopupFocusReason
 #ifdef Q_WS_WIN
                 && (event->reason() != Qt::ActiveWindowFocusReason || QApplication::activeWindow() != this)
 #endif
@@ -244,9 +241,9 @@ void KCompletionView::popup()
         setCurrentIndex(QModelIndex());
         blockSignals(block);
         clearSelection();
-        if(!isVisible()) {
+        if (!isVisible()) {
             show();
-        } else if(size().height() != sizeHint().height()) {
+        } else if (size().height() != sizeHint().height()) {
             sizeAndPosition();
         }
     }
@@ -260,22 +257,22 @@ void KCompletionView::sizeAndPosition()
     resize(geom.size());
 
     int x = currentPos.x(), y = currentPos.y();
-    if(d->m_parent) {
-      if(!isVisible()) {
+    if (d->m_parent) {
+      if (!isVisible()) {
         QRect screenSize = KGlobalSettings::desktopGeometry(d->m_parent);
 
         QPoint orig = globalPositionHint();
         x = orig.x() + geom.x();
         y = orig.y() + geom.y();
 
-        if(x + width() > screenSize.right())
+        if (x + width() > screenSize.right()) {
             x = screenSize.right() - width();
-        if(y + height() > screenSize.bottom()) {
+        }
+        if (y + height() > screenSize.bottom()) {
             y = y - height() - d->m_parent->height();
             d->upwardBox = true;
         }
-      }
-      else {
+      } else {
         // Are we above our parent? If so we must keep bottom edge anchored.
         if(d->upwardBox) {
           y += (currentGeom - height());
@@ -287,8 +284,9 @@ void KCompletionView::sizeAndPosition()
 
 QPoint KCompletionView::globalPositionHint() const
 {
-    if (!d->m_parent)
+    if (!d->m_parent) {
         return QPoint();
+    }
     return d->m_parent->mapToGlobal(QPoint(0, d->m_parent->height()));
 }
 
@@ -315,7 +313,7 @@ void KCompletionView::setVisible(bool visible)
         // of show(), causing inconsistent state. I'll try to submit a Qt patch too.
         qApp->sendPostedEvents();
     } else {
-        if(d->m_parent) {
+        if (d->m_parent) {
             qApp->removeEventFilter(this);
         }
         d->cancelText.clear();
@@ -328,8 +326,9 @@ QRect KCompletionView::calculateGeometry() const
 {
     QRect visualRect;
     if(!model() || model()->rowCount(QModelIndex()) == 0 ||
-        !(visualRect = rectForIndex(model()->index(0,0))).isValid())
+        !(visualRect = rectForIndex(model()->index(0,0))).isValid()) {
         return QRect();
+    }
 
     int x = 0, y = 0;
     int ih = visualRect.height();
@@ -383,17 +382,17 @@ QSize KCompletionView::sizeHint() const
 
 void KCompletionView::down()
 {
-    if(!model() || !model()->hasChildren()) {
+    if (!model() || !model()->hasChildren()) {
         return;
     }
     
-    if(selectionModel()->selectedIndexes().empty()) {
+    if (selectionModel()->selectedIndexes().empty()) {
         selectionModel()->select(model()->index(0,0), QItemSelectionModel::SelectCurrent);
         return;
     }
     
     QModelIndex current = selectionModel()->selectedIndexes().first();
-    if(current.row() + 1 < model()->rowCount()) {
+    if (current.row() + 1 < model()->rowCount()) {
         selectionModel()->select(model()->index(current.row() + 1, 0), QItemSelectionModel::SelectCurrent);
     } else {
         selectionModel()->select(model()->index(0,0), QItemSelectionModel::SelectCurrent);
@@ -402,23 +401,23 @@ void KCompletionView::down()
 
 void KCompletionView::up()
 {
-    if(!model() || !model()->hasChildren()) {
+    if (!model() || !model()->hasChildren()) {
         return;
     }
     
-    if(selectionModel()->selectedIndexes().empty()) {
+    if (selectionModel()->selectedIndexes().empty()) {
         selectionModel()->select(model()->index(model()->rowCount() - 1, 0), QItemSelectionModel::SelectCurrent);
         return;
     }
     
     QModelIndex current = selectionModel()->selectedIndexes().first();
-    if(current.row() > 0) {
+    if (current.row() > 0) {
         selectionModel()->select(model()->index(current.row() - 1, 0), QItemSelectionModel::SelectCurrent);
     } else {
         selectionModel()->select(model()->index(model()->rowCount() - 1,0), QItemSelectionModel::SelectCurrent);
     }
     
-    if(!model() || !model()->hasChildren()) {
+    if (!model() || !model()->hasChildren()) {
         return;
     }
 }
@@ -442,12 +441,12 @@ void KCompletionView::pageUp()
 
 void KCompletionView::home()
 {
-    setCurrentIndex( QModelIndex() );
+    setCurrentIndex(QModelIndex());
 }
 
 void KCompletionView::end()
 {
-    if(!model()) {
+    if (!model()) {
         return;
     }
     
@@ -467,7 +466,7 @@ bool KCompletionView::isTabHandling() const
 void KCompletionView::setCancelledText(const QString& text)
 {
     d->cancelText = text;
-    if(d->cancelText.isEmpty()) {
+    if (d->cancelText.isEmpty()) {
         kDebug() << "set empty";
     }
 }
@@ -479,11 +478,11 @@ QString KCompletionView::cancelledText() const
 
 void KCompletionView::canceled()
 {
-    if(!d->cancelText.isNull()) {
+    if (!d->cancelText.isNull()) {
         emit userCancelled( d->cancelText );
     }
     
-    if(isVisible()) {
+    if (isVisible()) {
         hide();
     }
 }

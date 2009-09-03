@@ -66,23 +66,24 @@ Q_SIGNALS:
     void mimeDataDropped(const QModelIndex& destination, QDropEvent* event);
 
 protected:
-    virtual void paintEvent(QPaintEvent* event);
-    virtual void enterEvent(QEvent* event);
-    virtual void leaveEvent(QEvent* event);
-    virtual void dropEvent(QDropEvent* event);
-    virtual void dragEnterEvent(QDragEnterEvent* event);
-    virtual void dragMoveEvent(QDragMoveEvent* event);
-    virtual void dragLeaveEvent(QDragLeaveEvent* event);
-    virtual void mousePressEvent(QMouseEvent* event);
-    virtual void mouseReleaseEvent(QMouseEvent* event);
-    virtual void mouseMoveEvent(QMouseEvent* event);
+
+    virtual void paintEvent(QPaintEvent *event);
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+    virtual void dropEvent(QDropEvent *event);
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dragMoveEvent(QDragMoveEvent *event);
+    virtual void dragLeaveEvent(QDragLeaveEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
 
 private Q_SLOTS:
     void updateNavigatorCurrentIndex();
     void startPopupDelay();
     void stopPopupDelay();
     void listChildItems();
-    void mimeDataDropped(QAction* action, QDropEvent* event);
+    void mimeDataDropped(QAction *action, QDropEvent *event);
 
 private:
     int arrowWidth() const;

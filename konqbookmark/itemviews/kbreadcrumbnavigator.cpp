@@ -51,17 +51,17 @@
 class KBreadCrumbNavigator::Private
 {
 public:
-    Private(KBreadCrumbNavigator* q);
+    Private(KBreadCrumbNavigator *q);
 
     /**
      * Appends the widget at the end of the URL navigator. It is assured
      * that the filler widget remains as last widget to fill the remaining
      * width.
      */
-    void appendWidget(QWidget* widget, int stretch = 0);
+    void appendWidget(QWidget *widget, int stretch = 0);
 
     /** Emits the signal urlsDropped(). */
-    void dropMimeData(const QModelIndex& destination, QDropEvent* event);
+    void dropMimeData(const QModelIndex &destination, QDropEvent *event);
     
     void slotCurrentIndexChanged();
 
@@ -93,14 +93,14 @@ public:
     
 public:
     QList<QAbstractProxyModel *> m_proxyChain;
-    QAbstractItemModel* m_model;
-    QItemSelectionModel* m_selectionModel;
-    QHBoxLayout* m_layout;
-    QLinkedList<KBreadCrumbNavigatorButton*> m_navButtons;
-    KBreadCrumbNavigator* q;
+    QAbstractItemModel *m_model;
+    QItemSelectionModel *m_selectionModel;
+    QHBoxLayout *m_layout;
+    QLinkedList<KBreadCrumbNavigatorButton *> m_navButtons;
+    KBreadCrumbNavigator *q;
 };
 
-KBreadCrumbNavigator::Private::Private(KBreadCrumbNavigator* q)
+KBreadCrumbNavigator::Private::Private(KBreadCrumbNavigator *q)
     :  m_model(0), m_selectionModel(0), m_layout(new QHBoxLayout), q(q)
 {
     m_layout->setSpacing(0);
@@ -118,18 +118,17 @@ void KBreadCrumbNavigator::Private::createProxyChain()
     QAbstractProxyModel *proxyModel = qobject_cast<QAbstractProxyModel*>(model);
 
     QAbstractItemModel *rootModel;
-    while (proxyModel)
-    {
+    while (proxyModel) {
 
-        if (proxyModel == m_model)
+        if (proxyModel == m_model) {
             break;
+        }
 
         m_proxyChain.prepend(proxyModel);
 
-        nextProxyModel = qobject_cast<QAbstractProxyModel*>(proxyModel->sourceModel());
+        nextProxyModel = qobject_cast<QAbstractProxyModel *>(proxyModel->sourceModel());
 
-        if (!nextProxyModel)
-        {
+        if (!nextProxyModel) {
             rootModel = qobject_cast<QAbstractItemModel*>(proxyModel->sourceModel());
             // It's the final model in the chain, so it is necessarily m_model.
             Q_ASSERT(rootModel == m_model);
@@ -143,22 +142,21 @@ void KBreadCrumbNavigator::Private::createProxyChain()
 QModelIndex KBreadCrumbNavigator::Private::sourceIndexToSelectionIndexParent(const QModelIndex &index) const
 {
     QModelIndex seekIndex = index;
-    QListIterator<QAbstractProxyModel*> i(m_proxyChain);
+    QListIterator<QAbstractProxyModel *> i(m_proxyChain);
     QAbstractProxyModel *proxy;
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         proxy = i.next();
         seekIndex = proxy->mapFromSource(seekIndex);
     }
     return seekIndex;
 }
 
-void KBreadCrumbNavigator::Private::appendWidget(QWidget* widget, int stretch)
+void KBreadCrumbNavigator::Private::appendWidget(QWidget *widget, int stretch)
 {
     m_layout->insertWidget(m_layout->count(), widget, stretch);
 }
 
-void KBreadCrumbNavigator::Private::dropMimeData(const QModelIndex& destination, QDropEvent* event)
+void KBreadCrumbNavigator::Private::dropMimeData(const QModelIndex &destination, QDropEvent *event)
 {
     bool match = q->haveCommonMimetypes(event->mimeData());
     if (match) {
@@ -168,18 +166,18 @@ void KBreadCrumbNavigator::Private::dropMimeData(const QModelIndex& destination,
 
 void KBreadCrumbNavigator::Private::updateButtons()
 {
-    if(!m_selectionModel || !m_selectionModel->currentIndex().isValid())
+    if (!m_selectionModel || !m_selectionModel->currentIndex().isValid()) {
         return;
+    }
     
-    QLinkedList<KBreadCrumbNavigatorButton*>::iterator it = m_navButtons.begin();
-    const QLinkedList<KBreadCrumbNavigatorButton*>::const_iterator itEnd = m_navButtons.end();
+    QLinkedList<KBreadCrumbNavigatorButton *>::iterator it = m_navButtons.begin();
+    const QLinkedList<KBreadCrumbNavigatorButton *>::const_iterator itEnd = m_navButtons.end();
     bool createButton = false;
 
     // Get to the topmost parent model index
     QModelIndex index = m_selectionModel->currentIndex();
     QList<QModelIndex> indexes;
-    while(index.parent().isValid())
-    {
+    while (index.parent().isValid()) {
         indexes.prepend(index);
         index = index.parent();
     }
@@ -188,19 +186,17 @@ void KBreadCrumbNavigator::Private::updateButtons()
     int count = indexes.size(), i = 1;
     kDebug() << count;
     
-    foreach(index, indexes)
-    {
+    foreach(index, indexes) {
         createButton = (it == itEnd);
         bool isLastButton = (i++ == count);
 
         const QString dirName = index.data().toString();
         kDebug() << dirName << (i - 1) << isLastButton;
         KBreadCrumbNavigatorButton* button = 0;
-        if (createButton)
-        {
+        if (createButton) {
             button = new KBreadCrumbNavigatorButton(index, q);
-            connect(button, SIGNAL(mimeDataDropped(const QModelIndex&, QDropEvent*)),
-                    q, SLOT(dropMimeData(const QModelIndex&, QDropEvent*)));
+            connect(button, SIGNAL(mimeDataDropped(const QModelIndex &, QDropEvent *)),
+                    q, SLOT(dropMimeData(const QModelIndex &, QDropEvent *)));
             appendWidget(button);
             // Don't show the button immediately, as setActive()
             // might change the size and a relayout gets triggered
@@ -209,8 +205,7 @@ void KBreadCrumbNavigator::Private::updateButtons()
             // activation state.
             button->setActive(isLastButton);
             m_navButtons.append(button);
-        } else
-        {
+        } else {
             button = *it;
             button->setIndex(index);
             button->setActive(isLastButton);
@@ -219,7 +214,7 @@ void KBreadCrumbNavigator::Private::updateButtons()
     }
 
     // delete buttons which are not used anymore
-    QLinkedList<KBreadCrumbNavigatorButton*>::iterator itBegin = it;
+    QLinkedList<KBreadCrumbNavigatorButton *>::iterator itBegin = it;
     while (it != itEnd) {
         (*it)->hide();
         (*it)->deleteLater();
@@ -229,7 +224,7 @@ void KBreadCrumbNavigator::Private::updateButtons()
     
     // all buttons have the correct activation state and
     // can be shown now
-    foreach (KBreadCrumbNavigatorButton* button, m_navButtons) {
+    foreach (KBreadCrumbNavigatorButton *button, m_navButtons) {
         button->show();
     }
     
@@ -280,8 +275,8 @@ QAbstractItemModel *KBreadCrumbNavigator::model()
 void KBreadCrumbNavigator::setSelectionModel(QItemSelectionModel *selectionModel)
 {
     d->m_selectionModel = selectionModel;
-    connect(d->m_selectionModel, SIGNAL(currentChanged ( const QModelIndex &, const QModelIndex &)),
-            this, SLOT(slotCurrentIndexChanged()));
+    connect(d->m_selectionModel, SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
+        this, SLOT(slotCurrentIndexChanged()));
     d->updateButtons();
     d->createProxyChain();
 }
@@ -315,27 +310,27 @@ void KBreadCrumbNavigator::currentChangedTriggered(const QModelIndex& index)
         QItemSelectionModel::SelectCurrent);
 }
 
-bool KBreadCrumbNavigator::haveCommonMimetypes(const QMimeData* mimeData)
+bool KBreadCrumbNavigator::haveCommonMimetypes(const QMimeData *mimeData)
 {
     Q_ASSERT(d->m_model);
     
     QStringList mimeTypes = mimeData->formats();
-    foreach(QString mimeType, d->m_model->mimeTypes())
-    {
-        if(mimeTypes.contains(mimeType))
+    foreach (QString mimeType, d->m_model->mimeTypes()) {
+        if (mimeTypes.contains(mimeType)) {
             return true;
+        }
     }
     
     return false;
 }
 
 
-void KBreadCrumbNavigator::mouseReleaseEvent(QMouseEvent* event)
+void KBreadCrumbNavigator::mouseReleaseEvent(QMouseEvent *event)
 {
 
     if (event->button() == Qt::MidButton) {
-        QClipboard* clipboard = QApplication::clipboard();
-        const QMimeData* mimeData = clipboard->mimeData();
+        QClipboard *clipboard = QApplication::clipboard();
+        const QMimeData *mimeData = clipboard->mimeData();
         bool match = haveCommonMimetypes(mimeData);
         if (match) {
             setCurrentIndex(mimeData);

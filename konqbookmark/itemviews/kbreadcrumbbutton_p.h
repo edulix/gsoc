@@ -38,7 +38,7 @@ class KBreadCrumbButton : public QPushButton
     Q_OBJECT
 
 public:
-    explicit KBreadCrumbButton(KBreadCrumbNavigator* parent);
+    explicit KBreadCrumbButton(KBreadCrumbNavigator *parent);
     virtual ~KBreadCrumbButton();
     KBreadCrumbNavigator* breadCrumbNavigator() const;
     
@@ -55,21 +55,21 @@ protected:
     void setDisplayHintEnabled(DisplayHint hint, bool enable);
     bool isDisplayHintEnabled(DisplayHint hint) const;
 
-    virtual void enterEvent(QEvent* event);
-    virtual void leaveEvent(QEvent* event);
-    virtual void contextMenuEvent(QContextMenuEvent* event);
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+    virtual void contextMenuEvent(QContextMenuEvent *event);
 
-    void drawHoverBackground(QPainter* painter);
+    void drawHoverBackground(QPainter *painter);
 
     /** Returns the foreground color by respecting the current display hint. */
     QColor foregroundColor() const;
 
 private:
     int m_displayHint;
-    KBreadCrumbNavigator* m_breadCrumbNavigator;
+    KBreadCrumbNavigator *m_breadCrumbNavigator;
 };
 
-inline KBreadCrumbNavigator* KBreadCrumbButton::breadCrumbNavigator() const
+inline KBreadCrumbNavigator *KBreadCrumbButton::breadCrumbNavigator() const
 {
     return m_breadCrumbNavigator;
 }

@@ -77,8 +77,7 @@ void KonqBookmarkView::setModel(QAbstractItemModel *model)
     
     QStringList shownColumns = KonqBookmarkSettings::shownColumns();
         
-    for(int i = KonqBookmarkModel::Url; i <= KonqBookmarkModel::LastVisited; ++i)
-    {
+    for(int i = KonqBookmarkModel::Url; i <= KonqBookmarkModel::LastVisited; ++i) {
         const QString columnName = model->headerData(i, Qt::Horizontal).toString();
         bool show = shownColumns.contains(columnName);
         setColumnHidden(i, !show);

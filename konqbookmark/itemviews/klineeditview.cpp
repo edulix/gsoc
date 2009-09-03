@@ -86,7 +86,7 @@ public:
         enableClickMsg = false;
         threeStars = false;
         completionRunning = false;
-        if(!initialized) {
+        if (!initialized) {
             KConfigGroup config(KGlobal::config(), "General");
             backspacePerformsCompletion = config.readEntry("Backspace performs completion", false);
 
@@ -143,14 +143,14 @@ public:
     {
         Q_UNUSED(category);
 
-        if(clearButton) {
+        if (clearButton) {
             clearButton->setAnimationsEnabled(KGlobalSettings::graphicEffectsLevel() & KGlobalSettings::SimpleAnimationEffects);
         }
     }
 
     void _k_updateUserText(const QString &txt)
     {
-        if((!completionRunning) && (txt != userText)) {
+        if ((!completionRunning) && (txt != userText)) {
             userText = txt;
             emit q->userTextChanged(txt);
         }
@@ -253,10 +253,10 @@ void KLineEditView::init()
     connect(KGlobalSettings::self(), SIGNAL(settingsChanged(int)), this, SLOT(_k_slotSettingsChanged(int)));
 
     const QPalette p = palette();
-    if(!d->previousHighlightedTextColor.isValid()) {
+    if (!d->previousHighlightedTextColor.isValid()) {
         d->previousHighlightedTextColor=p.color(QPalette::Normal,QPalette::HighlightedText);
     }
-    if(!d->previousHighlightColor.isValid()) {
+    if (!d->previousHighlightColor.isValid()) {
         d->previousHighlightColor=p.color(QPalette::Normal,QPalette::Highlight);
     }
 
@@ -351,8 +351,8 @@ QString KLineEditView::clickMessage() const
 
 void KLineEditView::setClearButtonShown(bool show)
 {
-    if(show) {
-        if(d->clearButton) {
+    if (show) {
+        if (d->clearButton) {
             return;
         }
 
@@ -380,7 +380,7 @@ bool KLineEditView::isClearButtonShown() const
 QSize KLineEditView::clearButtonUsedSize() const
 {
     QSize s;
-    if(d->clearButton) {
+    if (d->clearButton) {
         const int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth, 0, this);
         s = d->clearButton->sizeHint();
         s.rwidth() += frameWidth;
@@ -391,23 +391,23 @@ QSize KLineEditView::clearButtonUsedSize() const
 void KLineEditView::updateClearButtonIcon(const QString& text)
 {
     kDebug();
-    if(!d->clearButton || isReadOnly()) {
+    if (!d->clearButton || isReadOnly()) {
         return;
     }
 
     int clearButtonState = KIconLoader::DefaultState;
 
-    if(text.length() > 0) {
+    if (text.length() > 0) {
         d->clearButton->animateVisible(true);
     } else {
         d->clearButton->animateVisible(false);
     }
 
-    if(!d->clearButton->pixmap().isNull()) {
+    if (!d->clearButton->pixmap().isNull()) {
         return;
     }
 
-    if(layoutDirection() == Qt::LeftToRight) {
+    if (layoutDirection() == Qt::LeftToRight) {
         d->clearButton->setPixmap(SmallIcon("edit-clear-locationbar-rtl", 0, clearButtonState));
     } else {
         d->clearButton->setPixmap(SmallIcon("edit-clear-locationbar-ltr", 0, clearButtonState));
@@ -420,7 +420,7 @@ void KLineEditView::setCompletionMode(KGlobalSettings::Completion mode)
 {
     KGlobalSettings::Completion oldMode = completionMode();
 
-    if(oldMode != mode && (oldMode == KGlobalSettings::CompletionPopup ||
+    if (oldMode != mode && (oldMode == KGlobalSettings::CompletionPopup ||
         oldMode == KGlobalSettings::CompletionPopupAuto) &&
         d->completionView && d->completionView->isVisible()) {
         d->completionView->hide();
@@ -428,15 +428,15 @@ void KLineEditView::setCompletionMode(KGlobalSettings::Completion mode)
 
     // If the widgets echo mode is not Normal, no completion
     // feature will be enabled even if one is requested.
-    if(echoMode() != QLineEdit::Normal) {
+    if (echoMode() != QLineEdit::Normal) {
         mode = KGlobalSettings::CompletionNone; // Override the request.
     }
     
-    if(kapp && !KAuthorized::authorize("lineedit_text_completion")) {
+    if (kapp && !KAuthorized::authorize("lineedit_text_completion")) {
         mode = KGlobalSettings::CompletionNone;
     }
     
-    if(mode == KGlobalSettings::CompletionPopupAuto ||
+    if (mode == KGlobalSettings::CompletionPopupAuto ||
         mode == KGlobalSettings::CompletionAuto ||
         mode == KGlobalSettings::CompletionMan) {
         d->autoSuggest = true;
@@ -454,19 +454,19 @@ void KLineEditView::setCompletionModeDisabled(KGlobalSettings::Completion mode, 
 
 void KLineEditView::setCompletedText(const QString& t, bool marked)
 {
-    if(!d->autoSuggest) {
+    if (!d->autoSuggest) {
       return;
     }
 
     const QString txt = text();
 
-    if(t != txt) {
+    if (t != txt) {
         
         const bool blocked = blockSignals(true);
         setText(t);
         blockSignals(blocked);
         
-        if(marked) {
+        if (marked) {
             setSelection(t.length(), txt.length()-t.length());
         }
         setUserSelection(false);
@@ -488,7 +488,7 @@ void KLineEditView::setCompletedText(const QString& text)
 
 void KLineEditView::rotateText(KCompletionBase::KeyBindingType type)
 {
-    if(d->completionView && d->completionView->model() &&
+    if (d->completionView && d->completionView->model() &&
         d->completionView->model()->hasChildren() &&
         (type == KCompletionBase::PrevCompletionMatch ||
         type == KCompletionBase::NextCompletionMatch)) {
@@ -498,7 +498,7 @@ void KLineEditView::rotateText(KCompletionBase::KeyBindingType type)
         input = selModel->selectedIndexes().first().data().toString();
         kDebug() << input;
         
-        if(d->completionView->currentIndex() == selModel->selectedIndexes().first() ||
+        if (d->completionView->currentIndex() == selModel->selectedIndexes().first() ||
             input.isEmpty() || input == displayText()) {
             return;
         }
@@ -512,17 +512,17 @@ void KLineEditView::makeCompletion(const QString& text)
 {
     KGlobalSettings::Completion mode = completionMode();
 
-    if(!d->completionView || !d->completionView->model() || mode == KGlobalSettings::CompletionNone) {
+    if (!d->completionView || !d->completionView->model() || mode == KGlobalSettings::CompletionNone) {
         return;  // No completion object...
     }
     
     QAbstractItemModel* model = d->completionView->model();
     const QString match = model->index(0,0).data().toString();
 
-    if(mode == KGlobalSettings::CompletionPopup ||
+    if (mode == KGlobalSettings::CompletionPopup ||
          mode == KGlobalSettings::CompletionPopupAuto) {
-        if(match.isEmpty()) {
-            if(d->completionView) {
+        if (match.isEmpty()) {
+            if (d->completionView) {
                 d->completionView->hide();
             }
         } else {
@@ -532,15 +532,15 @@ void KLineEditView::makeCompletion(const QString& text)
         // Auto,  ShortAuto (Man) and Shell
         // all other completion modes
         // If no match or the same match, simply return without completing.
-        if(match.isEmpty() || match == text) {
+        if (match.isEmpty() || match == text) {
             return;
         }
 
-        if(mode != KGlobalSettings::CompletionShell) {
+        if (mode != KGlobalSettings::CompletionShell) {
             setUserSelection(false);
         }
 
-        if(d->autoSuggest) {
+        if (d->autoSuggest) {
             setCompletedText(match);
         }
     }
@@ -549,25 +549,25 @@ void KLineEditView::makeCompletion(const QString& text)
 void KLineEditView::setReadOnly(bool readOnly)
 {
     // Do not do anything if nothing changed...
-    if(readOnly == isReadOnly()) {
+    if (readOnly == isReadOnly()) {
       return;
     }
 
     QLineEdit::setReadOnly(readOnly);
 
-    if(readOnly) {
+    if (readOnly) {
         d->bgRole = backgroundRole();
         setBackgroundRole(QPalette::Window);
-        if(d->enableSqueezedText && d->squeezedText.isEmpty()) {
+        if (d->enableSqueezedText && d->squeezedText.isEmpty()) {
             d->squeezedText = text();
             setSqueezedText();
         }
 
-        if(d->clearButton) {
+        if (d->clearButton) {
             d->clearButton->animateVisible(false);
         }
     } else {
-        if(!d->squeezedText.isEmpty()) {
+        if (!d->squeezedText.isEmpty()) {
            setText(d->squeezedText);
            d->squeezedText.clear();
         }
@@ -594,11 +594,11 @@ bool KLineEditView::isSqueezedTextEnabled() const
 
 void KLineEditView::setText(const QString& text)
 {
-    if(d->enableClickMsg) {
+    if (d->enableClickMsg) {
           d->drawClickMsg = text.isEmpty();
           update();
     }
-    if(d->enableSqueezedText && isReadOnly()) {
+    if (d->enableSqueezedText && isReadOnly()) {
         d->squeezedText = text;
         setSqueezedText();
         return;
@@ -616,7 +616,7 @@ void KLineEditView::setSqueezedText()
     const int labelWidth = size().width() - 2*style()->pixelMetric(QStyle::PM_DefaultFrameWidth) - 2;
     const int textWidth = fm.width(fullText);
 
-    if(textWidth > labelWidth) {
+    if (textWidth > labelWidth) {
         // start with the dots only
         QString squeezedText = "...";
         int squeezedWidth = fm.width(squeezedText);
@@ -626,7 +626,7 @@ void KLineEditView::setSqueezedText()
         squeezedText = fullText.left(letters) + "..." + fullText.right(letters);
         squeezedWidth = fm.width(squeezedText);
 
-        if(squeezedWidth < labelWidth) {
+        if (squeezedWidth < labelWidth) {
             // we estimated too short
             // add letters while text < label
             do {
@@ -637,7 +637,7 @@ void KLineEditView::setSqueezedText()
             
             letters--;
             squeezedText = fullText.left(letters) + "..." + fullText.right(letters);
-        } else if(squeezedWidth > labelWidth) {
+        } else if (squeezedWidth > labelWidth) {
             // we estimated too long
             // remove letters while text > label
             do {
@@ -647,7 +647,7 @@ void KLineEditView::setSqueezedText()
             } while (squeezedWidth > labelWidth);
         }
 
-        if(letters < 5) {
+        if (letters < 5) {
             // too few letters added -> we give up squeezing
             QLineEdit::setText(fullText);
         } else {
@@ -669,33 +669,33 @@ void KLineEditView::setSqueezedText()
 
 void KLineEditView::copy() const
 {
-    if(!copySqueezedText(true)) {
+    if (!copySqueezedText(true)) {
         QLineEdit::copy();
     }
 }
 
 bool KLineEditView::copySqueezedText(bool clipboard) const
 {
-    if(!d->squeezedText.isEmpty() && d->squeezedStart) {
+    if (!d->squeezedText.isEmpty() && d->squeezedStart) {
         KLineEditView *that = const_cast<KLineEditView *>(this);
-        if(!that->hasSelectedText()) {
+        if (!that->hasSelectedText()) {
             return false;
         }
         
         int start = selectionStart(), end = start + selectedText().length();
-        if(start >= d->squeezedStart+3) {
+        if (start >= d->squeezedStart+3) {
             start = start - 3 - d->squeezedStart + d->squeezedEnd;
-        } else if(start > d->squeezedStart) {
+        } else if (start > d->squeezedStart) {
             start = d->squeezedStart;
         }
         
-        if(end >= d->squeezedStart+3) {
+        if (end >= d->squeezedStart+3) {
             end = end - 3 - d->squeezedStart + d->squeezedEnd;
-        } else if(end > d->squeezedStart) {
+        } else if (end > d->squeezedStart) {
             end = d->squeezedEnd;
         }
         
-        if(start == end) {
+        if (start == end) {
             return false;
         }
         QString t = d->squeezedText;
@@ -712,7 +712,7 @@ bool KLineEditView::copySqueezedText(bool clipboard) const
 void KLineEditView::resizeEvent(QResizeEvent * ev)
 {
     updateSideWidgetLocations();
-    if(!d->squeezedText.isEmpty()) {
+    if (!d->squeezedText.isEmpty()) {
         setSqueezedText();
     }
 
@@ -725,66 +725,66 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
     kDebug() << "key" << e->text() << KStandardShortcut::shortcut(KStandardShortcut::PrevCompletion).primary().toString();
     const int key = e->key() | e->modifiers();
 
-    if(KStandardShortcut::copy().contains(key)) {
+    if (KStandardShortcut::copy().contains(key)) {
         copy();
         return;
-    } else if(KStandardShortcut::paste().contains(key)) {
+    } else if (KStandardShortcut::paste().contains(key)) {
         // TODO:
         // we should restore the original text (not autocompleted), otherwise the paste
         // will get into troubles Bug: 134691
-        if(!isReadOnly()) {
+        if (!isReadOnly()) {
             paste();
         }
         return;
-    } else if(KStandardShortcut::pasteSelection().contains(key)) {
+    } else if (KStandardShortcut::pasteSelection().contains(key)) {
         QString text = QApplication::clipboard()->text(QClipboard::Selection);
         insert(text);
         deselect();
         return;
-    } else if(KStandardShortcut::cut().contains(key)) {
-        if(!isReadOnly()) {
+    } else if (KStandardShortcut::cut().contains(key)) {
+        if (!isReadOnly()) {
             cut();
         }
         return;
-    } else if(KStandardShortcut::undo().contains(key)) {
-        if(!isReadOnly()) {
+    } else if (KStandardShortcut::undo().contains(key)) {
+        if (!isReadOnly()) {
             undo();
         }
         return;
-    } else if(KStandardShortcut::redo().contains(key)) {
-        if(!isReadOnly()) {
+    } else if (KStandardShortcut::redo().contains(key)) {
+        if (!isReadOnly()) {
             redo();
         }
         return;
-    } else if(KStandardShortcut::deleteWordBack().contains(key)) {
+    } else if (KStandardShortcut::deleteWordBack().contains(key)) {
         cursorWordBackward(true);
-        if(hasSelectedText()) {
+        if (hasSelectedText()) {
             del();
         }
 
         e->accept();
         return;
-    } else if(KStandardShortcut::deleteWordForward().contains(key)) {
+    } else if (KStandardShortcut::deleteWordForward().contains(key)) {
         // Workaround for QT bug where
         cursorWordForward(true);
-        if(hasSelectedText())
+        if (hasSelectedText())
             del();
 
         e->accept();
         return;
-    } else if(KStandardShortcut::backwardWord().contains(key)) {
+    } else if (KStandardShortcut::backwardWord().contains(key)) {
       cursorWordBackward(false);
       e->accept();
       return;
-    } else if(KStandardShortcut::forwardWord().contains(key)) {
+    } else if (KStandardShortcut::forwardWord().contains(key)) {
       cursorWordForward(false);
       e->accept();
       return;
-    } else if(KStandardShortcut::beginningOfLine().contains(key)) {
+    } else if (KStandardShortcut::beginningOfLine().contains(key)) {
       home(false);
       e->accept();
       return;
-    } else if(KStandardShortcut::endOfLine().contains(key)) {
+    } else if (KStandardShortcut::endOfLine().contains(key)) {
       end(false);
       e->accept();
       return;
@@ -792,7 +792,7 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
 
     // Filter key-events if EchoMode is normal and
     // completion mode is not set to CompletionNone
-    if(echoMode() == QLineEdit::Normal &&
+    if (echoMode() == QLineEdit::Normal &&
         completionMode() != KGlobalSettings::CompletionNone) {
         const KeyBindingMap keys = getKeyBindings();
         const KGlobalSettings::Completion mode = completionMode();
@@ -800,10 +800,10 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
             e->modifiers() == Qt::ShiftModifier ||
             e->modifiers() == Qt::KeypadModifier);
 
-        if((mode == KGlobalSettings::CompletionAuto ||
+        if ((mode == KGlobalSettings::CompletionAuto ||
             mode == KGlobalSettings::CompletionPopupAuto ||
             mode == KGlobalSettings::CompletionMan) && noModifier) {
-            if(!d->userSelection && hasSelectedText() &&
+            if (!d->userSelection && hasSelectedText() &&
                 (e->key() == Qt::Key_Right || e->key() == Qt::Key_Left) &&
                 e->modifiers() == Qt::NoButton) {
                 const QString old_txt = text();
@@ -817,7 +817,7 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
 
                 // keep cursor at cPosition
                 setSelection(old_txt.length(), cPosition - old_txt.length());
-                if(e->key() == Qt::Key_Right && cPosition > start) {
+                if (e->key() == Qt::Key_Right && cPosition > start) {
                     //the user explicitly accepted the autocompletion
                     d->_k_updateUserText(text());
                 }
@@ -826,8 +826,8 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
                 return;
             }
 
-            if(e->key() == Qt::Key_Escape) {
-                if(hasSelectedText() && !d->userSelection) {
+            if (e->key() == Qt::Key_Escape) {
+                if (hasSelectedText() && !d->userSelection) {
                     del();
                     setUserSelection(true);
                 }
@@ -839,10 +839,10 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
             }
         }
 
-        if((mode == KGlobalSettings::CompletionAuto ||
+        if ((mode == KGlobalSettings::CompletionAuto ||
             mode == KGlobalSettings::CompletionMan) && noModifier) {
             const QString keycode = e->text();
-            if(!keycode.isEmpty() && (keycode.unicode()->isPrint() ||
+            if (!keycode.isEmpty() && (keycode.unicode()->isPrint() ||
                 e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)) {
                 const bool hasUserSelection=d->userSelection;
                 const bool hadSelection=hasSelectedText();
@@ -856,7 +856,7 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
                 // autocompletion, so we want to process events at the cursor position
                 // as if there was no selection. After processing the key event, we
                 // can set the new autocompletion again.
-                if(hadSelection && !hasUserSelection && start>cPos) {
+                if (hadSelection && !hasUserSelection && start>cPos) {
                     del();
                     setCursorPosition(cPos);
                     cursorNotAtEnd=true;
@@ -868,26 +868,26 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
 
                 QString txt = text();
                 int len = txt.length();
-                if(!hasSelectedText() && len /*&& cursorPosition() == len */) {
-                    if(e->key() == Qt::Key_Backspace) {
-                        if(hadSelection && !hasUserSelection && !cursorNotAtEnd) {
+                if (!hasSelectedText() && len /*&& cursorPosition() == len */) {
+                    if (e->key() == Qt::Key_Backspace) {
+                        if (hadSelection && !hasUserSelection && !cursorNotAtEnd) {
                             backspace();
                             txt = text();
                             len = txt.length();
                         }
 
-                        if(!d->backspacePerformsCompletion || !len) {
+                        if (!d->backspacePerformsCompletion || !len) {
                             d->autoSuggest = false;
                         }
                     }
 
-                    if(e->key() == Qt::Key_Delete) {
+                    if (e->key() == Qt::Key_Delete) {
                         d->autoSuggest=false;
                     }
 
                     doCompletion(txt);
 
-                    if((e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)) {
+                    if ((e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)) {
                         d->autoSuggest=true;
                     }
 
@@ -895,7 +895,7 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
                 }
                 return;
             }
-        } else if((mode == KGlobalSettings::CompletionPopup ||
+        } else if ((mode == KGlobalSettings::CompletionPopup ||
             mode == KGlobalSettings::CompletionPopupAuto) &&
             noModifier && !e->text().isEmpty()) {
             const QString old_txt = text();
@@ -911,7 +911,7 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
             // autocompletion, so we want to process events at the cursor position
             // as if there was no selection. After processing the key event, we
             // can set the new autocompletion again.
-            if(hadSelection && !hasUserSelection && start>cPos &&
+            if (hadSelection && !hasUserSelection && start>cPos &&
                 ((!keycode.isEmpty() && keycode.unicode()->isPrint()) ||
                 e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)) {
                 del();
@@ -925,68 +925,68 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
             QLineEdit::keyPressEvent(e);
             d->disableRestoreSelection = false;
 
-            if((selectedLength != selectedText().length()) && !hasUserSelection) {
+            if ((selectedLength != selectedText().length()) && !hasUserSelection) {
                 slotRestoreSelectionColors(); // and set userSelection to true
             }
 
             QString txt = text();
             int len = txt.length();
-            if((txt != old_txt || txt != e->text()) && len/* && (cursorPosition() == len || force)*/ &&
+            if ((txt != old_txt || txt != e->text()) && len/* && (cursorPosition() == len || force)*/ &&
                 ((!keycode.isEmpty() && keycode.unicode()->isPrint()) ||
                 e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)) {
-                if(e->key() == Qt::Key_Backspace) {
-                    if(hadSelection && !hasUserSelection && !cursorNotAtEnd) {
+                if (e->key() == Qt::Key_Backspace) {
+                    if (hadSelection && !hasUserSelection && !cursorNotAtEnd) {
                         backspace();
                         txt = text();
                         len = txt.length();
                     }
 
-                    if(!d->backspacePerformsCompletion) {
+                    if (!d->backspacePerformsCompletion) {
                         d->autoSuggest = false;
                     }
                 }
 
-                if(e->key() == Qt::Key_Delete) {
+                if (e->key() == Qt::Key_Delete) {
                     d->autoSuggest=false;
                 }
 
-                if(d->completionView) {
+                if (d->completionView) {
                     kDebug() << "setCancelledText" << txt;
                     d->completionView->setCancelledText(txt);
                 }
 
                 doCompletion(txt);
 
-                if((e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete) &&
+                if ((e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete) &&
                     mode == KGlobalSettings::CompletionPopupAuto) {
                     d->autoSuggest=true;
                 }
 
                 e->accept();
-            } else if(!len && d->completionView && d->completionView->isVisible()) {
+            } else if (!len && d->completionView && d->completionView->isVisible()) {
                 d->completionView->hide();
             }
 
             return;
-        } else if(mode == KGlobalSettings::CompletionShell) {
+        } else if (mode == KGlobalSettings::CompletionShell) {
             // Handles completion.
             KShortcut cut;
-            if(keys[TextCompletion].isEmpty()) {
+            if (keys[TextCompletion].isEmpty()) {
                 cut = KStandardShortcut::shortcut(KStandardShortcut::TextCompletion);
             } else {
                 cut = keys[TextCompletion];
             }
 
-            if(cut.contains(key)) {
+            if (cut.contains(key)) {
                 // Emit completion if the completion mode is CompletionShell
                 // and the cursor is at the end of the string.
                 const QString txt = text();
                 const int len = txt.length();
-                if(cursorPosition() == len && len != 0) {
+                if (cursorPosition() == len && len != 0) {
                     doCompletion(txt);
                     return;
                 }
-            } else if(d->completionView) {
+            } else if (d->completionView) {
                 d->completionView->hide();
             }
         }
@@ -996,14 +996,14 @@ void KLineEditView::keyPressEvent(QKeyEvent *e)
     // Let QLineEdit handle any other keys events.
     QLineEdit::keyPressEvent (e);
 
-    if(selectedLength != selectedText().length()) {
+    if (selectedLength != selectedText().length()) {
         slotRestoreSelectionColors(); // and set userSelection to true
     }
 }
 
 void KLineEditView::mouseDoubleClickEvent(QMouseEvent* e)
 {
-    if(e->button() == Qt::LeftButton) {
+    if (e->button() == Qt::LeftButton) {
         d->possibleTripleClick=true;
         QTimer::singleShot(QApplication::doubleClickInterval(),this,
             SLOT(tripleClickTimeout()));
@@ -1018,12 +1018,12 @@ void KLineEditView::mousePressEvent(QMouseEvent* e)
         d->clearButton) {
         d->clickInClear = d->clearButton->underMouse();
 
-        if(d->clickInClear) {
+        if (d->clickInClear) {
             d->possibleTripleClick = false;
         }
     }
 
-    if(e->button() == Qt::LeftButton && d->possibleTripleClick) {
+    if (e->button() == Qt::LeftButton && d->possibleTripleClick) {
         selectAll();
         e->accept();
         return;
@@ -1034,10 +1034,10 @@ void KLineEditView::mousePressEvent(QMouseEvent* e)
 
 void KLineEditView::mouseReleaseEvent(QMouseEvent* e)
 {
-    if(d->clickInClear) {
-        if(d->clearButton->underMouse()) {
+    if (d->clickInClear) {
+        if (d->clearButton->underMouse()) {
             QString newText;
-            if(e->button() == Qt::MidButton) {
+            if (e->button() == Qt::MidButton) {
                 newText = QApplication::clipboard()->text(QClipboard::Selection);
                 setText(newText);
             } else {
@@ -1055,8 +1055,8 @@ void KLineEditView::mouseReleaseEvent(QMouseEvent* e)
 
     QLineEdit::mouseReleaseEvent(e);
 
-   if(QApplication::clipboard()->supportsSelection()) {
-       if(e->button() == Qt::LeftButton) {
+   if (QApplication::clipboard()->supportsSelection()) {
+       if (e->button() == Qt::LeftButton) {
             // Fix copying of squeezed text if needed
             copySqueezedText(false);
        }
@@ -1072,7 +1072,7 @@ QMenu* KLineEditView::createStandardContextMenu()
 {
     QMenu *popup = QLineEdit::createStandardContextMenu();
 
-    if(!isReadOnly()) {
+    if (!isReadOnly()) {
         // FIXME: This code depends on Qt's action ordering.
         const QList<QAction *> actionList = popup->actions();
         enum { UndoAct, RedoAct, Separator1, CutAct, CopyAct, PasteAct, DeleteAct, ClearAct,
@@ -1080,12 +1080,12 @@ QMenu* KLineEditView::createStandardContextMenu()
         QAction *separatorAction = 0L;
         // separator we want is right after Delete right now.
         const int idx = actionList.indexOf(actionList[DeleteAct]) + 1;
-        if(idx < actionList.count()) {
+        if (idx < actionList.count()) {
             separatorAction = actionList.at(idx);
         }
-        if(separatorAction) {
+        if (separatorAction) {
             KAction *clearAllAction = KStandardAction::clear(this, SLOT(clear()), this) ;
-            if(text().isEmpty()) {
+            if (text().isEmpty()) {
                 clearAllAction->setEnabled(false);
             }
             popup->insertAction(separatorAction, clearAllAction);
@@ -1097,7 +1097,7 @@ QMenu* KLineEditView::createStandardContextMenu()
     // If a completion object is present and the input
     // widget is not read-only, show the Text Completion
     // menu item.
-    if(d->completionView && !isReadOnly() && KAuthorized::authorize("lineedit_text_completion")) {
+    if (d->completionView && !isReadOnly() && KAuthorized::authorize("lineedit_text_completion")) {
         QMenu *subMenu = popup->addMenu(KIcon("text-completion"), i18nc("@title:menu", "Text Completion"));
         connect(subMenu, SIGNAL(triggered (QAction*)),
                  this, SLOT(completionMenuActivated(QAction*)));
@@ -1138,7 +1138,7 @@ QMenu* KLineEditView::createStandardContextMenu()
         d->popupAutoCompletionAction->setChecked(mode == KGlobalSettings::CompletionPopupAuto);
 
         const KGlobalSettings::Completion defaultMode = KGlobalSettings::completionMode();
-        if(mode != defaultMode && !d->disableCompletionMap[ defaultMode ]) {
+        if (mode != defaultMode && !d->disableCompletionMap[ defaultMode ]) {
             subMenu->addSeparator();
             d->defaultAction = subMenu->addAction(i18nc("@item:inmenu Text Completion", "Default"));
         }
@@ -1149,7 +1149,7 @@ QMenu* KLineEditView::createStandardContextMenu()
 
 void KLineEditView::contextMenuEvent(QContextMenuEvent *e)
 {
-    if(QLineEdit::contextMenuPolicy() != Qt::DefaultContextMenu) {
+    if (QLineEdit::contextMenuPolicy() != Qt::DefaultContextMenu) {
       return;
     }
     QMenu *popup = createStandardContextMenu();
@@ -1167,26 +1167,26 @@ void KLineEditView::completionMenuActivated(QAction  *act)
 {
     KGlobalSettings::Completion oldMode = completionMode();
 
-    if(act == d->noCompletionAction) {
+    if (act == d->noCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionNone);
-    } else if(act ==  d->shellCompletionAction) {
+    } else if (act ==  d->shellCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionShell);
-    } else if(act == d->autoCompletionAction) {
+    } else if (act == d->autoCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionAuto);
-    } else if(act == d->popupCompletionAction) {
+    } else if (act == d->popupCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionPopup);
-    } else if(act == d->shortAutoCompletionAction) {
+    } else if (act == d->shortAutoCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionMan);
-    } else if(act == d->popupAutoCompletionAction) {
+    } else if (act == d->popupAutoCompletionAction) {
         setCompletionMode(KGlobalSettings::CompletionPopupAuto);
-    } else if(act == d->defaultAction) {
+    } else if (act == d->defaultAction) {
         setCompletionMode(KGlobalSettings::completionMode());
     } else {
         return;
     }
 
-    if(oldMode != completionMode()) {
-        if((oldMode == KGlobalSettings::CompletionPopup ||
+    if (oldMode != completionMode()) {
+        if ((oldMode == KGlobalSettings::CompletionPopup ||
             oldMode == KGlobalSettings::CompletionPopupAuto) &&
             d->completionView && d->completionView->isVisible()) {
             d->completionView->hide();
@@ -1197,9 +1197,9 @@ void KLineEditView::completionMenuActivated(QAction  *act)
 
 void KLineEditView::dropEvent(QDropEvent *e)
 {
-    if(d->handleURLDrops) {
+    if (d->handleURLDrops) {
         const KUrl::List urlList = KUrl::List::fromMimeData(e->mimeData());
-        if(!urlList.isEmpty()) {
+        if (!urlList.isEmpty()) {
             // Let's replace the current text with the dropped URL(s), rather than appending.
             // Makes more sense in general (#188129), e.g. konq location bar and kurlrequester
             // can only hold one url anyway. OK this code supports multiple urls being dropped,
@@ -1213,7 +1213,7 @@ void KLineEditView::dropEvent(QDropEvent *e)
             //QString dropText = text();
             KUrl::List::ConstIterator it;
             for(it = urlList.begin() ; it != urlList.end() ; ++it) {
-                if(!dropText.isEmpty()) {
+                if (!dropText.isEmpty()) {
                     dropText+=' ';
                 }
 
@@ -1233,16 +1233,16 @@ void KLineEditView::dropEvent(QDropEvent *e)
 bool KLineEditView::event(QEvent* ev)
 {
 //     KCursor::autoHideEventFilter(this, ev);
-    if(ev->type() == QEvent::ShortcutOverride) {
+    if (ev->type() == QEvent::ShortcutOverride) {
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
-        if(d->overrideShortcut(e)) {
+        if (d->overrideShortcut(e)) {
             ev->accept();
         }
-    } else if(ev->type() == QEvent::KeyPress) {
+    } else if (ev->type() == QEvent::KeyPress) {
         // Hmm -- all this could be done in keyPressEvent too...
         
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
-        if(e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+        if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
             kDebug() << "enter";
             const bool trap = d->completionView && d->completionView->isVisible();
 
@@ -1251,35 +1251,35 @@ bool KLineEditView::event(QEvent* ev)
                                        e->modifiers() == Qt::KeypadModifier));
 
             // Qt will emit returnPressed() itself if we return false
-            if(stopEvent) {
+            if (stopEvent) {
                 emit QLineEdit::returnPressed();
                 e->accept();
             }
 
             emit returnPressed(displayText());
 
-            if(trap) {
+            if (trap) {
                 d->completionView->hide();
                 deselect();
                 setCursorPosition(text().length());
             }
 
             // Eat the event if the user asked for it, or if a completionview was visible
-            if(stopEvent) {
+            if (stopEvent) {
                 return true;
             }
         }
-    } else if(completionMode() != KGlobalSettings::CompletionNone &&
+    } else if (completionMode() != KGlobalSettings::CompletionNone &&
         ev->type() == QEvent::KeyRelease) {
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
         // handle rotation
         // Handles previous match
-        if(e->key() == Qt::Key_Up) {
+        if (e->key() == Qt::Key_Up) {
             kDebug() << "PrevCompletionMatch";
-            if(emitSignals()) {
+            if (emitSignals()) {
                 emit textRotation(KCompletionBase::PrevCompletionMatch);
             }
-            if(handleSignals()) {
+            if (handleSignals()) {
                 kDebug() << "rotateText(KCompletionBase::PrevCompletionMatch);";
                 rotateText(KCompletionBase::PrevCompletionMatch);
             }
@@ -1287,18 +1287,18 @@ bool KLineEditView::event(QEvent* ev)
         }
 
         // Handles next match
-        if(e->key() == Qt::Key_Down) {
+        if (e->key() == Qt::Key_Down) {
             kDebug() << "NextCompletionMatch";
-            if(emitSignals()) {
+            if (emitSignals()) {
                 emit textRotation(KCompletionBase::NextCompletionMatch);
             }
-            if(handleSignals()) {
+            if (handleSignals()) {
                 kDebug() << "rotateText(KCompletionBase::NextCompletionMatch);";
                 rotateText(KCompletionBase::NextCompletionMatch);
             }
             return true;
         }
-    } else if(ev->type() == QEvent::LayoutDirectionChange) {
+    } else if (ev->type() == QEvent::LayoutDirectionChange) {
         if (isRightToLeft()) {
             d->m_leftLayout->setDirection(QBoxLayout::RightToLeft);
             d->m_rightLayout->setDirection(QBoxLayout::RightToLeft);
@@ -1338,11 +1338,11 @@ void KLineEditView::setUrl(const KUrl& url)
 
 void KLineEditView::userCancelled(const QString & cancelText)
 {
-    if(completionMode() != KGlobalSettings::CompletionPopupAuto) {
+    if (completionMode() != KGlobalSettings::CompletionPopupAuto) {
         // TODO: this sets modified==false. But maybe it was true before...
         setText(cancelText);
-    } else if(hasSelectedText()) {
-        if(d->userSelection) {
+    } else if (hasSelectedText()) {
+        if (d->userSelection) {
             deselect();
         } else {
             d->autoSuggest=false;
@@ -1362,75 +1362,75 @@ bool KLineEditView::Private::overrideShortcut(const QKeyEvent* e)
     const int key = e->key() | e->modifiers();
     const KLineEditView::KeyBindingMap keys = q->getKeyBindings();
 
-    if(keys[KLineEditView::TextCompletion].isEmpty()) {
+    if (keys[KLineEditView::TextCompletion].isEmpty()) {
         scKey = KStandardShortcut::shortcut(KStandardShortcut::TextCompletion);
     } else {
         scKey = keys[KLineEditView::TextCompletion];
     }
     
-    if(scKey.contains(key)) {
+    if (scKey.contains(key)) {
         return true;
     }
 
-    if(keys[KLineEditView::NextCompletionMatch].isEmpty()) {
+    if (keys[KLineEditView::NextCompletionMatch].isEmpty()) {
         scKey = KStandardShortcut::shortcut(KStandardShortcut::NextCompletion);
     } else {
         scKey = keys[KLineEditView::NextCompletionMatch];
     }
 
-    if(scKey.contains(key)) {
+    if (scKey.contains(key)) {
         return true;
     }
 
-    if(keys[KLineEditView::PrevCompletionMatch].isEmpty()) {
+    if (keys[KLineEditView::PrevCompletionMatch].isEmpty()) {
         scKey = KStandardShortcut::shortcut(KStandardShortcut::PrevCompletion);
     } else {
         scKey = keys[KLineEditView::PrevCompletionMatch];
     }
 
-    if(scKey.contains(key)) {
+    if (scKey.contains(key)) {
         return true;
     }
 
     // Override all the text manupilation accelerators...
-    if(KStandardShortcut::copy().contains(key)) {
+    if (KStandardShortcut::copy().contains(key)) {
         return true;
-    } else if(KStandardShortcut::paste().contains(key)) {
+    } else if (KStandardShortcut::paste().contains(key)) {
         return true;
-    } else if(KStandardShortcut::cut().contains(key)) {
+    } else if (KStandardShortcut::cut().contains(key)) {
         return true;
-    } else if(KStandardShortcut::undo().contains(key)) {
+    } else if (KStandardShortcut::undo().contains(key)) {
         return true;
-    } else if(KStandardShortcut::redo().contains(key)) {
+    } else if (KStandardShortcut::redo().contains(key)) {
         return true;
-    } else if(KStandardShortcut::deleteWordBack().contains(key)) {
+    } else if (KStandardShortcut::deleteWordBack().contains(key)) {
         return true;
-    } else if(KStandardShortcut::deleteWordForward().contains(key)) {
+    } else if (KStandardShortcut::deleteWordForward().contains(key)) {
         return true;
-    } else if(KStandardShortcut::forwardWord().contains(key)) {
+    } else if (KStandardShortcut::forwardWord().contains(key)) {
         return true;
-    } else if(KStandardShortcut::backwardWord().contains(key)) {
+    } else if (KStandardShortcut::backwardWord().contains(key)) {
         return true;
-    } else if(KStandardShortcut::beginningOfLine().contains(key)) {
+    } else if (KStandardShortcut::beginningOfLine().contains(key)) {
         return true;
-    } else if(KStandardShortcut::endOfLine().contains(key)) {
+    } else if (KStandardShortcut::endOfLine().contains(key)) {
         return true;
     }
     // Shortcut overrides for shortcuts that QLineEdit handles
     // but doesn't dare force as "stronger than kaction shortcuts"...
-    else if(e->matches(QKeySequence::SelectAll)) {
+    else if (e->matches(QKeySequence::SelectAll)) {
         return true;
     }
 #ifdef Q_WS_X11
-    else if(key == Qt::CTRL + Qt::Key_E || key == Qt::CTRL + Qt::Key_U) {
+    else if (key == Qt::CTRL + Qt::Key_E || key == Qt::CTRL + Qt::Key_U) {
         return true;
     }
 #endif
 
-    if(completionView && completionView->model() && completionView->isVisible()) {
+    if (completionView && completionView->model() && completionView->isVisible()) {
         const int key = e->key();
         const Qt::KeyboardModifiers modifiers = e->modifiers();
-        if((key == Qt::Key_Backtab || key == Qt::Key_Tab) &&
+        if ((key == Qt::Key_Backtab || key == Qt::Key_Tab) &&
             (modifiers == Qt::NoModifier || (modifiers & Qt::ShiftModifier))) {
             return true;
         }
@@ -1442,7 +1442,7 @@ bool KLineEditView::Private::overrideShortcut(const QKeyEvent* e)
 void KLineEditView::updateCompletedItems(bool autoSuggest)
 {
     QString txt;
-    if(d->completionView && d->completionView->isVisible()) {
+    if (d->completionView && d->completionView->isVisible()) {
         // The popup is visible already - do the matching on the initial string,
         // not on the currently selected one.
         txt = d->completionView->cancelledText();
@@ -1450,8 +1450,8 @@ void KLineEditView::updateCompletedItems(bool autoSuggest)
         txt = text();
     }
 
-    if(d->completionView && d->completionView->model() && d->completionView->model()->hasChildren()) {
-        if(d->completionView->isVisible()) {
+    if (d->completionView && d->completionView->model() && d->completionView->model()->hasChildren()) {
+        if (d->completionView->isVisible()) {
             QModelIndex currentIndex = d->completionView->currentIndex();
             QModelIndex matchedIndex;
 
@@ -1459,7 +1459,7 @@ void KLineEditView::updateCompletedItems(bool autoSuggest)
             QString currentSelection;
 
             d->completionView->sizeAndPosition();
-            if(currentIndex.isValid()) {
+            if (currentIndex.isValid()) {
                 QItemSelectionModel* selModel = d->completionView->selectionModel();
                 wasSelected = selModel->hasSelection() &&
                     selModel->selectedIndexes().first() == currentIndex;
@@ -1470,38 +1470,38 @@ void KLineEditView::updateCompletedItems(bool autoSuggest)
             // because it's not possible otherwise to have no selected item. In such case make
             // always the first item current and unselected, so that the current item doesn't jump.
             QModelIndex matchedItem;
-            if(!wasSelected) {
+            if (!wasSelected) {
                 matchedItem = d->completionView->model()->index(0,0);
             }
             
-            if(matchedItem.isValid()) {
+            if (matchedItem.isValid()) {
                 const bool blocked = d->completionView->blockSignals(true);
                 d->completionView->selectionModel()->select(matchedIndex, QItemSelectionModel::SelectCurrent);
                 d->completionView->blockSignals(blocked);
             }
         } else { // completion box not visible yet -> show it
-            if(!txt.isEmpty()) {
+            if (!txt.isEmpty()) {
                 kDebug() << "setCancelledText" << txt;
                 d->completionView->setCancelledText(txt);
             }
             d->completionView->popup();
         }
 
-        if(d->autoSuggest && autoSuggest) {
+        if (d->autoSuggest && autoSuggest) {
             const QString tempString = d->completionView->model()->index(0,0).data().toString();
             const int index = tempString.indexOf(txt);
             const QString newText = tempString.mid(index);
             setUserSelection(false);
             setCompletedText(newText, true);
         }
-    } else if(d->completionView && d->completionView->isVisible()) {
+    } else if (d->completionView && d->completionView->isVisible()) {
         d->completionView->hide();
     }
 }
 
 KCompletionView * KLineEditView::completionView(bool create)
 {
-    if(create && !d->completionView) {
+    if (create && !d->completionView) {
         d->completionView = new KCompletionView(this);
         d->completionView->setObjectName("completion box");
         d->completionView->setFont(font());
@@ -1524,13 +1524,13 @@ void KLineEditView::setUserSelection(bool userSelection)
     //if !d->userSelection && userSelection we are accepting a completion,
     //so trigger an update
 
-    if(!d->userSelection && userSelection) {
+    if (!d->userSelection && userSelection) {
         d->_k_updateUserText(text());
     }
 
     QPalette p = palette();
 
-    if(userSelection) {
+    if (userSelection) {
         p.setColor(QPalette::Highlight, d->previousHighlightColor);
         p.setColor(QPalette::HighlightedText, d->previousHighlightedTextColor);
     } else {
@@ -1546,7 +1546,7 @@ void KLineEditView::setUserSelection(bool userSelection)
 
 void KLineEditView::slotRestoreSelectionColors()
 {
-    if(d->disableRestoreSelection) {
+    if (d->disableRestoreSelection) {
         return;
     }
 
@@ -1560,7 +1560,7 @@ void KLineEditView::clear()
 
 void KLineEditView::setTextWorkaround(const QString& text)
 {
-    if(!text.isEmpty()) {
+    if (!text.isEmpty()) {
         setText(text);
         end(false); // force cursor at end
     }
@@ -1568,7 +1568,7 @@ void KLineEditView::setTextWorkaround(const QString& text)
 
 QString KLineEditView::originalText() const
 {
-    if(d->enableSqueezedText && isReadOnly()) {
+    if (d->enableSqueezedText && isReadOnly()) {
         return d->squeezedText;
     }
 
@@ -1587,7 +1587,7 @@ bool KLineEditView::autoSuggest() const
 
 void KLineEditView::paintEvent(QPaintEvent *ev)
 {
-    if(echoMode() == Password && d->threeStars) {
+    if (echoMode() == Password && d->threeStars) {
         blockSignals(true);
         const QString oldText = text();
         const bool isModifiedState = isModified(); // save modified state because setText resets it
@@ -1601,7 +1601,7 @@ void KLineEditView::paintEvent(QPaintEvent *ev)
     }
 
 //     kDebug() << d->enableClickMsg << d->drawClickMsg << !hasFocus() << text().isEmpty();
-    if(d->enableClickMsg && d->drawClickMsg && !hasFocus() && text().isEmpty()) {
+    if (d->enableClickMsg && d->drawClickMsg && !hasFocus() && text().isEmpty()) {
         QPainter p(this);
         QFont f = font();
         f.setItalic(d->italicizePlaceholder);
@@ -1632,7 +1632,7 @@ void KLineEditView::paintEvent(QPaintEvent *ev)
 void KLineEditView::focusInEvent(QFocusEvent *ev)
 {
     kDebug();
-    if(d->enableClickMsg && d->drawClickMsg) {
+    if (d->enableClickMsg && d->drawClickMsg) {
         d->drawClickMsg = false;
         update();
     }
@@ -1641,7 +1641,7 @@ void KLineEditView::focusInEvent(QFocusEvent *ev)
 
 void KLineEditView::focusOutEvent(QFocusEvent *ev)
 {
-    if(d->enableClickMsg && text().isEmpty()) {
+    if (d->enableClickMsg && text().isEmpty()) {
         d->drawClickMsg = true;
         update();
     }
@@ -1669,10 +1669,10 @@ bool KLineEditView::isContextMenuEnabled() const
 
 void KLineEditView::setPasswordMode(bool b)
 {
-    if(b) {
+    if (b) {
         KConfigGroup cg(KGlobal::config(), "Passwords");
         const QString val = cg.readEntry("EchoMode", "OneStar");
-        if(val == "NoEcho") {
+        if (val == "NoEcho") {
             setEchoMode(NoEcho);
         } else {
             d->threeStars = (val == "ThreeStars");
@@ -1691,11 +1691,11 @@ bool KLineEditView::passwordMode() const
 void KLineEditView::doCompletion(const QString& txt)
 {
     kDebug();
-    if(emitSignals()) {
+    if (emitSignals()) {
         emit completion(txt); // emit when requested...
     }
     d->completionRunning = true;
-    if(handleSignals()) {
+    if (handleSignals()) {
         makeCompletion(txt);  // handle when requested...
     }
     d->completionRunning = false;

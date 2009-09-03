@@ -57,7 +57,7 @@ public:
      * The parent widget is used to give the focus back when pressing the
      * up-button on the very first item.
      */
-    explicit KCompletionView(QWidget* parent = 0);
+    explicit KCompletionView(QWidget *parent = 0);
 
     /**
      * Destroys the box
@@ -109,10 +109,10 @@ public Q_SLOTS:
      * If the canceled text is not set through this function, the
      * userCancelled signal will not be emitted.
      *
-     * @see userCancelled(const QString&)
+     * @see userCancelled(const QString &)
      * @param text  the text to be emitted if the user cancels this box
      */
-    void setCancelledText(const QString& text);
+    void setCancelledText(const QString &text);
 
     /**
      * @returns the text set via setCancelledText() or QString().
@@ -159,7 +159,7 @@ Q_SIGNALS:
      * Emitted whenever the user chooses to ignore the available
      * selections and close the this box.
      */
-    void userCancelled(const QString& text);
+    void userCancelled(const QString &text);
 
 protected:
     /**
@@ -179,7 +179,7 @@ protected:
      * Reimplemented from KListWidget to get events from the viewport (to hide
      * this widget on mouse-click, Escape-presses, etc.
      */
-    virtual bool eventFilter(QObject* o, QEvent* e);
+    virtual bool eventFilter(QObject *o, QEvent *e);
 
     /**
      * The preferred global coordinate at which the completion box's top left corner
@@ -192,7 +192,7 @@ protected Q_SLOTS:
      * Called when an item was activated. Emits
      * activated() with the item.
      */
-    virtual void slotActivated(const QModelIndex& index);
+    virtual void slotActivated(const QModelIndex &index);
 
 private Q_SLOTS:
     void canceled();

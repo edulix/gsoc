@@ -44,12 +44,12 @@ Q_SIGNALS:
     /**
      * Is emitted when drop event occurs.
      */
-    void mimeDataDropped(QAction* action, QDropEvent* event);
+    void mimeDataDropped(QAction *action, QDropEvent *event);
 
 protected:
-    virtual void dragEnterEvent(QDragEnterEvent* event);
-    virtual void dragMoveEvent(QDragMoveEvent* event);
-    virtual void dropEvent(QDropEvent* event);    
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dragMoveEvent(QDragMoveEvent *event);
+    virtual void dropEvent(QDropEvent *event);    
    
 private:
     KBreadCrumbNavigator* m_breadCrumbNavigator;

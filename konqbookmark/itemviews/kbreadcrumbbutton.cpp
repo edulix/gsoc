@@ -35,7 +35,7 @@
 #include <QStyleOptionFocusRect>
 #include <QModelIndexList>
 
-KBreadCrumbButton::KBreadCrumbButton(KBreadCrumbNavigator* parent) :
+KBreadCrumbButton::KBreadCrumbButton(KBreadCrumbNavigator *parent) :
     QPushButton(parent),
     m_displayHint(0),
     m_breadCrumbNavigator(parent)
@@ -50,7 +50,7 @@ KBreadCrumbButton::~KBreadCrumbButton()
 }
 
 void KBreadCrumbButton::setDisplayHintEnabled(DisplayHint hint,
-                                       bool enable)
+    bool enable)
 {
     if (enable) {
         m_displayHint = m_displayHint | hint;
@@ -65,21 +65,21 @@ bool KBreadCrumbButton::isDisplayHintEnabled(DisplayHint hint) const
     return (m_displayHint & hint) > 0;
 }
 
-void KBreadCrumbButton::enterEvent(QEvent* event)
+void KBreadCrumbButton::enterEvent(QEvent *event)
 {
     QPushButton::enterEvent(event);
     setDisplayHintEnabled(EnteredHint, true);
     update();
 }
 
-void KBreadCrumbButton::leaveEvent(QEvent* event)
+void KBreadCrumbButton::leaveEvent(QEvent *event)
 {
     QPushButton::leaveEvent(event);
     setDisplayHintEnabled(EnteredHint, false);
     update();
 }
 
-void KBreadCrumbButton::contextMenuEvent(QContextMenuEvent* event)
+void KBreadCrumbButton::contextMenuEvent(QContextMenuEvent *event)
 {
     Q_UNUSED(event);
 
@@ -87,15 +87,15 @@ void KBreadCrumbButton::contextMenuEvent(QContextMenuEvent* event)
 
     // provide 'Copy' action, which copies the current URL of
     // the URL navigator into the clipboard
-    QAction* copyAction = popup.addAction(KIcon("edit-copy"), i18n("Copy"));
+    QAction *copyAction = popup.addAction(KIcon("edit-copy"), i18n("Copy"));
 
     // provide 'Paste' action, which copies the current clipboard text
     // into the URL navigator
-    QAction* pasteAction = popup.addAction(KIcon("edit-paste"), i18n("Paste"));
-    QClipboard* clipboard = QApplication::clipboard();
+    QAction *pasteAction = popup.addAction(KIcon("edit-paste"), i18n("Paste"));
+    QClipboard *clipboard = QApplication::clipboard();
     pasteAction->setEnabled(!clipboard->text().isEmpty());
 
-    QAction* activatedAction = popup.exec(QCursor::pos());
+    QAction *activatedAction = popup.exec(QCursor::pos());
     if (activatedAction == copyAction) {
         QModelIndexList currentIndex;
         currentIndex.append(m_breadCrumbNavigator->currentIndex());
@@ -108,8 +108,8 @@ void KBreadCrumbButton::contextMenuEvent(QContextMenuEvent* event)
 void KBreadCrumbButton::drawHoverBackground(QPainter* painter)
 {
     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) ||
-                               isDisplayHintEnabled(DraggedHint) ||
-                               isDisplayHintEnabled(PopupActiveHint);
+        isDisplayHintEnabled(DraggedHint) ||
+        isDisplayHintEnabled(PopupActiveHint);
 
     QColor backgroundColor = isHighlighted ? palette().color(QPalette::Highlight) : Qt::transparent;
 
@@ -126,8 +126,8 @@ void KBreadCrumbButton::drawHoverBackground(QPainter* painter)
 QColor KBreadCrumbButton::foregroundColor() const
 {
     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) ||
-                               isDisplayHintEnabled(DraggedHint) ||
-                               isDisplayHintEnabled(PopupActiveHint);
+        isDisplayHintEnabled(DraggedHint) ||
+        isDisplayHintEnabled(PopupActiveHint);
 
     QColor foregroundColor = palette().color(foregroundRole());
 

@@ -34,7 +34,7 @@
 
 QPointer<KBreadCrumbNavigatorMenu> KBreadCrumbNavigatorButton::m_childItemsMenu;
 
-KBreadCrumbNavigatorButton::KBreadCrumbNavigatorButton(QModelIndex index, KBreadCrumbNavigator* parent) :
+KBreadCrumbNavigatorButton::KBreadCrumbNavigatorButton(QModelIndex index, KBreadCrumbNavigator *parent) :
     KBreadCrumbButton(parent),
     m_index(index),
     m_hoverArrow(false),
@@ -91,7 +91,7 @@ QSize KBreadCrumbNavigatorButton::sizeHint() const
     return QSize(width, KBreadCrumbButton::sizeHint().height());
 }
 
-void KBreadCrumbNavigatorButton::paintEvent(QPaintEvent* event)
+void KBreadCrumbNavigatorButton::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
 
@@ -188,7 +188,7 @@ void KBreadCrumbNavigatorButton::enterEvent(QEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::leaveEvent(QEvent* event)
+void KBreadCrumbNavigatorButton::leaveEvent(QEvent *event)
 {
     KBreadCrumbButton::leaveEvent(event);
     setToolTip(QString());
@@ -199,7 +199,7 @@ void KBreadCrumbNavigatorButton::leaveEvent(QEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::dropEvent(QDropEvent* event)
+void KBreadCrumbNavigatorButton::dropEvent(QDropEvent *event)
 {
     if (!m_index.isValid()) {
         return;
@@ -216,7 +216,7 @@ void KBreadCrumbNavigatorButton::dropEvent(QDropEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::dragEnterEvent(QDragEnterEvent* event)
+void KBreadCrumbNavigatorButton::dragEnterEvent(QDragEnterEvent *event)
 {
     bool match = breadCrumbNavigator()->haveCommonMimetypes(event->mimeData());
     if (match) {
@@ -227,7 +227,7 @@ void KBreadCrumbNavigatorButton::dragEnterEvent(QDragEnterEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
+void KBreadCrumbNavigatorButton::dragMoveEvent(QDragMoveEvent *event)
 {
     QRect rect = event->answerRect();
     if (isAboveArrow(rect.center().x())) {
@@ -247,6 +247,7 @@ void KBreadCrumbNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
         if (m_popupDelay->isActive()) {
             stopPopupDelay();
         }
+        
         delete m_childItemsMenu;
         m_childItemsMenu = 0;
         m_hoverArrow = false;
@@ -254,7 +255,7 @@ void KBreadCrumbNavigatorButton::dragMoveEvent(QDragMoveEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::dragLeaveEvent(QDragLeaveEvent* event)
+void KBreadCrumbNavigatorButton::dragLeaveEvent(QDragLeaveEvent *event)
 {
     KBreadCrumbButton::dragLeaveEvent(event);
 
@@ -263,7 +264,7 @@ void KBreadCrumbNavigatorButton::dragLeaveEvent(QDragLeaveEvent* event)
     update();
 }
 
-void KBreadCrumbNavigatorButton::mousePressEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mousePressEvent(QMouseEvent *event)
 {
     if (isAboveArrow(event->x()) && (event->button() == Qt::LeftButton)) {
         listChildItems();
@@ -273,7 +274,7 @@ void KBreadCrumbNavigatorButton::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::mouseReleaseEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mouseReleaseEvent(QMouseEvent *event)
 {
     if (!isAboveArrow(event->x()) || (event->button() != Qt::LeftButton)) {
         // the mouse is released above the text area
@@ -281,7 +282,7 @@ void KBreadCrumbNavigatorButton::mouseReleaseEvent(QMouseEvent* event)
     }
 }
 
-void KBreadCrumbNavigatorButton::mouseMoveEvent(QMouseEvent* event)
+void KBreadCrumbNavigatorButton::mouseMoveEvent(QMouseEvent *event)
 {
     KBreadCrumbButton::mouseMoveEvent(event);
 
@@ -317,7 +318,7 @@ void KBreadCrumbNavigatorButton::stopPopupDelay()
     m_popupDelay->stop();
 }
 
-void KBreadCrumbNavigatorButton::mimeDataDropped(QAction* action, QDropEvent* event)
+void KBreadCrumbNavigatorButton::mimeDataDropped(QAction *action, QDropEvent *event)
 {
     const int result = action->data().toInt();
     emit mimeDataDropped(m_childItems.at(result), event);
@@ -326,7 +327,7 @@ void KBreadCrumbNavigatorButton::mimeDataDropped(QAction* action, QDropEvent* ev
 /**
  * Helper function for listJobFinished
  */
-static bool naturalLessThan(const QModelIndex& indexLeft, const QModelIndex& indexRight)
+static bool naturalLessThan(const QModelIndex &indexLeft, const QModelIndex &indexRight)
 {
     QString s1 = indexLeft.data().toString();
     QString s2 = indexRight.data().toString();
@@ -334,13 +335,13 @@ static bool naturalLessThan(const QModelIndex& indexLeft, const QModelIndex& ind
 }
 
 /// Helper function for listChildItems()
-static QModelIndex getSelectedChildItem(const QModelIndex& navigatorIndex, const QModelIndex& buttonIndex)
+static QModelIndex getSelectedChildItem(const QModelIndex &navigatorIndex, const QModelIndex &buttonIndex)
 {
     QModelIndex index = navigatorIndex;
-    while(index.parent().isValid())
-    {
-        if(index.parent() == buttonIndex)
+    while(index.parent().isValid()) {
+        if(index.parent() == buttonIndex) {
             return index;
+        }
         index = index.parent();
     }
     return QModelIndex();
@@ -354,8 +355,7 @@ void KBreadCrumbNavigatorButton::listChildItems()
     
     m_childItems.clear();
     int count = breadCrumbNavigator()->model()->rowCount(m_index);
-    for(int i = 0; i < count; i++)
-    {
+    for(int i = 0; i < count; i++) {
         m_childItems.append(m_index.child(i, 0));
     }
     
@@ -376,11 +376,10 @@ void KBreadCrumbNavigatorButton::listChildItems()
     m_childItemsMenu->setLayoutDirection(Qt::LeftToRight);
     int i = 0;
     QModelIndex selectedChildItem = getSelectedChildItem(breadCrumbNavigator()->currentIndex(), m_index);
-    foreach (const QModelIndex& childIndex, m_childItems)
-    {
+    foreach (const QModelIndex& childIndex, m_childItems) {
         QString text = KStringHandler::csqueeze(childIndex.data().toString(), 60);
         text.replace('&', "&&");
-        QAction* action = new QAction(text, this);
+        QAction *action = new QAction(text, this);
         if (selectedChildItem == childIndex) {
             QFont font(action->font());
             font.setBold(true);
@@ -394,7 +393,7 @@ void KBreadCrumbNavigatorButton::listChildItems()
             // a usability view. Also there are implementation issues in
             // QMenu if the number of menu items don't fit into the available
             // screen -> skip remaining items
-            QAction* limitReached = new QAction("...", this);
+            QAction *limitReached = new QAction("...", this);
             limitReached->setEnabled(false);
             m_childItemsMenu->addAction(limitReached);
             break;
@@ -405,7 +404,7 @@ void KBreadCrumbNavigatorButton::listChildItems()
     const int popupX = leftToRight ? width() - arrowWidth() - BorderWidth : 0;
     const QPoint popupPos  = breadCrumbNavigator()->mapToGlobal(geometry().bottomLeft() + QPoint(popupX, 0));
 
-    const QAction* action = m_childItemsMenu->exec(popupPos);
+    const QAction *action = m_childItemsMenu->exec(popupPos);
     if (action != 0) {
         const int result = action->data().toInt();
         breadCrumbNavigator()->currentChangedTriggered(m_childItems.at(result));
@@ -456,8 +455,7 @@ void KBreadCrumbNavigatorButton::updateMinimumWidth()
     int minWidth = sizeHint().width();
     if (minWidth < 40) {
         minWidth = 40;
-    }
-    else if (minWidth > 150) {
+    } else if (minWidth > 150) {
         // don't let an overlong path name waste all the URL navigator space
         minWidth = 150;
     }
