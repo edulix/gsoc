@@ -23,7 +23,7 @@
 
 using namespace Akonadi;
 
-KonqBookmarkProxyModel::KonqBookmarkProxyModel( QObject *parent )
+KonqBookmarkProxyModel::KonqBookmarkProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
 {
     setDynamicSortFilter(true);
@@ -33,22 +33,23 @@ KonqBookmarkProxyModel::KonqBookmarkProxyModel( QObject *parent )
 static int indexTypeHelper(const QModelIndex & index)
 {
     QString mimeType = index.data(EntityTreeModel::MimeTypeRole).toString();
-    if(mimeType == Collection::mimeType()) {
+    if (mimeType == Collection::mimeType()) {
         return EntityTreeModel::CollectionRole;
     } else {
         return EntityTreeModel::ItemRole;
     }
 }
 
-bool KonqBookmarkProxyModel::lessThan ( const QModelIndex & left, const QModelIndex & right ) const
+bool KonqBookmarkProxyModel::lessThan(const QModelIndex & left, const QModelIndex & right) const
 {
     bool leftIsCollection = indexTypeHelper(left) == EntityTreeModel::CollectionRole;
     bool rightIsCollection = indexTypeHelper(right) == EntityTreeModel::CollectionRole;
     
-    if(leftIsCollection && !rightIsCollection)
+    if (leftIsCollection && !rightIsCollection) {
         return true;
-    else if(!leftIsCollection && rightIsCollection)
+    } else if (!leftIsCollection && rightIsCollection) {
         return false;
-    else
+    } else {
         return QSortFilterProxyModel::lessThan(left, right);
+    }
 }

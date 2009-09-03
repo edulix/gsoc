@@ -24,7 +24,7 @@
 using namespace Konqueror;
 using namespace Akonadi;
 
-CollectionsProxyModel::CollectionsProxyModel( QObject *parent )
+CollectionsProxyModel::CollectionsProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
 {
     setDynamicSortFilter(true);
@@ -34,15 +34,15 @@ CollectionsProxyModel::CollectionsProxyModel( QObject *parent )
 static int indexTypeHelper(const QModelIndex & index)
 {
     QString mimeType = index.data(EntityTreeModel::MimeTypeRole).toString();
-    if(mimeType == Collection::mimeType()) {
+    if (mimeType == Collection::mimeType()) {
         return EntityTreeModel::CollectionRole;
     } else {
         return EntityTreeModel::ItemRole;
     }
 }
 
-bool CollectionsProxyModel::filterAcceptsRow( int sourceRow, const QModelIndex &sourceParent ) const
+bool CollectionsProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
-    QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);    
+    QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
     return indexTypeHelper(sourceIndex) == EntityTreeModel::CollectionRole;
 }

@@ -100,20 +100,21 @@ void KCompletionModel::Private::slotMatches(const QStringList &matches)
     
     while (it.hasNext()) {
         it.next();
-        if(!matches.contains(it.key())) {
+        if (!matches.contains(it.key())) {
             indexesToRemove.append(it.value());
             kDebug() << "removing " << it.key() << "with row =" << it.value().row();
         }
     }
     
-    if(!indexesToRemove.empty())
+    if (!indexesToRemove.empty()) {
         removeRows(indexesToRemove);
+    }
     
     QList<QPair<QModelIndex, QVariant> > indexesToAppend;
     QList<QString>::const_iterator strIt;
     int count = m_strings.size();
     for (strIt = matches.constBegin(); strIt != matches.constEnd(); ++strIt) {
-        if(!m_reverseIndexes.contains(*strIt)) {
+        if (!m_reverseIndexes.contains(*strIt)) {
             QPair<QModelIndex, QVariant> indexPair;
             indexPair.first = q->createIndex(count++, 0);
             indexPair.second = *strIt;
@@ -123,15 +124,16 @@ void KCompletionModel::Private::slotMatches(const QStringList &matches)
         }
     }
 
-    if(!indexesToAppend.empty())
+    if (!indexesToAppend.empty()) {
         insertRows(indexesToAppend);
+    }
     
     kDebug() << "rowCount = " << q->rowCount();
 }
 
 void KCompletionModel::Private::insertRows(const QList<QPair<QModelIndex, QVariant> >& indexes)
 {
-    if(indexes.empty()) {
+    if (indexes.empty()) {
         return;
     }
     
@@ -188,7 +190,7 @@ void KCompletionModel::Private::removeRows(const QModelIndexList& list)
 
 QModelIndex KCompletionModel::Private::indexForMatch(const QString& match) const
 {
-    if(m_reverseIndexes.contains(match)) {
+    if (m_reverseIndexes.contains(match)) {
         return m_reverseIndexes.value(match);
     }
     
@@ -210,7 +212,7 @@ KCompletionModel::~KCompletionModel()
 
 int KCompletionModel::rowCount(const QModelIndex &parent) const
 {
-    if(parent.isValid()) {
+    if (parent.isValid()) {
         return 0;
     }
     
@@ -220,10 +222,11 @@ int KCompletionModel::rowCount(const QModelIndex &parent) const
 QVariant KCompletionModel::data(const QModelIndex &index, int role) const
 {
     
-    if (index.row() < 0 || index.row() >= d->m_strings.size())
+    if (index.row() < 0 || index.row() >= d->m_strings.size()) {
         return QVariant();
+    }
     
-    switch( role ) {
+    switch(role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
     case CompletionMatchRole:
@@ -238,12 +241,11 @@ KCompletion* KCompletionModel::completion() const
 }
 void KCompletionModel::setCompletion(KCompletion* completion)
 {
-    if(!completion) {
+    if (!completion) {
         return;
     }
     
-    if(d->m_completion)
-    {
+    if (d->m_completion) {
         disconnect(d->m_completion, SIGNAL(matches(const QStringList &)),
             this, SLOT(slotMatches(const QStringList &)));
         
@@ -269,11 +271,10 @@ void KCompletionModel::setCompletion(KCompletion* completion)
 
 QModelIndex KCompletionModel::index(int row, int column, const QModelIndex& parent) const
 {   
-    if(parent.isValid())
-    {
+    if (parent.isValid()) {
         return QModelIndex();
     }
-    if(row < 0 || row >= d->m_strings.size() || column != 0) {
+    if (row < 0 || row >= d->m_strings.size() || column != 0) {
         return QModelIndex();
     }
     
@@ -282,11 +283,11 @@ QModelIndex KCompletionModel::index(int row, int column, const QModelIndex& pare
 
 QModelIndex KCompletionModel::parent(const QModelIndex& index) const
 {
-    if(!index.isValid()) {
+    if (!index.isValid()) {
         return QModelIndex();
     }
     
-    if(index.column() != 0) {
+    if (index.column() != 0) {
         QModelIndex index = createIndex(index.row(), 0);
         return (d->m_indexes.contains(index)) ? index : QModelIndex();
     }

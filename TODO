@@ -11,10 +11,14 @@ TODO:
  
  #6 Wait for EntityTreeView to get out of akonadi_next and into kdepimlibs.
  
- #7 Segfaults with EntityTreeModel.
-
-Planning:
- Fix #1, create own model
+ #7 Segfaults with EntityTreeModel
+ 
+ #9 continue work on location bar delegate
+ 
+ #11 write plugins for the location bar
+ 
+ #12 add support *in akonadi* for undo & redo
+---
  
  * Nepomuk is used by the wrapper class KonqBookmark for accessing to the data.
  * Akonadi is used to administrate collections and virtual collections and to allow

@@ -90,7 +90,7 @@ private:
     class Private;
     QSharedDataPointer<Private> d;
     Q_PRIVATE_SLOT(d, void expand(const QModelIndex& index))
-    Q_PRIVATE_SLOT(d, void selectBookmarkFolder(const QModelIndex& index = QModelIndex()))
+    Q_PRIVATE_SLOT(d, void selectBookmarkFolder(const QModelIndex& index = QModelIndex(), int start = -1))
 };
 
 #endif // BOOKMARSVIEW_H

@@ -51,12 +51,12 @@ namespace Akonadi
         };
         enum { ColumnCount =  9 };
 
-        KonqBookmarkModel(Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent = 0 );
+        KonqBookmarkModel(Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent = 0);
 
         virtual ~KonqBookmarkModel();
 
-        virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
-        virtual QVariant getHeaderData( int section, Qt::Orientation orientation, int role, int headerSet ) const;
+        virtual int columnCount(const QModelIndex & parent = QModelIndex()) const;
+        virtual QVariant getHeaderData(int section, Qt::Orientation orientation, int role, int headerSet) const;
         
         // We let the delegate know that we are editable
         Qt::ItemFlags flags(const QModelIndex &index) const;
@@ -69,10 +69,11 @@ namespace Akonadi
          * and also for collections in the next function. EntityTreeModel::data() will then call these
          * functions.
          */
-        virtual QVariant getData( const Item &item, int column, int role = Qt::DisplayRole ) const;
-        virtual QVariant getData( const Collection &collection, int column, int role = Qt::DisplayRole ) const;
+        virtual QVariant getData(const Item &item, int column, int role = Qt::DisplayRole) const;
+        virtual QVariant getData(const Collection &collection, int column, int role = Qt::DisplayRole) const;
     
-        bool removeRows ( int row, int count, const QModelIndex & parent = QModelIndex() );
+        bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
+        
         // Drag & drop related functions
         bool dropMimeData(const QMimeData *data, Qt::DropAction action,
             int row, int column, const QModelIndex &parent);

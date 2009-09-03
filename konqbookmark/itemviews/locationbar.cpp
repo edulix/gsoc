@@ -18,6 +18,7 @@
 */
 
 #include "locationbar.h"
+#include "locationbardelegate.h"
 #include "kcompletionview.h"
 #include "placesmanager.h"
 #include "klineeditview_p.h"
@@ -32,6 +33,7 @@
 #include <QStringListModel>
 #include <QStringList>
 #include <QWidget>
+#include <QSortFilterProxyModel>
 
 #include <kurlcompletion.h>
 #include <kurl.h>
@@ -72,11 +74,11 @@ void LocationBar::init()
 {
     setCompletionMode(KGlobalSettings::CompletionPopup);
     setClearButtonShown(true);
-    
-    // FIXME for now, only one location bar is supported because of this
-    // completion model. We just need to be able to create new completion models
-    // that automatically connected to places manager, so it's quite easy.
-    KCompletionModel* completionModel = PlacesManager::self()->urlCompletionModel();
+    completionView()->setItemDelegate(new LocationBarDelegate(this));
+
+    KCompletionModel *completionModel = new KCompletionModel(this);
+    completionModel->setCompletion(new KUrlCompletion());
+    PlacesManager::self()->registerUrlCompletionModel(completionModel);
 //     connect(this, SIGNAL(textChanged(const QString&)),
 //         completionModel->completion(), SLOT(slotMakeCompletion(const QString &)));
     
@@ -89,11 +91,15 @@ void LocationBar::init()
     placesProxyModel->setSourceModel(PlacesManager::self()->historyEntriesModel());
         
     KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
-    aggregatedModel->addSourceModel(completionModel);
-    aggregatedModel->addSourceModel(historyProxyModel);
+//     aggregatedModel->addSourceModel(completionModel);
+//     aggregatedModel->addSourceModel(historyProxyModel);
     aggregatedModel->addSourceModel(placesProxyModel);
     
-    completionView()->setModel(aggregatedModel);
+    QSortFilterProxyModel *sortModel = new QSortFilterProxyModel(this);
+    sortModel->setSourceModel(placesProxyModel);
+    sortModel->setSortRole(Place::PlaceRelevanceRole);
+    sortModel->setDynamicSortFilter(true);
+    completionView()->setModel(sortModel);
     
     KLineEditViewButton* tempButton = new KLineEditViewButton(this);
     tempButton->setCursor(Qt::ArrowCursor);

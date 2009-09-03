@@ -27,19 +27,20 @@
 namespace Konqueror
 {
     /** 
-     * class created because because of some reason EntityFilterProxyModel doesn't
-     * seem to be working right now.
+     * Class created because because of some reason EntityFilterProxyModel doesn't
+     * seem to be working right now. It filters out indexes which are not Akonadi
+     * Collections.
      */
     class KONQBOOKMARK_EXPORT CollectionsProxyModel : public QSortFilterProxyModel
     {        
     public:
-        CollectionsProxyModel( QObject *parent = 0 );
-    protected:
+        CollectionsProxyModel(QObject *parent = 0);
         
+    protected:
         /**
-        * Reimplemented to show only folders
-        */
-        virtual bool filterAcceptsRow( int sourceRow, const QModelIndex &sourceParent ) const;
+         * Reimplemented to show only folders
+         */
+        virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
     };
 
 }

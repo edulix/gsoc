@@ -57,6 +57,7 @@ set(konqbookmark_LIB_SRCS
     itemviews/ktreeviewsearchline.cpp
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
+    itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
 #     itemviews/placesdelegate.cpp
@@ -75,6 +76,7 @@ target_link_libraries(konqbookmark
     ${QT_QTCORE_LIBRARY}
     ${KDE4_KDECORE_LIBS}
     ${KDE4_KDEUI_LIBS}
+    ${KDE4_KIO_LIBS} # for KUrlCompletion
     ${NEPOMUK_LIBRARIES}
     ${SOPRANO_LIBRARIES}
 )
@@ -111,6 +113,7 @@ set(konqbookmark_LIB_HDRS
     itemviews/konqbookmarkmodelmenu.h
     itemviews/modelmenusearchline.h
     itemviews/locationbar.h
+    itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
     itemviews/klineeditview.h
 #     itemviews/placesdelegate.h

@@ -72,7 +72,7 @@ KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monito
     monitor->fetchCollection( true );
     monitor->setItemFetchScope( scope );
     monitor->setMimeTypeMonitored( mimeType() );
-    monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
+//     monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
     // FIXME Set all monitored because otherwise the model doesn't get updates 
     // from items/collections being removed.
     monitor->setAllMonitored(true);
@@ -83,19 +83,17 @@ KonqBookmarkModel::~KonqBookmarkModel()
     delete d;
 }
 
-int KonqBookmarkModel::columnCount( const QModelIndex& index) const
+int KonqBookmarkModel::columnCount(const QModelIndex& index) const
 {
     Q_UNUSED(index);
     
     return 9;
 }
 
-QVariant KonqBookmarkModel::getHeaderData( int section, Qt::Orientation orientation, int role, int headerSet ) const
+QVariant KonqBookmarkModel::getHeaderData(int section, Qt::Orientation orientation, int role, int headerSet ) const
 {   
-    if ( role == Qt::DisplayRole && orientation == Qt::Horizontal )
-    {
-        switch( section )
-        {
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
+        switch(section) {
         case Title:
             return i18nc( "@title:column, bookmark title", "Title" );
         case Url:
@@ -308,12 +306,14 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
 
 bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & parent)
 {
+    kDebug();
     Akonadi::TransactionSequence *transaction = new TransactionSequence;
-    for(int i = row; i < row + count; i++)
-    {
+    for (int i = row; i < row + count; i++) {
         const QModelIndex& entityIndex = index(i, 0, parent);
-        if(!entityIndex.isValid())
+        kDebug() << entityIndex << i << parent;
+        if (!entityIndex.isValid()) {
             continue;
+        }
         
         Item item = qVariantValue<Item>(data(entityIndex, EntityTreeModel::ItemRole));
         Collection collection = qVariantValue<Collection>(data(entityIndex, EntityTreeModel::CollectionRole));
@@ -326,8 +326,7 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         }
     }
 
-    if(!transaction->exec())
-    {
+    if(!transaction->exec()) {
         kDebug() << transaction->errorString();
         return false;
     }
@@ -336,7 +335,7 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
 
 QString KonqBookmarkModel::mimeType() const
 {
-    return QString("application/x-vnd.kde.konqbookmark");
+    return KonqBookmark::mimeType();
 }
 
 QStringList KonqBookmarkModel::mimeTypes() const

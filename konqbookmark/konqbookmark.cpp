@@ -70,11 +70,11 @@ KonqBookmark::KonqBookmark(const QUrl& uniqueUri) : d( new Private(uniqueUri.toS
 {
 }
 
-KonqBookmark::KonqBookmark() : d( new Private )
+KonqBookmark::KonqBookmark() : d(new Private)
 {   
 }
 
-KonqBookmark::KonqBookmark( const KonqBookmark &other ) : d( other.d )
+KonqBookmark::KonqBookmark(const KonqBookmark &other) : d(other.d)
 {
 }
 
@@ -82,12 +82,18 @@ KonqBookmark::~KonqBookmark()
 {
 }
 
-KonqBookmark &KonqBookmark::operator=( const KonqBookmark &other )
+KonqBookmark &KonqBookmark::operator=(const KonqBookmark &other)
 {
-    if ( this != &other )
+    if (this != &other) {
         d = other.d;
+    }
 
     return *this;
+}
+
+bool KonqBookmark::operator==(const KonqBookmark &other)
+{
+    return other.uniqueUri() == uniqueUri();
 }
 
 Nepomuk::Bookmark KonqBookmark::bookmark() const

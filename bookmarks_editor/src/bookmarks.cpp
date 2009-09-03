@@ -26,6 +26,8 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPrinter>
 #include <QtCore/QTimer>
+#include <QtCore/QTimer>
+#include <QtDBus>
 
 #include <Nepomuk/ResourceManager> 
 #include <kconfigdialog.h>
@@ -66,7 +68,7 @@ Bookmarks::Bookmarks()
     setupGUI();
     
     // Start Akonadi
-    QTimer::singleShot( 0, this, SLOT( delayedInit() ) );
+    QTimer::singleShot(0, this, SLOT(delayedInit()));
 }
 
 Bookmarks::~Bookmarks()
@@ -88,6 +90,15 @@ void Bookmarks::setupActions()
 
     Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
     Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
+    
+    // create Konqueror Bookmarks Resource if needed
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusInterface *interface = new QDBusInterface("org.freedesktop.Akonadi",
+        "/ResourceManager", "org.freedesktop.Akonadi.ResourceManager",  bus,
+        this);
+    QString resourceName("akonadi_konquerorbookmarks_resource");  
+    interface->call("addResourceInstance", resourceName);
+    
     Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
     KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, actionCollection(), this);
     

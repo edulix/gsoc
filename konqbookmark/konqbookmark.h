@@ -68,24 +68,25 @@ public:
      * Copy constructor.
      * @overload
      */
-    KonqBookmark( const KonqBookmark &other );
+    KonqBookmark(const KonqBookmark &other);
 
     /**
      * Destructor.
      */
     virtual ~KonqBookmark();
 
-    KonqBookmark &operator=( const KonqBookmark &other );
+    KonqBookmark &operator=(const KonqBookmark &other);
+    bool operator==(const KonqBookmark &other);
 
 // Properties
     
     Nepomuk::Bookmark bookmark() const;
     
-    void setUrl( const QUrl &url );
+    void setUrl(const QUrl &url);
 
     QUrl url() const;
 
-    void setTitle( const QString &title );
+    void setTitle(const QString &title);
 
     QString title() const;
     

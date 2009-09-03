@@ -101,11 +101,12 @@ int PlacesProxyModel::Private::matches(Place* place)
     matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
     matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
     matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
+    kDebug() << place->url() << place->url().toString().count(m_strQuery, Qt::CaseInsensitive) << matches;
     return matches;
 }
 
 bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
-{   
+{
     Place* place = placeFromIndex(index);
     QDateTime currentTime = QDateTime::currentDateTime();
     
@@ -115,13 +116,13 @@ bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
     
     int days = place->lastVisited().daysTo(currentTime);
     
-    if(days < first_bucket_days) {
+    if (days < first_bucket_days) {
         weight = first_bucket_weight;
-    } else if(days < second_bucket_days) {
+    } else if (days < second_bucket_days) {
         weight = second_bucket_weight;
-    } else if(days < third_bucket_days) {
+    } else if (days < third_bucket_days) {
         weight = third_bucket_weight;
-    } else if(days < fourth_bucket_days) {
+    } else if (days < fourth_bucket_days) {
         weight = fourth_bucket_weight;
     } else {
         weight = default_bucket_weight;
@@ -129,7 +130,7 @@ bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
     
     relevance += matches * weight + place->numVisits() * weight;
     
-    if(m_relevance[index] == relevance) {
+    if (m_relevance[index] == relevance) {
         return false;
     }
     
@@ -140,7 +141,7 @@ bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
 void PlacesProxyModel::Private::slotRowsInserted(const QModelIndex& parent, int start, int end)
 {
     Q_UNUSED(parent);
-    for(int i = start; i <= end; i++) {
+    for (int i = start; i <= end; i++) {
         QModelIndex index = q->index(i, 0);
         updateRelevance(index);
     }
@@ -149,7 +150,7 @@ void PlacesProxyModel::Private::slotRowsInserted(const QModelIndex& parent, int 
 void PlacesProxyModel::Private::slotRowsRemoved(const QModelIndex& parent, int start, int end)
 {
     Q_UNUSED(parent);
-    for(int i = start; i <= end; i++) {
+    for (int i = start; i <= end; i++) {
         QModelIndex index = q->index(i, 0);
         m_relevance.remove(index);
     }
@@ -170,6 +171,7 @@ PlacesProxyModel::PlacesProxyModel(QObject *parent)
 {
     setSortRole(Place::PlaceRelevanceRole);
     setSortCaseSensitivity(Qt::CaseInsensitive);
+    setDynamicSortFilter(false);
     
     connect(this, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(slotRowsInserted(const QModelIndex&, int, int)));
@@ -191,10 +193,16 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
-    kDebug() << "query";
+    if (query.isEmpty()) {
+        return;
+    }
+    
+    kDebug() << "query=" << query;
+    emit layoutAboutToBeChanged();
     d->m_strQuery = query;
-    // HACK: triggers a call to d->filter_changed();
-    setFilterKeyColumn(0);
+    d->m_relevance.clear();
+    invalidateFilter();
+    emit layoutChanged();
 }
 
 void PlacesProxyModel::setQuery(QVariant query)
@@ -209,7 +217,7 @@ QVariant PlacesProxyModel::query() const
 
 void PlacesProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
-    if(!sourceModel) {
+    if (!sourceModel) {
         return;
     }
     
@@ -224,13 +232,13 @@ void PlacesProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 }
 
 QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
-{    
-    switch( role )
-    {
+{
+    switch (role) {
     case Place::PlaceRelevanceRole:
         if(!d->m_relevance.contains(index)) {
             d->updateRelevance(index);
         }
+        kDebug() << d->m_relevance[index];
         return d->m_relevance[index];
     default:
         return QSortFilterProxyModel::data(index, role);
@@ -241,22 +249,25 @@ bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& sourc
 {
     QModelIndex sourceIndex = sourceModel()->index(source_row, 0, source_parent);
     
-    if(!sourceIndex.isValid() || sourceModel()->hasChildren(sourceIndex)) {
+    if (!sourceIndex.isValid() || sourceModel()->hasChildren(sourceIndex)) {
         return false;
     }
     
     QVariant variant = sourceIndex.data(Place::PlaceUrlRole);
-    if(variant == QVariant()) {
+    if (variant == QVariant()) {
         return false;
     }
     
     QUrl url = variant.toString();
     Place* place = PlacesManager::self()->place(url);
+    kDebug() << sourceIndex << (d->matches(place) > 0);
         
     // Places manager should have all the places!
     Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");    
     
-    return d->matches(place) > 0;
+    bool accept = d->matches(place) > 0;
+    
+    return accept;
 }
 
 #include "placesproxymodel.moc"

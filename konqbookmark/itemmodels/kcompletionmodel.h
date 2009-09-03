@@ -54,8 +54,11 @@ public:
     enum Roles {
         CompletionMatchRole = Qt::UserRole + 1
     };
+    
     enum {ColumnCount = 1 }; // Qt::DisplayRole
+    
     KCompletionModel(QObject * parent);
+    
     virtual ~KCompletionModel();
     
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -74,8 +77,8 @@ private:
     friend class Private;
     Private* const d;
     
-    Q_PRIVATE_SLOT( d, void slotMatches(const QStringList &) )
-    Q_PRIVATE_SLOT( d, void slotMatches() )
+    Q_PRIVATE_SLOT(d, void slotMatches(const QStringList &))
+    Q_PRIVATE_SLOT(d, void slotMatches())
 };
 
 #endif // KCOMPLETION_MODEL_H

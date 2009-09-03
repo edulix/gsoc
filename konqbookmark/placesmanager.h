@@ -67,8 +67,8 @@ namespace Konqueror
         static PlacesManager* self();
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
-        virtual KCompletionModel* urlCompletionModel();
         virtual QAbstractItemModel* historyEntriesModel() { return 0; }
+        void registerUrlCompletionModel(KCompletionModel* urlCompletionModel);
         
         KonqBookmark* bookmark(const QUrl& url);
         KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
@@ -102,6 +102,7 @@ namespace Konqueror
         
         Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex&, int, int))
         Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotBookmarksChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight))
         
         Q_PRIVATE_SLOT(d, void slotHistoryEntryAdded(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))

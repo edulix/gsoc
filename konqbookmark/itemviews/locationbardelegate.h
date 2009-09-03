@@ -1,5 +1,4 @@
 /*
-    This file is part of the KDE project
     Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
 
     This library is free software; you can redistribute it and/or modify it
@@ -18,26 +17,27 @@
     02110-1301, USA.
 */
 
-#ifndef KONQBOOKMARKPROXYMODEL_H
-#define KONQBOOKMARKPROXYMODEL_H
+#ifndef KONQUEROR_LOCATION_BAR_DELEGATE_H
+#define KONQUEROR_LOCATION_BAR_DELEGATE_H
 
 #include "konqbookmark_export.h"
-#include <QSortFilterProxyModel>
 
-namespace Akonadi
+#include <QStyledItemDelegate>
+
+class QObject;
+
+namespace Konqueror
 {
-    class KONQBOOKMARK_EXPORT KonqBookmarkProxyModel : public QSortFilterProxyModel
-    {        
+    class KONQBOOKMARK_EXPORT LocationBarDelegate : public QStyledItemDelegate
+    {
+        Q_OBJECT
     public:
-        KonqBookmarkProxyModel(QObject *parent = 0);
-        
-    protected:
-        /**
-        * Reimplemented only to show always folders first
-        */
-        bool lessThan(const QModelIndex & left, const QModelIndex & right) const;
-    };
+        LocationBarDelegate(QObject* parent = 0);
 
+        void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+
+        virtual QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    };
 }
 
-#endif /* KONQBOOKMARKPROXYMODEL_H */
+#endif // KONQUEROR_LOCATION_BAR_DELEGATE_H
