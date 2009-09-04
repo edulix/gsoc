@@ -57,6 +57,10 @@ void LocationBarDelegate::paint(QPainter* painter, const QStyleOptionViewItem& o
     
     // Paint background and stablish main text colors depending on if we are
     // painting the currently selected index or not
+    // TODO: why doesn't it work fine? background for selected items is only
+    // painted in the first item, and normal items' background is only painted
+    // for even indexex.
+    
     QColor titleColor;
     QColor urlColor;
     if (option.state & QStyle::State_Selected) {
@@ -68,29 +72,38 @@ void LocationBarDelegate::paint(QPainter* painter, const QStyleOptionViewItem& o
         urlColor = option.palette.color(QPalette::Dark);
     }
     
-    // Paint title
-    painter->setPen(titleColor);
-    paintText(painter, 27, 16, place->title());
+    // Paint url
+    painter->setPen(urlColor);
+    paintText(painter, 27, 40, place->url().toString());
     
     // Paint tags
-    int maxUrlWidth = option.rect.width();
+    int maxTitleWidth = option.rect.width();
     QString tags;
     if (!place->tags().isEmpty() && !(tags = place->tags().join(", ")).isEmpty()) {
         const QString tags = place->tags().join(", ");
-        const QPixmap tagIcon = SmallIcon("mail-tagged");
-        int rightX = option.rect.width() - tagIcon.width() - 3;
-        painter->drawPixmap(rightX, 25, tagIcon);
-        
-        const int bottomY = 40;
+        const QPixmap tagIcon = SmallIcon("mail-tagged"); // TODO: ask for a proper icon
+        int rightX = option.rect.width() - tagIcon.width() - 6;
+        const int bottomY = 17;
         const int maxWidth = option.rect.width() / 3.0;
+        painter->setPen(titleColor);
+        QFont font = painter->font();
+        QFont fontPrev = painter->font();
+        font.setPointSize(font.pointSize()-1);
+        painter->setFont(font);
         const int usedWidth = paintText(painter, rightX - 3, bottomY, tags, AlignRight, maxWidth);
-        kDebug() << maxWidth << usedWidth;
-        maxUrlWidth -= usedWidth + tagIcon.width() + 40;
+        painter->setFont(fontPrev);
+        
+        rightX -= usedWidth + tagIcon.width() + 3;
+        painter->drawPixmap(rightX, 4, tagIcon);
+        maxTitleWidth = rightX - 3;
     }
     
-    // Paint url
-    painter->setPen(urlColor);
-    paintText(painter, 27, 40, place->url().toString(), AlignLeft, maxUrlWidth);
+    // Paint title
+    painter->setPen(titleColor);
+    QFont font = painter->font();
+    font.setPointSize(font.pointSize()+2);
+    painter->setFont(font);
+    paintText(painter, 27, 19, place->title(), AlignLeft, maxTitleWidth);
     
     if (place->bookmark()) {
         const QPixmap bookmark = SmallIcon("bookmarks");
