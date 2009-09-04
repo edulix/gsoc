@@ -25,18 +25,35 @@
 #include <QStyledItemDelegate>
 
 class QObject;
+class QPainter;
 
 namespace Konqueror
 {
+    class LocationBar;
+    
     class KONQBOOKMARK_EXPORT LocationBarDelegate : public QStyledItemDelegate
     {
         Q_OBJECT
     public:
-        LocationBarDelegate(QObject* parent = 0);
+        enum TextAlignment {AlignLeft, AlignRight};
+        
+        LocationBarDelegate(LocationBar *parent = 0);
 
         void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
         virtual QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    
+    protected:
+        /**
+         * Paints a text underlining the part of the text matching with the
+         * current location bar query.
+         * 
+         * @return the width that will be used by the painted text.
+         */
+        int paintText(QPainter *painter, int x, int bottomY, QString text, TextAlignment textAlignment = AlignLeft, int maxWidth = -1) const;
+        
+    private:
+        LocationBar *m_parent;
     };
 }
 

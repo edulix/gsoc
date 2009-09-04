@@ -80,10 +80,10 @@ namespace Konqueror
         Place* place(const KonqBookmark* konqBookmark);
         Place* place(const KonqHistoryEntry* historyEntry);
         
-        virtual QIcon* icon(const QUrl& url);
-        virtual QIcon* icon(const KonqBookmark* konqBookmark);
-        virtual QIcon* icon(const KonqHistoryEntry* historyEntry);
-        virtual QIcon* icon(const Place* place);
+        virtual QIcon icon(const QUrl& url);
+        virtual QIcon icon(const KonqBookmark* konqBookmark);
+        virtual QIcon icon(const KonqHistoryEntry* historyEntry);
+        virtual QIcon icon(const Place* place);
         
     protected:
         PlacesManager();

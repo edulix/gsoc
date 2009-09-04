@@ -374,42 +374,42 @@ Place* PlacesManager::place(const KonqBookmark* konqBookmark)
 
 Place* PlacesManager::place(const KonqHistoryEntry* historyEntry)
 {
-    if(!historyEntry) {
+    if (!historyEntry) {
         return 0;
     }
     
     return place(historyEntry->url);
 }
 
-QIcon* PlacesManager::icon(const QUrl& url)
+QIcon PlacesManager::icon(const QUrl& url)
 {
     Q_UNUSED(url);
     
-    return 0;
+    return QIcon();
 }
 
-QIcon* PlacesManager::icon(const KonqBookmark* konqBookmark)
+QIcon PlacesManager::icon(const KonqBookmark* konqBookmark)
 {
-    if(!konqBookmark) {
-        return 0;
+    if (!konqBookmark) {
+        return QIcon();
     }
     
     return icon(konqBookmark->url());
 }
 
-QIcon* PlacesManager::icon(const KonqHistoryEntry* historyEntry)
+QIcon PlacesManager::icon(const KonqHistoryEntry* historyEntry)
 {
-    if(!historyEntry) {
-        return 0;
+    if (!historyEntry) {
+        return QIcon();
     }
     
     return icon(historyEntry->url);
 }
 
-QIcon* PlacesManager::icon(const Place* place)
+QIcon PlacesManager::icon(const Place* place)
 {
-    if(!place) {
-        return 0;
+    if (!place) {
+        return QIcon();
     }
     
     return icon(place->url());

@@ -54,10 +54,10 @@ KCompletionView::KCompletionView(QWidget *parent)
 
     setWindowFlags(Qt::ToolTip); // calls setVisible, so must be done after initializations
 
-    setLineWidth(0);
-    setFrameStyle(QFrame::Box | QFrame::Plain);
+    setLineWidth(1);
 
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    setMaximumHeight(350);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     connect(this, SIGNAL(activated(const QModelIndex &)),

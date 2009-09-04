@@ -94,12 +94,7 @@ void LocationBar::init()
 //     aggregatedModel->addSourceModel(completionModel);
 //     aggregatedModel->addSourceModel(historyProxyModel);
     aggregatedModel->addSourceModel(placesProxyModel);
-    
-    QSortFilterProxyModel *sortModel = new QSortFilterProxyModel(this);
-    sortModel->setSourceModel(placesProxyModel);
-    sortModel->setSortRole(Place::PlaceRelevanceRole);
-    sortModel->setDynamicSortFilter(true);
-    completionView()->setModel(sortModel);
+    completionView()->setModel(placesProxyModel);
     
     KLineEditViewButton* tempButton = new KLineEditViewButton(this);
     tempButton->setCursor(Qt::ArrowCursor);

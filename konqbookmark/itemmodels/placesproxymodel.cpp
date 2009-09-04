@@ -193,6 +193,8 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
+    query = query.trimmed();
+    
     if (query.isEmpty()) {
         return;
     }
