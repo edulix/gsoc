@@ -1,0 +1,33 @@
+Konqueror Bookmarks
+-------------------
+
+This document outlines how the new bookmarks system is architected. This is a
+project to replace the current bookmarks system in konqueror. It's divided in
+several folders:
+
+ * ontologies - Library which contains the C++ classes for the Nepomuk
+   ontologies used in this project. It's separated so that other modules of the
+   bookmarks system can dynamically link to it.
+
+ * konqbookmark - The core of the bookmark system. It contains main classes like
+   KonqBookmark, Place, LocationBar, some useful item views and models, etc.
+   
+ * konquerorbookmarks - The akonadi bookmarks resource, a middle layer to access
+   the bookmarks which are actually stored in Nepomuk.
+   
+ * bookmarks_editor - As it name says, it's the Konqueror Bookmarks Editor
+   implementation.
+   
+ * nepotest - a test program used for development purposes, not very useful.
+
+Architecture
+------------
+
+Nepomuk ----> Akonadi ----> You
+
+Bookmarks are stored in Nepomuk database as NFO Bookmarks and BookmarkFolders.
+But you don't really access to bookmarks directly with Nepomuk, but with Akonadi
+instead. The Akonadi resource's job is to present the user the collection of 
+bookmarks and to let the user modify them.
+
+
