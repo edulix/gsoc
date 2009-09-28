@@ -18,47 +18,78 @@
     02110-1301, USA.
 */
 
-#ifndef PLACES_PROXY_MODEL_H
-#define PLACES_PROXY_MODEL_H
+#ifndef KONQUEROR_PLACES_PROXY_MODEL_H
+#define KONQUEROR_PLACES_PROXY_MODEL_H
 
 #include "konqbookmark_export.h"
 #include "place.h"
 
 #include <QSortFilterProxyModel>
+#include <QAbstractProxyModel>
 #include <QObject>
 
 namespace Konqueror
 {
+    class LocationBarCompletionModel;
+    // TODO: Rename to Konqueror::LocationBarCompletionModel
     /**
-     * This is a model which returns sorted by relevance order the list of
-     * places related to a query string. The only requirement is that the source
-     * model syncs its list of places with PlacesManager and provides the
-     * Place::PlaceUrlRole role for its indexes.
+     * This is the completion model used in the location bar. It completes
+     * history entries, bookmarks, and URLs. It's done by adding an URL
+     * completion model to the PlacesManager, and then using the PlacesManager
+     * model as the source model and filtering the relevant places.
      * 
-     * The RelevanceRole datafor each index will return a qreal corresponding 
-     * with the relevance of the index with the query term.
+     * Those places are also filtered by using the query string, which should
+     * be set by the LocationBar when the user writes in it.
+     * 
+     * Depending on the query string each item has a Relevance which can be
+     * accessed by using the RelevanceRole. The intention is to be able to
+     * sort the items in the completion view in descending order. To do that,
+     * LocationBar should use a QSortFilterProxy model and call setSortRole()
+     * accordingly.
      */
     class KONQBOOKMARK_EXPORT PlacesProxyModel : public QSortFilterProxyModel
     {
         Q_OBJECT
     public:        
+        friend class LocationBarCompletionModel;
         PlacesProxyModel(QObject *parent = 0);
         virtual ~PlacesProxyModel();
         
-        QVariant query() const;
-        
-        /** 
-         * Reimplemented because we won't use directly the given source model,
-         * but we will use a KDescendantsProxyModel instead as a source.
+        /**
+         * @returns the query string previously set by calling @p setQuery().
+         * 
+         * @note that if it hasn't been set, returns QString().
+         * 
+         * @see setQuery()
          */
-        virtual void setSourceModel(QAbstractItemModel* sourceModel);
+        QString query() const;
+        
+        /**
+         * Adds support for RelevanceRole. For other roles, proxies the call to
+         * the sourceModel.
+         */
         virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
+
+        /**
+         * Do not call this method, because the source model can't change (it
+         * always be the PlacesManager model).
+         */
+        virtual void setSourceModel(QAbstractItemModel *sourceModel);
         
     public Q_SLOTS:
+        /**
+         * Updates the query string, and filters again the model by using the
+         * new query, updating also the relevance of each index.
+         */
         void setQuery(QString query);
-        void setQuery(QVariant query);
-        
+
     protected:
+        /**
+         * Will only accept items using two contraints:
+         *  - Only accept places from bookmarks, history, or the given url
+         *    completion model.
+         *  - Only accept items which are relevant to the given query string.
+         */
         virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const;
         
     private:
@@ -68,8 +99,39 @@ namespace Konqueror
         
         Q_PRIVATE_SLOT(d, void slotRowsInserted(const QModelIndex&, int, int))
         Q_PRIVATE_SLOT(d, void slotRowsRemoved(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void slotModelAboutToBeReset())
+        Q_PRIVATE_SLOT(d, void slotModelReset())
+    };
+
+    /**
+     * Model that can be directly used by a LocationBar as its completion model.
+     * It's like PlacesProxyModel but sorted by descending relevance.
+     * Note that this class is a HACK and should be removed whenever it can be
+     * replaced by QSortFilterProxyModel, but at the moment QSortFilterProxyModel
+     * doesn't seem to be working.
+     */
+    class LocationBarCompletionModel : public QAbstractProxyModel
+    {
+        Q_OBJECT
+    public:
+        LocationBarCompletionModel(PlacesProxyModel *sourceModel, QObject *parent);
+    
+        virtual QModelIndex mapToSource(const QModelIndex &proxyIndex) const;
+        virtual QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;
+        virtual QModelIndex index(int row, int dcolumn, const QModelIndex &parent = QModelIndex()) const;
+        virtual QModelIndex parent(const QModelIndex&) const;
+        virtual int rowCount(const QModelIndex&) const;
+        virtual int columnCount(const QModelIndex&) const;
+        virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
+
+        // Do not use
+        virtual void setSourceModel(QAbstractItemModel */*sourceModel*/) {}
+    private:
+        class Private;
+        Private* const d;
+        
+        Q_PRIVATE_SLOT(d, void slotModelReset());
     };
 }
 
-#endif // PLACES_PROXY_MODEL_H
+
+#endif // KONQUEROR_PLACES_PROXY_MODEL_H

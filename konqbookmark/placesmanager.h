@@ -30,6 +30,7 @@
 #include <QIcon>
 #include <QStringList>
 #include <QDateTime>
+#include <QAbstractListModel>
 #include <QAbstractItemModel>
 
 class KonqHistoryEntry;
@@ -51,19 +52,22 @@ namespace Konqueror
      * @p self(); the PlacesManager will be created the first time you call it:
      * 
      * Inherit from this class if you want the history entries to be filled or
-     * if you want to provide an icon for items (hould just reimplement @p icon(QUrl).
+     * if you want to provide an icon for items (hould just reimplement @p
+     * icon(QUrl).
      * 
      * @code
      * PlacesManager::self();
      * @endcode
+     * 
+     * For the sake of simplicity, this class also acts directly as a model.
+     * The model will be a list of the places contained in the manager, to
+     * which you'll be able to access to the QModelIndexes places url using
+     * Konqueror::Place::PlaceUrlRole.
      */
-    class KONQBOOKMARK_EXPORT PlacesManager : public QObject
+    class KONQBOOKMARK_EXPORT PlacesManager : public QAbstractListModel
     {
         Q_OBJECT
     public:
-        friend class Private;
-        class Private;
-        
         static PlacesManager* self();
         
         virtual Akonadi::KonqBookmarkModel* bookmarkModel();
@@ -85,6 +89,29 @@ namespace Konqueror
         virtual QIcon icon(const KonqHistoryEntry* historyEntry);
         virtual QIcon icon(const Place* place);
         
+        /**
+         * Used by PlacesModels to know if a given Place (refered by its url)
+         * should be shown in the model. Basically it will always return true
+         * but when the place is not refered by any history entry or bookmark
+         * nor by the given KCompletionModel (which should be the one 
+         * associated with the PlaceModel).
+         */
+        bool filterAcceptUrl(const QUrl& url, KCompletionModel* completionModel) const;
+
+        /**
+         * Returns the number of places.
+         * (Implementation of QAbstractListModel)
+         */
+        int rowCount(const QModelIndex&) const;
+        
+        /**
+         * Returns the place url corresponding to the given index using 
+         * Konqueror::Place::PlaceUrlRole.
+         *
+         * (Implementation of QAbstractListModel)
+         */
+        QVariant data(const QModelIndex&, int) const;
+
     protected:
         PlacesManager();
         virtual ~PlacesManager();
@@ -97,6 +124,8 @@ namespace Konqueror
         static bool hasInstance();
         
     private:
+        friend class Private;
+        class Private;
         static PlacesManager *s_self;
         Private* const d;
         

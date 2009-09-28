@@ -26,6 +26,7 @@
 #include <QFontMetrics>
 #include <QColor>
 #include <QPainter>
+#include <QApplication>
 
 #include <kdebug.h>
 #include <kiconloader.h>
@@ -44,7 +45,7 @@ void LocationBarDelegate::paint(QPainter* painter, const QStyleOptionViewItem& o
     // information we need to paint
     QVariant variant = index.data(Place::PlaceUrlRole);
     if (variant == QVariant()) {
-        QStyledItemDelegate::paint(painter, option, index);
+        QStyledItemDelegate::paint(painter, option, QModelIndex());
         return;
     }
     
@@ -53,8 +54,9 @@ void LocationBarDelegate::paint(QPainter* painter, const QStyleOptionViewItem& o
 
     // Start painting
     painter->save();
+    QStyledItemDelegate::paint(painter, option, QModelIndex());
+
     painter->translate(option.rect.x(), option.rect.y());
-    
     // Paint background and stablish main text colors depending on if we are
     // painting the currently selected index or not
     // TODO: why doesn't it work fine? background for selected items is only
@@ -63,44 +65,46 @@ void LocationBarDelegate::paint(QPainter* painter, const QStyleOptionViewItem& o
     
     QColor titleColor;
     QColor urlColor;
+
     if (option.state & QStyle::State_Selected) {
-        painter->fillRect(option.rect, option.palette.highlight());
         urlColor = titleColor = option.palette.color(QPalette::HighlightedText);
     } else {
-        painter->fillRect(option.rect, option.palette.window());
         titleColor = option.palette.color(QPalette::Text);
-        urlColor = option.palette.color(QPalette::Dark);
+        urlColor = option.palette.color(QPalette::Link);
     }
     
     // Paint url
     painter->setPen(urlColor);
-    paintText(painter, 27, 40, place->url().toString());
+    paintText(painter, 27, 40, place->url().toString(), AlignLeft, option.rect.width() - 30);
     
-    // Paint tags
+    // Paint relevance (for debugging only!)
+    painter->setPen(titleColor);
+    QFont font = painter->font();
+    QFont fontPrev = painter->font();
+    font.setPointSize(font.pointSize()-1);
+    painter->setFont(font);    
+    qreal relevance = qVariantValue<qreal>(index.data(Place::PlaceRelevanceRole));
+    paintText(painter, option.rect.width() - 3, 40, QString::number(relevance), AlignRight);
+    
+    // Paint tags if any (use the same font as in relevance)
     int maxTitleWidth = option.rect.width();
     QString tags;
     if (!place->tags().isEmpty() && !(tags = place->tags().join(", ")).isEmpty()) {
         const QString tags = place->tags().join(", ");
-        const QPixmap tagIcon = SmallIcon("mail-tagged"); // TODO: ask for a proper icon
+        const QPixmap tagIcon = SmallIcon("item-tagged");
         int rightX = option.rect.width() - tagIcon.width() - 6;
         const int bottomY = 17;
         const int maxWidth = option.rect.width() / 3.0;
-        painter->setPen(titleColor);
-        QFont font = painter->font();
-        QFont fontPrev = painter->font();
-        font.setPointSize(font.pointSize()-1);
-        painter->setFont(font);
         const int usedWidth = paintText(painter, rightX - 3, bottomY, tags, AlignRight, maxWidth);
-        painter->setFont(fontPrev);
-        
-        rightX -= usedWidth + tagIcon.width() + 3;
+        rightX -= usedWidth + tagIcon.width() + 6;
         painter->drawPixmap(rightX, 4, tagIcon);
         maxTitleWidth = rightX - 3;
     }
+    painter->setFont(fontPrev);
     
     // Paint title
     painter->setPen(titleColor);
-    QFont font = painter->font();
+    font = painter->font();
     font.setPointSize(font.pointSize()+2);
     painter->setFont(font);
     paintText(painter, 27, 19, place->title(), AlignLeft, maxTitleWidth);
@@ -156,7 +160,7 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     // position from which we should start painting until we have finished
     // finding the matches.
     
-    QString query = m_parent->userText();
+    QString query = m_parent->userText().trimmed();
     QList<int>      positions;
     QList<QString>  substrings;
     QList<bool>     underline;
@@ -174,7 +178,7 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     bool endByEliding = false;
     
     // Find matches and non matches, populate list of substrings
-    while ((currentPos = text.indexOf(query, oldPos)) != -1 && width < maxWidth) {
+    while ((currentPos = text.indexOf(query, oldPos, Qt::CaseInsensitive)) != -1 && width < maxWidth) {
         if (currentPos - oldPos > 0) {
             underline.append(false);
             positions.append(width);
@@ -240,6 +244,7 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
         int position = startX + positions.at(i);
         painter->drawText(position, bottomY, substring);
     }
+    painter->setFont(fontNormal);
     
     return width;
 }

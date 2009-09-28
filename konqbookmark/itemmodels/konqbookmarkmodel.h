@@ -33,6 +33,12 @@ namespace Akonadi
     class Monitor;
     class Session;
 
+    /**
+     * @brief Main konqueror bookmarks model.
+     *
+     * This is the main bookmarks model, used for example for the Bookmarks
+     * Organizer.
+     */
     class KONQBOOKMARK_EXPORT KonqBookmarkModel : public EntityTreeModel
     {
         Q_OBJECT

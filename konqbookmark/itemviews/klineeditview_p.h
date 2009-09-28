@@ -48,7 +48,7 @@ public:
         connect(m_timeline, SIGNAL(frameChanged(int)), this, SLOT(update()));
     }
 
-    QSize sizeHint () const
+    QSize sizeHint() const
     {
         return m_pixmap.size();
     }
@@ -115,13 +115,13 @@ protected:
             QPainter p(this);
             p.setOpacity(m_timeline->currentValue());
             p.drawPixmap((width() - m_pixmap.width()) / 2,
-                        (height() - m_pixmap.height()) / 2,
+                        (height() - m_pixmap.height()) / 2 - 1,
                         m_pixmap);
         } else {
             QPainter p(this);
             p.setOpacity(1); // make sure
             p.drawPixmap((width() - m_pixmap.width()) / 2,
-                        (height() - m_pixmap.height()) / 2,
+                        (height() - m_pixmap.height()) / 2 - 1,
                         m_pixmap);
         }
     }

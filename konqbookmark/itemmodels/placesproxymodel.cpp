@@ -20,12 +20,17 @@
 
 #include "placesproxymodel.h"
 #include "placesmanager.h"
+#include "kcompletionmodel.h"
 
+#include <kurlcompletion.h>
 #include <kdescendantsproxymodel.h>
 #include <kdebug.h>
 
 #include <QString>
+#include <QVariant>
+#include <QtAlgorithms>
 #include <QHash>
+#include <QMap>
 #include <QDateTime>
 #include <QPersistentModelIndex>
 
@@ -60,20 +65,19 @@ public:
     bool updateRelevance(const QModelIndex& index);
     Place* placeFromIndex(const QModelIndex& index);
     
-    void slotRowsInserted(const QModelIndex& parent, int start, int end);
-    void slotRowsRemoved(const QModelIndex& parent, int start, int end);
-    void slotModelAboutToBeReset();
+    void slotRowsInserted(const QModelIndex& source_parent, int start, int end);
+    void slotRowsRemoved(const QModelIndex& source_parent, int start, int end);
+    void slotModelReset();
     
     PlacesProxyModel* q;
-    
+
+    KCompletionModel *m_urlCompletionModel;
     QString m_strQuery;
-    QAbstractItemModel *m_sourceModel;
-    KDescendantsProxyModel *m_descendantsModel;
     QHash<const QPersistentModelIndex, qreal> m_relevance;
 };
 
 PlacesProxyModel::Private::Private(PlacesProxyModel* parent)
-    : q(parent), m_sourceModel(0), m_descendantsModel(0)
+    : q(parent), m_strQuery(QString())
 {
 
 }
@@ -85,7 +89,7 @@ PlacesProxyModel::Private::~Private()
 
 Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex& index)
 {
-    QUrl placeUrl = q->mapToSource(index).data(Place::PlaceUrlRole).toString();
+    QUrl placeUrl = index.data(Place::PlaceUrlRole).toString();
     Place* place = PlacesManager::self()->place(placeUrl);
     
     // Places manager should have all the places!
@@ -101,7 +105,6 @@ int PlacesProxyModel::Private::matches(Place* place)
     matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
     matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
     matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
-    kDebug() << place->url() << place->url().toString().count(m_strQuery, Qt::CaseInsensitive) << matches;
     return matches;
 }
 
@@ -129,8 +132,8 @@ bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
     }
     
     relevance += matches * weight + place->numVisits() * weight;
-    
-    if (m_relevance[index] == relevance) {
+
+    if (m_relevance.contains(index) && m_relevance[index] == relevance) {
         return false;
     }
     
@@ -156,11 +159,12 @@ void PlacesProxyModel::Private::slotRowsRemoved(const QModelIndex& parent, int s
     }
 }
 
-void PlacesProxyModel::Private::slotModelAboutToBeReset()
+void PlacesProxyModel::Private::slotModelReset()
 {
     m_relevance.clear();
-    QModelIndexList list = q->persistentIndexList();
-    foreach(const QModelIndex& index, list) {
+
+    QModelIndexList persistentIndexList = q->persistentIndexList();
+    foreach(const QModelIndex& index, persistentIndexList) {
         updateRelevance(index);
     }
 }
@@ -169,21 +173,19 @@ void PlacesProxyModel::Private::slotModelAboutToBeReset()
 PlacesProxyModel::PlacesProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent), d(new Private(this))
 {
-    setSortRole(Place::PlaceRelevanceRole);
-    setSortCaseSensitivity(Qt::CaseInsensitive);
-    setDynamicSortFilter(false);
-    
+    // Create the url completion model and set the source model
+    d->m_urlCompletionModel = new KCompletionModel(this);
+    d->m_urlCompletionModel->setCompletion(new KUrlCompletion());
+    PlacesManager::self()->registerUrlCompletionModel(d->m_urlCompletionModel);
+    QSortFilterProxyModel::setSourceModel(PlacesManager::self());
     connect(this, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(slotRowsInserted(const QModelIndex&, int, int)));
-        
     connect(this, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
         this, SLOT(slotRowsRemoved(const QModelIndex&, int, int)));
-        
-    connect(this, SIGNAL(modelAboutToBeReset()),
-        this, SLOT(slotModelAboutToBeReset()));
-        
-    connect(this, SIGNAL(layoutAboutToBeChanged()),
-        this, SLOT(slotModelAboutToBeReset()));
+    connect(this, SIGNAL(modelReset()),
+        this, SLOT(slotModelReset()));
+    connect(this, SIGNAL(layoutChanged()),
+        this, SLOT(slotModelReset()));
 }
 
 PlacesProxyModel::~PlacesProxyModel()
@@ -193,44 +195,23 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
+//     d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
+    kDebug() << rowCount() << hasChildren();
+
     query = query.trimmed();
     
     if (query.isEmpty()) {
         return;
     }
-    
-    kDebug() << "query=" << query;
-    emit layoutAboutToBeChanged();
+
     d->m_strQuery = query;
     d->m_relevance.clear();
-    invalidateFilter();
-    emit layoutChanged();
+    invalidate();
 }
 
-void PlacesProxyModel::setQuery(QVariant query)
-{
-    setQuery(query);
-}
-
-QVariant PlacesProxyModel::query() const
+QString PlacesProxyModel::query() const
 {
     return d->m_strQuery;
-}
-
-void PlacesProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
-{
-    if (!sourceModel) {
-        return;
-    }
-    
-    // TODO we don't allow yet to change from a model to another
-    Q_ASSERT(d->m_sourceModel == 0);
-    
-    d->m_sourceModel = sourceModel;
-    d->m_descendantsModel = new KDescendantsProxyModel(this);
-    d->m_descendantsModel->setSourceModel(d->m_sourceModel);
-    
-    QSortFilterProxyModel::setSourceModel(d->m_descendantsModel);
 }
 
 QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
@@ -240,18 +221,26 @@ QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
         if(!d->m_relevance.contains(index)) {
             d->updateRelevance(index);
         }
-        kDebug() << d->m_relevance[index];
         return d->m_relevance[index];
     default:
         return QSortFilterProxyModel::data(index, role);
     }
 }
 
+void PlacesProxyModel::setSourceModel(QAbstractItemModel */*sourceModel*/)
+{
+    Q_ASSERT_X(false, "source model", "Shouldn't be called, this proxy model has PlacesManager model as the fixed source model");
+}
+
 bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
-    QModelIndex sourceIndex = sourceModel()->index(source_row, 0, source_parent);
+    Q_UNUSED(source_parent);
+
+    Q_ASSERT(sourceModel());
+    // 1. Obtain the place URL for the given row
+    QModelIndex sourceIndex = sourceModel()->index(source_row, 0, QModelIndex());
     
-    if (!sourceIndex.isValid() || sourceModel()->hasChildren(sourceIndex)) {
+    if (!sourceIndex.isValid()) {
         return false;
     }
     
@@ -261,15 +250,142 @@ bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& sourc
     }
     
     QUrl url = variant.toString();
+    if(url.isEmpty()) {
+        return false;
+    }
+    kDebug() << url;
+
+    // 2. Only accept URLs from history, bookmarks, or our url completion model
+    if(!PlacesManager::self()->filterAcceptUrl(url, d->m_urlCompletionModel)) {
+        return false;
+    }
+    
     Place* place = PlacesManager::self()->place(url);
-    kDebug() << sourceIndex << (d->matches(place) > 0);
-        
     // Places manager should have all the places!
-    Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");    
-    
+    Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");
+
+    // 3. Only accept places relevant to our query
     bool accept = d->matches(place) > 0;
-    
     return accept;
+}
+
+
+////////////////////////
+
+class LocationBarCompletionModel::Private
+{
+public:
+    Private(LocationBarCompletionModel *parent);
+    ~Private();
+
+    void slotModelReset();
+
+    LocationBarCompletionModel *q;
+    QHash<int, int> m_mapFromSource;
+    QHash<int, int> m_mapToSource;
+};
+
+LocationBarCompletionModel::Private::Private(LocationBarCompletionModel *parent)
+    : q(parent)
+{
+
+}
+
+LocationBarCompletionModel::Private::~Private()
+{
+
+}
+
+class ComparePlaces
+{
+public:
+    bool operator()(const QModelIndex &sourceLeft, const QModelIndex &sourceRight) const
+    {
+        int leftRelevance = sourceLeft.data(Place::PlaceRelevanceRole).value<qreal>();
+        int rightRelevance = sourceRight.data(Place::PlaceRelevanceRole).value<qreal>();
+        return leftRelevance > rightRelevance;
+    }
+};
+
+void LocationBarCompletionModel::Private::slotModelReset()
+{
+    emit q->layoutAboutToBeChanged();
+    QModelIndexList values;
+    m_mapFromSource.clear();
+    m_mapToSource.clear();
+    for(int i = 0; i < q->sourceModel()->rowCount(); i++) {
+        QModelIndex sourceIndex = q->sourceModel()->index(i, 0);
+        values.append(sourceIndex);
+    }
+    qSort(values.begin(), values.end(), ComparePlaces());
+    int i = 0;
+    foreach(const QModelIndex sourceIndex, values) {
+        m_mapToSource[i] = sourceIndex.row();
+        m_mapFromSource[sourceIndex.row()] = i;
+        i++;
+        kDebug() << i << sourceIndex.row();
+    }
+    emit q->layoutChanged();
+}
+
+LocationBarCompletionModel::LocationBarCompletionModel(PlacesProxyModel *sourceModel, QObject *parent)
+    : QAbstractProxyModel(parent), d(new Private(this))
+{
+    QAbstractProxyModel::setSourceModel(sourceModel);
+
+    d->slotModelReset();
+
+    connect(sourceModel, SIGNAL(modelReset()),
+        this, SLOT(slotModelReset()));
+    connect(sourceModel, SIGNAL(layoutChanged()),
+        this, SLOT(slotModelReset()));   
+}
+
+QModelIndex LocationBarCompletionModel::mapToSource(const QModelIndex &proxyIndex) const
+{
+    return sourceModel()->index(d->m_mapToSource[proxyIndex.row()], 0);
+}
+
+QModelIndex LocationBarCompletionModel::mapFromSource(const QModelIndex &sourceIndex) const
+{
+    return index(d->m_mapFromSource[sourceIndex.row()], 0);
+}
+
+QModelIndex LocationBarCompletionModel::index(int row, int column, const QModelIndex& parent) const
+{
+    if (column != 0 || parent.isValid()) {
+        return QModelIndex();
+    }
+    
+    if (row < 0 || row > rowCount(QModelIndex())) {
+        return QModelIndex();
+    }
+    
+    return createIndex(row, column);
+}
+
+QModelIndex LocationBarCompletionModel::parent(const QModelIndex&) const
+{
+    return QModelIndex();
+}
+
+int LocationBarCompletionModel::rowCount(const QModelIndex& index) const
+{
+    if(index.isValid()) {
+        return 0;
+    }
+
+    return sourceModel()->rowCount();
+}
+
+int LocationBarCompletionModel::columnCount(const QModelIndex&) const
+{
+    return sourceModel()->columnCount();
+}
+
+QVariant LocationBarCompletionModel::data(const QModelIndex& index, int role) const
+{
+    return sourceModel()->data(mapToSource(index), role);
 }
 
 #include "placesproxymodel.moc"

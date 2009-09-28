@@ -35,6 +35,7 @@
 #include "konqbookmark_export.h"
 
 #include <QtGui/QLineEdit>
+#include <QModelIndex>
 
 #include <kcompletion.h>
 
@@ -517,6 +518,12 @@ protected Q_SLOTS:
      * cancels the request. Mostly applies to popup completions.
      */
     void userCancelled(const QString & cancelText);
+
+    /**
+     * Sets current text to the display text of the activated popup completion
+     * index.
+     */
+    void slotActivated(const QModelIndex& index);
     
     
     void updateTextMargins();

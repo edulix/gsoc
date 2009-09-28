@@ -12,11 +12,13 @@ include(CheckIncludeFiles)
 find_package (KdepimLibs REQUIRED)
 find_package(Nepomuk REQUIRED)
 
+add_subdirectory(icons)
+
 if(WIN32)
     set(LIB_INSTALL_DIR ${LIB_INSTALL_DIR}
-                        RUNTIME DESTINATION ${BIN_INSTALL_DIR}
-                        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-                        ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif(WIN32)
 
 include_directories(
@@ -60,7 +62,6 @@ set(konqbookmark_LIB_SRCS
     itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
-#     itemviews/placesdelegate.cpp
 #     kbookmarkbridge/kbookmarkimporter.cpp
 )
 
@@ -104,10 +105,7 @@ set(konqbookmark_LIB_HDRS
     konqbookmark_export.h
     itemviews/konqbookmarkview.h
     itemviews/konqbookmarkdelegate.h
-    itemviews/kbreadcrumbbutton_p.h
     itemviews/kbreadcrumbnavigator.h
-    itemviews/kbreadcrumbnavigatorbutton_p.h
-    itemviews/kbreadcrumbnavigatormenu_p.h
     itemviews/ktreeviewsearchline.h
     itemviews/modelmenu.h
     itemviews/konqbookmarkmodelmenu.h
@@ -116,7 +114,6 @@ set(konqbookmark_LIB_HDRS
     itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
     itemviews/klineeditview.h
-#     itemviews/placesdelegate.h
 #     kbookmarkbridge/kbookmarkimporter.h
 )
 

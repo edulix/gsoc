@@ -27,6 +27,23 @@
 
 namespace Konqueror
 {
+    /**
+     * Konqueror Location Bar. It has support for plugin that can be added to
+     * the left and right of the line edit. It also features a completion popup.
+     * The completion popup is an items view with a custom item delegate called
+     * LocationBarDelegate. The items model used is a sorted PlacesProxy. The
+     * tree of proxies models is like this:
+     * 
+     *   QSortedFilterProxyModel
+     *             ^
+     *             |
+     *             |
+     *     PlacesProxyModel
+     *             ^
+     *             |
+     *             |
+     *      PlacesManager
+     */
     class KONQBOOKMARK_EXPORT LocationBar : public KLineEditView
     {
         Q_OBJECT

@@ -23,8 +23,11 @@
 #include <QString>
 #include <klineedit.h>
 #include <kdebug.h> 
+#include "../itemmodels/konqbookmarkmodel.h" 
+#include "locationbar.h"
 
 using namespace Akonadi;
+using namespace Konqueror;
 
 KonqBookmarkDelegate::KonqBookmarkDelegate(QObject *parent)
     : QItemDelegate(parent)
@@ -32,26 +35,47 @@ KonqBookmarkDelegate::KonqBookmarkDelegate(QObject *parent)
 }
 
 QWidget *KonqBookmarkDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &/* option */,
-    const QModelIndex &/* index */) const
+    const QModelIndex &index) const
 {
-    KLineEdit *editor = new KLineEdit(parent);
-    return editor;
+    if(index.column() == KonqBookmarkModel::Url) {
+        // Edit the address with a locationbar
+        LocationBar *editor = new LocationBar(parent);
+        return editor;
+    } else {
+        KLineEdit *editor = new KLineEdit(parent);
+        // Show some space at the left for the bookmarks' icon
+        if (index.column() == KonqBookmarkModel::Title) {
+            editor->setContentsMargins(24, 0, 0, 0);
+        }
+        return editor;
+    }
 }
 
 void KonqBookmarkDelegate::setEditorData(QWidget *editor,
                                     const QModelIndex &index) const
 {
     QString text = index.model()->data(index, Qt::EditRole).toString();
-
-    KLineEdit *kLineEditEditor = static_cast<KLineEdit*>(editor);
-    kLineEditEditor->setText(text);
+    
+    if(index.column() == KonqBookmarkModel::Url) {
+        LocationBar *LocationBarEditor = qobject_cast<LocationBar*>(editor);
+        LocationBarEditor->setText(text);
+    } else {
+        KLineEdit *kLineEditEditor = static_cast<KLineEdit*>(editor);
+        kLineEditEditor->setText(text);
+    }
 }
 
 void KonqBookmarkDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
                                 const QModelIndex &index) const
 {
-    KLineEdit *kLineEditEditor = static_cast<KLineEdit*>(editor);
-    QString text = kLineEditEditor->text();
+    QString text;
+    if(index.column() == KonqBookmarkModel::Url) {
+        LocationBar *LocationBarEditor = qobject_cast<LocationBar*>(editor);
+        text = LocationBarEditor->text();
+    } else {
+        KLineEdit *kLineEditEditor = static_cast<KLineEdit*>(editor);
+        text = kLineEditEditor->text();
+    }
 
     model->setData(index, text, Qt::EditRole);
 }

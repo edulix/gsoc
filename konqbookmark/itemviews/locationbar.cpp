@@ -34,6 +34,7 @@
 #include <QStringList>
 #include <QWidget>
 #include <QSortFilterProxyModel>
+#include <QCompleter>
 
 #include <kurlcompletion.h>
 #include <kurl.h>
@@ -48,9 +49,12 @@ class LocationBar::Private
 public:
     Private(LocationBar* parent);
     ~Private();
+
+    void sort();
     
     LocationBar* q;
-    KAggregatedModel* m_model;
+    PlacesProxyModel* m_unsortedModel;
+    LocationBarCompletionModel* m_model;
     QAbstractItemView* m_view;
 };
 
@@ -74,27 +78,15 @@ void LocationBar::init()
 {
     setCompletionMode(KGlobalSettings::CompletionPopup);
     setClearButtonShown(true);
+    setClickMessage(i18n("Search Bookmarks and History"));
     completionView()->setItemDelegate(new LocationBarDelegate(this));
-
-    KCompletionModel *completionModel = new KCompletionModel(this);
-    completionModel->setCompletion(new KUrlCompletion());
-    PlacesManager::self()->registerUrlCompletionModel(completionModel);
-//     connect(this, SIGNAL(textChanged(const QString&)),
-//         completionModel->completion(), SLOT(slotMakeCompletion(const QString &)));
     
-    PlacesProxyModel* placesProxyModel = new PlacesProxyModel(this);
-    placesProxyModel->setSourceModel(PlacesManager::self()->bookmarkModel());
+    d->m_unsortedModel = new PlacesProxyModel(this);
+    d->m_model = new LocationBarCompletionModel(d->m_unsortedModel, this);
+
     connect(this, SIGNAL(textChanged(const QString&)),
-        placesProxyModel, SLOT(setQuery(const QString &)));
-        
-    PlacesProxyModel* historyProxyModel = new PlacesProxyModel(this);
-    placesProxyModel->setSourceModel(PlacesManager::self()->historyEntriesModel());
-        
-    KAggregatedModel* aggregatedModel = new KAggregatedModel(this);
-//     aggregatedModel->addSourceModel(completionModel);
-//     aggregatedModel->addSourceModel(historyProxyModel);
-    aggregatedModel->addSourceModel(placesProxyModel);
-    completionView()->setModel(placesProxyModel);
+        d->m_unsortedModel, SLOT(setQuery(const QString &)));
+    completionView()->setModel(d->m_model);
     
     KLineEditViewButton* tempButton = new KLineEditViewButton(this);
     tempButton->setCursor(Qt::ArrowCursor);

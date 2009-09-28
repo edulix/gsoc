@@ -1336,6 +1336,11 @@ void KLineEditView::setUrl(const KUrl& url)
     setText(url.prettyUrl());
 }
 
+void KLineEditView::slotActivated(const QModelIndex &index)
+{
+    userCancelled(index.data().toString());
+}
+
 void KLineEditView::userCancelled(const QString & cancelText)
 {
     if (completionMode() != KGlobalSettings::CompletionPopupAuto) {
@@ -1507,6 +1512,8 @@ KCompletionView * KLineEditView::completionView(bool create)
         d->completionView->setFont(font());
         connect(d->completionView, SIGNAL(userCancelled(const QString&)),
                 this, SLOT(userCancelled(const QString&)));
+        connect(d->completionView, SIGNAL(activated(const QModelIndex &)),
+            SLOT(slotActivated(const QModelIndex &)));
     }
 
     return d->completionView;

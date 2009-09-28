@@ -28,6 +28,9 @@
 
 namespace Akonadi
 {
+    /**
+     * Delegate used in the bookmarks editor for editing the bookmarks.
+     */
     class KONQBOOKMARK_EXPORT KonqBookmarkDelegate : public QItemDelegate
     {
     public:
