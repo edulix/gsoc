@@ -6,5 +6,5 @@ Exec=akonadi_konquerorbookmarks_resource
 Icon=bookmarks
 
 X-Akonadi-MimeTypes=application/x-vnd.kde.konqbookmark
-X-Akonadi-Capabilities=Resource,Unique,Autostart
+X-Akonadi-Capabilities=Resource,Unique,Autostart,NoConfig
 X-Akonadi-Identifier=akonadi_konquerorbookmarks_resource

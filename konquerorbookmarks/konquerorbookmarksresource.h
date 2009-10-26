@@ -1,20 +1,20 @@
 /*
-    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
+Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
 
-    This library is free software; you can redistribute it and/or modify it
-    under the terms of the GNU Library General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or (at your
-    option) any later version.
+This library is free software; you can redistribute it and/or modify it
+under the terms of the GNU Library General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
 
-    This library is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-    License for more details.
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+License for more details.
 
-    You should have received a copy of the GNU Library General Public License
-    along with this library; see the file COPYING.LIB.  If not, write to the
-    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
+You should have received a copy of the GNU Library General Public License
+along with this library; see the file COPYING.LIB.  If not, write to the
+Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
 */
 
 #ifndef KONQUERORBOOKMARKSRESOURCE_H
@@ -27,21 +27,21 @@
 class KonquerorBookmarksResource : public Akonadi::ResourceBase,
                            public Akonadi::AgentBase::Observer
 {
-Q_OBJECT
+  Q_OBJECT
 
-public:
+  public:
     KonquerorBookmarksResource( const QString &id );
-    virtual ~KonquerorBookmarksResource();
+    ~KonquerorBookmarksResource();
 
-public Q_SLOTS:
+  public Q_SLOTS:
     virtual void configure( WId windowId );
 
-protected Q_SLOTS:
+  protected Q_SLOTS:
     void retrieveCollections();
     void retrieveItems( const Akonadi::Collection &col );
     bool retrieveItem( const Akonadi::Item &item, const QSet<QByteArray> &parts );
-    
-protected:
+
+  protected:
     virtual void aboutToQuit();
 
     virtual void itemAdded( const Akonadi::Item &item, const Akonadi::Collection &collection );

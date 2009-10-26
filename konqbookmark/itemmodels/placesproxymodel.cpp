@@ -253,7 +253,6 @@ bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& sourc
     if(url.isEmpty()) {
         return false;
     }
-    kDebug() << url;
 
     // 2. Only accept URLs from history, bookmarks, or our url completion model
     if(!PlacesManager::self()->filterAcceptUrl(url, d->m_urlCompletionModel)) {
@@ -323,7 +322,6 @@ void LocationBarCompletionModel::Private::slotModelReset()
         m_mapToSource[i] = sourceIndex.row();
         m_mapFromSource[sourceIndex.row()] = i;
         i++;
-        kDebug() << i << sourceIndex.row();
     }
     emit q->layoutChanged();
 }

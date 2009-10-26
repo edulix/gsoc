@@ -39,8 +39,6 @@ set(KDE4_ICON_DIR ${KDE4_INSTALL_DIR}/share/icons)
 
 include_directories(
     ${KDE4_INCLUDES}
-    ${SOPRANO_INCLUDE_DIRS}
-    ${NEPOMUK_INCLUDE_DIRS}
     ${KDEPIMLIBS_INCLUDE_DIRS}
 )
 
@@ -56,9 +54,9 @@ set( konquerorbookmarksresource_SRCS
 install( FILES konquerorbookmarksresource.desktop DESTINATION "${CMAKE_INSTALL_PREFIX}/share/akonadi/agents" )
 
 kde4_add_kcfg_files(konquerorbookmarksresource_SRCS settings.kcfgc)
-kcfg_generate_dbus_interface(${CMAKE_CURRENT_SOURCE_DIR}/konquerorbookmarksresource.kcfg org.kde.Akonadi.KonquerorBookmarks.Settings)
+kcfg_generate_dbus_interface(${CMAKE_CURRENT_SOURCE_DIR}/konquerorbookmarksresource.kcfg org.kde.Akonadi.konquerorbookmarks.Settings)
 qt4_add_dbus_adaptor(konquerorbookmarksresource_SRCS
-  ${CMAKE_CURRENT_BINARY_DIR}/org.kde.Akonadi.KonquerorBookmarks.Settings.xml settings.h Settings
+  ${CMAKE_CURRENT_BINARY_DIR}/org.kde.Akonadi.konquerorbookmarks.Settings.xml settings.h Settings
 )
 
 kde4_add_executable(akonadi_konquerorbookmarks_resource RUN_UNINSTALLED ${konquerorbookmarksresource_SRCS})

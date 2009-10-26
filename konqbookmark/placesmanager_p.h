@@ -31,7 +31,7 @@
 #include <kcompletion.h>
 #include <kglobal.h>
 
-#include <akonadi/monitor.h>
+#include <akonadi/changerecorder.h>
 #include <akonadi/session.h>
 
 #include <QByteArray>
@@ -82,7 +82,7 @@ PlacesManager::Private::Private(PlacesManager *parent)
     : q(parent)
 {   
     Session* session = new Session(QByteArray("PlacesManager-") + QByteArray::number(qrand()), q);
-    Monitor* monitor = new Monitor(q);
+    ChangeRecorder* monitor = new ChangeRecorder(q);
     m_bookmarksModel = new KonqBookmarkModel(session, monitor, q);
     
     connect(m_bookmarksModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),

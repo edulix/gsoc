@@ -33,7 +33,7 @@
 #include <akonadi/collectionmodifyjob.h>
 #include <akonadi/collectioncopyjob.h>
 #include <akonadi/transactionsequence.h>
-#include <akonadi/monitor.h>
+#include <akonadi/changerecorder.h>
 #include <akonadi/session.h>
 #include <akonadi/itemfetchscope.h>
 #include <Nepomuk/ResourceManager>
@@ -62,7 +62,7 @@ class KonqBookmarkModel::Private
 
 //@endcond
 
-KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Monitor *monitor, QObject *parent )
+KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::ChangeRecorder *monitor, QObject *parent )
   : EntityTreeModel( session, monitor, parent ),
     d( new Private() )
 {
@@ -90,7 +90,7 @@ int KonqBookmarkModel::columnCount(const QModelIndex& index) const
     return 9;
 }
 
-QVariant KonqBookmarkModel::getHeaderData(int section, Qt::Orientation orientation, int role, int headerSet ) const
+QVariant KonqBookmarkModel::entityHeaderData(int section, Qt::Orientation orientation, int role, HeaderGroup headerGroup ) const
 {   
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
         switch(section) {
@@ -117,7 +117,7 @@ QVariant KonqBookmarkModel::getHeaderData(int section, Qt::Orientation orientati
         }
     }
     
-    return EntityTreeModel::getHeaderData( section, orientation, role, headerSet );
+    return EntityTreeModel::entityHeaderData( section, orientation, role, headerGroup );
 }
 
 
@@ -129,7 +129,7 @@ Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
     return EntityTreeModel::flags(index) | Qt::ItemIsEditable;
 }
 
-QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) const
+QVariant KonqBookmarkModel::entityData( const Item &item, int column, int role ) const
 {
     if ( item.mimeType() == mimeType() ) {
         if ( !item.hasPayload<KonqBookmark>() ) {
@@ -184,10 +184,10 @@ QVariant KonqBookmarkModel::getData( const Item &item, int column, int role ) co
             break;
         }
     }
-    return EntityTreeModel::getData( item, column, role );
+    return EntityTreeModel::entityData( item, column, role );
 }
 
-QVariant KonqBookmarkModel::getData( const Collection &collection, int column, int role ) const
+QVariant KonqBookmarkModel::entityData( const Collection &collection, int column, int role ) const
 {
     switch( role )
     {
@@ -220,7 +220,7 @@ QVariant KonqBookmarkModel::getData( const Collection &collection, int column, i
     case Qt::CheckStateRole:
         return QVariant();
     }
-    return EntityTreeModel::getData( collection, column, role );
+    return EntityTreeModel::entityData( collection, column, role );
 }
 
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)

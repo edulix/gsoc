@@ -37,7 +37,7 @@
 #include <kstandardaction.h>
 #include <KLocale>
 #include <akonadi/control.h>
-#include <akonadi/monitor.h>
+#include <akonadi/changerecorder.h>
 #include <akonadi/session.h>
 
 #include <konqbookmark/konqbookmarkmodel.h>
@@ -89,7 +89,7 @@ void Bookmarks::setupActions()
     (void) KStandardAction::paste(actn, SLOT( slotPaste() ), actionCollection());
 
     Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
-    Akonadi::Monitor* monitor = new Akonadi::Monitor( this );
+    Akonadi::ChangeRecorder* monitor = new Akonadi::ChangeRecorder( this );
     
     // create Konqueror Bookmarks Resource if needed
     QDBusConnection bus = QDBusConnection::sessionBus();

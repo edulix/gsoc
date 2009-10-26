@@ -53,7 +53,7 @@
 #include <akonadi/itemcreatejob.h>
 #include <akonadi/itemdeletejob.h>
 #include <akonadi/itemfetchscope.h>
-#include <akonadi/monitor.h>
+#include <akonadi/changerecorder.h>
 #include <akonadi/session.h>
 #include <akonadi/entitytreemodel.h>
 #include <akonadi/entityfilterproxymodel.h>
@@ -85,7 +85,6 @@ public:
     Konqueror::CollectionsProxyModel *mCollectionProxyModel;
     KDataWidgetSelectionMapper *mMapper;
     ModelWatcher *mModelWatcher;
-    Akonadi::Monitor *mMonitor;
     BookmarksView *mParent;
 };
 

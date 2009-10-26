@@ -63,13 +63,13 @@ public:
     
 public:
     Collection mBookmarksRootCollection;
-    Collection mMenuCollection;
-    Collection mToolbarCollection;
-    Collection mSavedSearchesCollection;
-    Collection mMostRecentCollection;
-    Collection mRecentTagsCollection;
-    Collection mMostVisitedCollection;
-    Collection mUnclasifiedCollection;
+//     Collection mMenuCollection;
+//     Collection mToolbarCollection;
+//     Collection mSavedSearchesCollection;
+//     Collection mMostRecentCollection;
+//     Collection mRecentTagsCollection;
+//     Collection mMostVisitedCollection;
+//     Collection mUnclasifiedCollection;
     Collection::List mList;
 
 private:
@@ -132,50 +132,8 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     // or at least we should remove the pre-existing virtual collection 
     
 //     Akonadi::SearchCreateJob *job = new Akonadi::SearchCreateJob( i18n("Latest Bookmarks"), query );
-
-//     d->mMenuCollection.setParent( d->mBookmarksRootCollection );
-//     d->mMenuCollection.setRemoteId( "/konquerorbookmarks/menu/" );
-//     d->mMenuCollection.setName( "Bookmarks Menu" );
-//     d->mMenuCollection.setContentMimeTypes( mimeTypes );
-//     
-//     d->mToolbarCollection.setParent( d->mBookmarksRootCollection );
-//     d->mToolbarCollection.setRemoteId( "/konquerorbookmarks/toolbar/" );
-//     d->mToolbarCollection.setName( "Bookmarks Toolbar" );
-//     d->mToolbarCollection.setContentMimeTypes( mimeTypes );
-//     
-//     d->mSavedSearchesCollection.setParent( d->mMenuCollection );
-//     d->mSavedSearchesCollection.setRemoteId( "/konquerorbookmarks/menu/savedsearches/" );
-//     d->mSavedSearchesCollection.setName( "Saved Searches" );
-//     d->mSavedSearchesCollection.setContentMimeTypes( mimeTypes );
-//     
-//     d->mMostRecentCollection.setParent( d->mMenuCollection );
-//     d->mMostRecentCollection.setRemoteId( "/konquerorbookmarks/menu/mostrecent/" );
-//     d->mMostRecentCollection.setName( "Most Recent Bookmarks" );
-//     d->mMostRecentCollection.setContentMimeTypes( mimeTypes );
-//     
-//     d->mRecentTagsCollection.setParent( d->mMenuCollection );
-//     d->mRecentTagsCollection.setRemoteId( "/konquerorbookmarks/menu/mostrecenttags/" );
-//     d->mRecentTagsCollection.setName( "Most Recent Tags" );
-//     d->mRecentTagsCollection.setContentMimeTypes( mimeTypes );
-// 
-//     d->mMostVisitedCollection.setParent( d->mMenuCollection );
-//     d->mMostVisitedCollection.setRemoteId( "/konquerorbookmarks/menu/mostvisited/" );
-//     d->mMostVisitedCollection.setName( "Most Visited Bookmarks" );
-//     d->mMostVisitedCollection.setContentMimeTypes( mimeTypes );
-//     
-//     d->mUnclasifiedCollection.setParent( d->mMenuCollection );
-//     d->mUnclasifiedCollection.setRemoteId( "/konquerorbookmarks/menu/unclasified/" );
-//     d->mUnclasifiedCollection.setName( "Unclasified Bookmarks" );
-//     d->mUnclasifiedCollection.setContentMimeTypes( mimeTypes );
     
     d->mList << d->mBookmarksRootCollection;
-//     d->mList << d->mMenuCollection;
-//     d->mList << d->mToolbarCollection;
-//     d->mList << d->mSavedSearchesCollection;
-//     d->mList << d->mMostRecentCollection;
-//     d->mList << d->mRecentTagsCollection;
-//     d->mList << d->mMostVisitedCollection;
-//     d->mList << d->mUnclasifiedCollection;
 
     synchronizeCollectionTree();
 }
@@ -274,9 +232,9 @@ void KonquerorBookmarksResource::aboutToQuit()
 
 void KonquerorBookmarksResource::configure(WId windowId)
 {
-    Q_UNUSED(windowId);
-    
-    // TODO Here we will show the "Organize bookmarks.." dialog.
+    Q_UNUSED(windowId);    
+    synchronizeCollectionTree();
+    emit configurationDialogAccepted();
 }
 
 void KonquerorBookmarksResource::itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection)

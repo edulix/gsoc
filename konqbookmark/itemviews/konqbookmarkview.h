@@ -35,7 +35,7 @@ namespace Akonadi
         
         virtual ~KonqBookmarkView();
         
-        virtual void setModel (QAbstractItemModel *model);
+        virtual void setModel(QAbstractItemModel *model);
         
     public Q_SLOTS:
         /**
@@ -47,9 +47,9 @@ namespace Akonadi
         
     private Q_SLOTS:
         /**
-        * Disables the automatical resizing of columns, if the user has resized the columns
-        * with the mouse.
-        */
+         * Disables the automatical resizing of columns, if the user has resized the columns
+         * with the mouse.
+         */
         void slotHeaderSectionResized(int logicalIndex, int oldSize, int newSize);
         
         /**
@@ -61,7 +61,7 @@ namespace Akonadi
     protected:
         void resizeEvent(QResizeEvent* event);
 //         void dragEnterEvent(QDragEnterEvent *event) {}
-//         void dragLeaveEvent(QDragLeaveEvent *event) {}
+        void dragLeaveEvent(QDragLeaveEvent */*event*/) {}
 //         void dragMoveEvent(QDragMoveEvent *event) {}
 //         void dropEvent(QDropEvent *event) {}
 //         void mousePressEvent(QMouseEvent *event) {}
@@ -80,4 +80,3 @@ namespace Akonadi
 }
 
 #endif // KONQ_BOOKMARK_VIEW_H
-
