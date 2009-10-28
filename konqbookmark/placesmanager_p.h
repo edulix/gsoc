@@ -32,6 +32,7 @@
 #include <kglobal.h>
 
 #include <akonadi/changerecorder.h>
+#include <akonadi/itemfetchscope.h>
 #include <akonadi/session.h>
 
 #include <QByteArray>
@@ -83,8 +84,17 @@ PlacesManager::Private::Private(PlacesManager *parent)
 {   
     Session* session = new Session(QByteArray("PlacesManager-") + QByteArray::number(qrand()), q);
     ChangeRecorder* monitor = new ChangeRecorder(q);
-    m_bookmarksModel = new KonqBookmarkModel(session, monitor, q);
     
+    
+    Akonadi::ItemFetchScope scope;
+    scope.fetchFullPayload( true );
+
+    monitor->fetchCollection( true );
+    monitor->setItemFetchScope( scope );
+    monitor->setMimeTypeMonitored( KonqBookmark::mimeType() );
+
+    m_bookmarksModel = new KonqBookmarkModel(session, monitor, q);
+            
     connect(m_bookmarksModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         q, SLOT(slotBookmarksInserted(const QModelIndex&, int, int)));
         

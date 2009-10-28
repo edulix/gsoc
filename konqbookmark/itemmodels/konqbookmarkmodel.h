@@ -71,7 +71,7 @@ namespace Akonadi
         bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
         
         /**
-         * Instead of reimplementing data() function, we reimplement getData() for items in this case,
+         * Instead of reimplementing data() function, we reimplement entityData() for items in this case,
          * and also for collections in the next function. EntityTreeModel::data() will then call these
          * functions.
          */

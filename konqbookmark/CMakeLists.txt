@@ -89,7 +89,6 @@ install(TARGETS konqbookmark ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 set(konqbookmark_LIB_HDRS
     konqbookmark.h
-    itemviews/entitytreeview.h # from akonadi_next
     itemmodels/collectionsproxymodel.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h

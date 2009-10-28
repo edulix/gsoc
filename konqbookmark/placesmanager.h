@@ -129,9 +129,9 @@ namespace Konqueror
         static PlacesManager *s_self;
         Private* const d;
         
-        Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void slotBookmarksChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight))
+        Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex &, int, int))
+        Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex &, int, int))
+        Q_PRIVATE_SLOT(d, void slotBookmarksChanged(const QModelIndex &, const QModelIndex &))
         
         Q_PRIVATE_SLOT(d, void slotHistoryEntryAdded(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))

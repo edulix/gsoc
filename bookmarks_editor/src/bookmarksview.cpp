@@ -77,7 +77,8 @@ class BookmarksView::Private : public QSharedData
 public:
     Private(BookmarksView *parent);
     
-    void expand(const QModelIndex& index);
+    void expandCollectionsView(const QModelIndex& index);
+    void expandBookmarksView(const QModelIndex& index);
     void selectBookmarkFolder(const QModelIndex& index = QModelIndex(), int start = -1);
     
     Akonadi::KonqBookmarkModel *mBookmarkModel;
@@ -94,13 +95,28 @@ BookmarksView::Private::Private(BookmarksView *parent)
     
 }
 
-void BookmarksView::Private::expand(const QModelIndex& index)
+void BookmarksView::Private::expandCollectionsView(const QModelIndex& index)
 {
     // If index is invalid it means that the inserted index is the root index
     // and thus we need to expand all children
     if (!index.isValid()) {
+        kDebug() << "expand All";
+        mParent->ui_bookmarksview_base.collectionsView->expandAll();
+    } else {
+        kDebug() << index.data(KonqBookmarkModel::Title);
+        mParent->ui_bookmarksview_base.collectionsView->expand(index);
+    }
+}
+
+void BookmarksView::Private::expandBookmarksView(const QModelIndex& index)
+{
+    // If index is invalid it means that the inserted index is the root index
+    // and thus we need to expand all children
+    if (!index.isValid()) {
+        kDebug() << "expand All";
         mParent->ui_bookmarksview_base.bookmarksView->expandAll();
     } else {
+        kDebug() << index.data(KonqBookmarkModel::Title);
         mParent->ui_bookmarksview_base.bookmarksView->expand(index);
     }
 }
@@ -141,6 +157,7 @@ void BookmarksView::createModels()
     d->mCollectionProxyModel = new Konqueror::CollectionsProxyModel(this);
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
     
+    ui_bookmarksview_base.tempView->setModel(d->mBookmarkModel);
     ui_bookmarksview_base.collectionsView->setModel(d->mCollectionProxyModel);
     ui_bookmarksview_base.navigatorBreadCrumb->setModel(d->mCollectionProxyModel);
     ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel(ui_bookmarksview_base.collectionsView->selectionModel());
@@ -192,13 +209,13 @@ void BookmarksView::createModels()
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
     
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-            ui_bookmarksview_base.collectionsView, SLOT(expand(const QModelIndex&)));
+            this, SLOT(expandCollectionsView(const QModelIndex&)));
     
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(selectBookmarkFolder(const QModelIndex&, int)));
         
     connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-            this, SLOT(expand(const QModelIndex&)));
+            this, SLOT(expandBookmarksView(const QModelIndex&)));
 }
 
 void BookmarksView::addBookmark()

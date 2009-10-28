@@ -40,6 +40,7 @@
 #include <akonadi/changerecorder.h>
 #include <akonadi/session.h>
 
+#include <konqbookmark/placesmanager.h>
 #include <konqbookmark/konqbookmarkmodel.h>
 #include <konqbookmark/konqbookmarkmodelmenu.h>
 
@@ -87,9 +88,6 @@ void Bookmarks::setupActions()
     (void) KStandardAction::cut(actn, SLOT( slotCut() ), actionCollection());
     (void) KStandardAction::copy(actn, SLOT( slotCopy() ), actionCollection());
     (void) KStandardAction::paste(actn, SLOT( slotPaste() ), actionCollection());
-
-    Akonadi::Session* session = new Akonadi::Session(QByteArray( "BookmarksMain-" ) + QByteArray::number( qrand() ), this);
-    Akonadi::ChangeRecorder* monitor = new Akonadi::ChangeRecorder( this );
     
     // create Konqueror Bookmarks Resource if needed
     QDBusConnection bus = QDBusConnection::sessionBus();
@@ -99,7 +97,7 @@ void Bookmarks::setupActions()
     QString resourceName("akonadi_konquerorbookmarks_resource");  
     interface->call("addResourceInstance", resourceName);
     
-    Akonadi::KonqBookmarkModel* bookmarkModel = new Akonadi::KonqBookmarkModel( session, monitor, this );
+    Akonadi::KonqBookmarkModel* bookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
     KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, actionCollection(), this);
     
     KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");

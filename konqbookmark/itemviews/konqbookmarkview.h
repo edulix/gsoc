@@ -22,7 +22,7 @@
 
 #include "konqbookmark_export.h"
 #include "konqbookmark.h"
-#include "entitytreeview.h"
+#include <akonadi/entitytreeview.h>
 
 namespace Akonadi
 {

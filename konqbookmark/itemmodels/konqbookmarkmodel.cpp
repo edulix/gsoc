@@ -66,16 +66,9 @@ KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Change
   : EntityTreeModel( session, monitor, parent ),
     d( new Private() )
 {
-    Akonadi::ItemFetchScope scope;
-    scope.fetchFullPayload( true );
-
-    monitor->fetchCollection( true );
-    monitor->setItemFetchScope( scope );
-    monitor->setMimeTypeMonitored( mimeType() );
-//     monitor->setMimeTypeMonitored( Akonadi::Collection::mimeType() );
     // FIXME Set all monitored because otherwise the model doesn't get updates 
     // from items/collections being removed.
-    monitor->setAllMonitored(true);
+//     monitor->setAllMonitored(true);
 }
 
 KonqBookmarkModel::~KonqBookmarkModel()
@@ -225,7 +218,7 @@ QVariant KonqBookmarkModel::entityData( const Collection &collection, int column
 
 bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    // For EntityTree::getData(... EntityTreeModel::ItemRole) column's index must be 0,
+    // For EntityTree::entityData(... EntityTreeModel::ItemRole) column's index must be 0,
     // same with EntityTree::setData(... EntityTreeModel::ItemRole), etc
     QModelIndex indexZero = EntityTreeModel::index(index.row(), 0, index.parent());
     
