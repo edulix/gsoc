@@ -103,21 +103,6 @@
         </layout>
        </item>
        <item>
-        <widget class="Konqueror::LocationBar" name="locationBar">
-        </widget>
-       </item>
-       <item>
-     <widget class="Akonadi::EntityTreeView" name="tempView">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>4</verstretch>
-          </sizepolicy>
-         </property>
-     </widget>
-       </item>
-       
-       <item>
         <widget class="Akonadi::KonqBookmarkView" name="bookmarksView">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -210,11 +195,6 @@
    <header>klineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>KComboBox</class>
-   <extends>QComboBox</extends>
-   <header>kcombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>KTextEdit</class>
    <extends>QTextEdit</extends>
    <header>ktextedit.h</header>
@@ -240,21 +220,10 @@
    <header location="global">konqbookmark/konqbookmarkview.h</header>
   </customwidget>
   <customwidget>
-   <class>Akonadi::EntityTreeView</class>
-   <extends>QTreeView</extends>
-   <header location="global">akonadi/entitytreeview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>KLineEditView</class>
-   <extends>QLineEdit</extends>
-   <header location="global">konqbookmark/klineeditview.h</header>
-  </customwidget>
-  <customwidget>
    <class>Konqueror::LocationBar</class>
    <extends>QLineEdit</extends>
    <header location="global">konqbookmark/locationbar.h</header>
   </customwidget>
-
  </customwidgets>
  <resources/>
  <connections/>

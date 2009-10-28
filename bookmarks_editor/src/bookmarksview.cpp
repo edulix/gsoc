@@ -157,7 +157,6 @@ void BookmarksView::createModels()
     d->mCollectionProxyModel = new Konqueror::CollectionsProxyModel(this);
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
     
-    ui_bookmarksview_base.tempView->setModel(d->mBookmarkModel);
     ui_bookmarksview_base.collectionsView->setModel(d->mCollectionProxyModel);
     ui_bookmarksview_base.navigatorBreadCrumb->setModel(d->mCollectionProxyModel);
     ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel(ui_bookmarksview_base.collectionsView->selectionModel());

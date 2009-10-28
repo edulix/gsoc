@@ -91,6 +91,7 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
         Settings::self(), QDBusConnection::ExportAdaptors); 
     changeRecorder()->itemFetchScope().fetchFullPayload();
     changeRecorder()->fetchCollection(true);
+    
 
     QStringList mimeTypes;
     mimeTypes << KonqBookmark::mimeType() << Collection::mimeType();
@@ -135,7 +136,7 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     
     d->mList << d->mBookmarksRootCollection;
 
-    synchronizeCollectionTree();
+    synchronize();
 }
 
 KonquerorBookmarksResource::~KonquerorBookmarksResource()
@@ -274,23 +275,19 @@ void KonquerorBookmarksResource::itemChanged(const Akonadi::Item &item, const QS
         itemCopy.setRemoteId(konqBookmark.uniqueUri());
         changeCommitted(itemCopy);
     }
+    changeProcessed();
 }
 
 void KonquerorBookmarksResource::itemRemoved( const Akonadi::Item &item )
 {
-    kDebug();
-    if (!item.hasPayload<KonqBookmark>()) {
-        kDebug() << "!item.hasPayload<KonqBookmark>()";
-        return;
-    }
+    kDebug() << "removing item remoteId = " << item.remoteId();
     
-    KonqBookmark konqBookmark = item.payload<KonqBookmark>();
-    Nepomuk::Bookmark bookmark(konqBookmark.uniqueUri());
+    Nepomuk::Bookmark bookmark(item.remoteId());
     if (bookmark.isValid()) {
+        kDebug() << "bookmark.remove();";
         bookmark.remove();
     }
-    
-    changeCommitted(item);
+    changeProcessed();
 }
 
 void KonquerorBookmarksResource::collectionAdded(const Akonadi::Collection &collection, const Akonadi::Collection &parent)
@@ -330,6 +327,7 @@ void KonquerorBookmarksResource::collectionChanged(const Akonadi::Collection &co
     if (bookmarkFolder.titles() != QStringList(collection.name())) {
         bookmarkFolder.setTitles( QStringList(collection.name()) );
     }
+    changeProcessed();
 }
 
 void KonquerorBookmarksResource::collectionRemoved(const Akonadi::Collection &collection)
