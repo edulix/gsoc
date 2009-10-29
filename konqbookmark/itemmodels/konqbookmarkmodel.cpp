@@ -66,9 +66,6 @@ KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::Change
   : EntityTreeModel( session, monitor, parent ),
     d( new Private() )
 {
-    // FIXME Set all monitored because otherwise the model doesn't get updates 
-    // from items/collections being removed.
-//     monitor->setAllMonitored(true);
 }
 
 KonqBookmarkModel::~KonqBookmarkModel()
@@ -124,7 +121,7 @@ Qt::ItemFlags KonqBookmarkModel::flags(const QModelIndex &index) const
 
 QVariant KonqBookmarkModel::entityData( const Item &item, int column, int role ) const
 {
-    if ( item.mimeType() == mimeType() ) {
+    if ( item.mimeType() == KonqBookmark::mimeType() ) {
         if ( !item.hasPayload<KonqBookmark>() ) {
 
             // Pass modeltest
@@ -324,127 +321,5 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         return false;
     }
     return true;
-}
-
-QString KonqBookmarkModel::mimeType() const
-{
-    return KonqBookmark::mimeType();
-}
-
-QStringList KonqBookmarkModel::mimeTypes() const
-{
-    QStringList types;
-    types << mimeType();
-    return types;
-}
-
-QMimeData *KonqBookmarkModel::mimeData(const QModelIndexList &indexes) const
-{
-    QMimeData *mimeData = new QMimeData();
-    QByteArray encodedData;
-
-    QDataStream stream(&encodedData, QIODevice::WriteOnly);
-
-    foreach (QModelIndex index, indexes) {
-        if (index.isValid()) {
-            Item item = qVariantValue<Item>(data(index, EntityTreeModel::ItemRole));
-            Collection collection = qVariantValue<Collection>(data(index, EntityTreeModel::CollectionRole));
-            if(item.isValid() && item.hasPayload<KonqBookmark>())
-            {
-                stream << EntityTreeModel::ItemRole << item.id();
-            } else if (collection.isValid())
-            {
-                stream << EntityTreeModel::CollectionRole << collection.id();
-            }
-        }
-    }
-
-    mimeData->setData(mimeType(), encodedData);
-    return mimeData;
-}
-
-bool KonqBookmarkModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
-                            int row, int column, const QModelIndex &parent)
-{   
-    kDebug() << "row, column = " << row << ", " << column;
-    
-    if (!data->hasFormat(mimeType()))
-        return false;
-
-    if (action == Qt::IgnoreAction)
-        return true;
-
-    if (column > 0)
-        return false;
-
-    int beginRow;
-
-    
-     if (row != -1)
-         beginRow = row;
-     else if (parent.isValid())
-         beginRow = parent.row();
-     else
-         beginRow = rowCount(QModelIndex());
-
-    QByteArray encodedData = data->data(mimeType());
-    QDataStream stream(&encodedData, QIODevice::ReadOnly);
-    Akonadi::TransactionSequence *transaction = new TransactionSequence;
-    Entity::Id id;
-    int role;
-    
-    while (!stream.atEnd()) {
-        // Get the parent collection of the new item
-        const QModelIndex& entityIndex = index(beginRow, 0, parent);
-        if(!entityIndex.isValid())
-            continue;
-        
-        Item item = qVariantValue<Item>(this->data(entityIndex, EntityTreeModel::ItemRole));
-        Collection parentCollection = qVariantValue<Collection>(this->data(entityIndex, EntityTreeModel::CollectionRole));
-        if ( item.isValid() ) {
-            parentCollection = qVariantValue<Collection>(this->data(parent, EntityTreeModel::CollectionRole));
-        }
-        
-        
-        // Dropped a collection or an item?
-        stream >> role >> id;
-        if(role == EntityTreeModel::ItemRole)
-        {
-            Item item(id);
-            
-            //Move or copy?
-            if(action == Qt::MoveAction)
-            {
-                new Akonadi::ItemMoveJob(item, parentCollection, transaction);
-            } else if(action == Qt::CopyAction)
-            {
-                new Akonadi::ItemCopyJob(item, parentCollection, transaction);
-            }
-        } else if (role == EntityTreeModel::CollectionRole)
-        {
-            Collection collection(id);
-            
-            if(!collection.isValid())
-                continue;
-            
-            //Move or copy?
-            if(action == Qt::MoveAction)
-            {
-                collection.setParent(parentCollection);
-                new Akonadi::CollectionModifyJob(collection, transaction);
-            } else if(action == Qt::CopyAction)
-            {
-                new Akonadi::CollectionCopyJob(collection, parentCollection, transaction);
-            }
-        }
-    }
-    // As this is an async way to drop data, we always return false. Akonadi will
-    // update the model later on 
-    return false;
-}
-
-Qt::DropActions KonqBookmarkModel::supportedDropActions() const
-{
-    return Qt::CopyAction | Qt::MoveAction;
 }
  

@@ -185,13 +185,10 @@ void BookmarksView::createModels()
     d->mModelWatcher = 0;
     
     // Setup drag & drop
-    ui_bookmarksview_base.bookmarksView->setDragEnabled(true);
-    ui_bookmarksview_base.bookmarksView->viewport()->setAcceptDrops(true);
-    ui_bookmarksview_base.bookmarksView->setDropIndicatorShown(true);
-//     ui_bookmarksview_base.bookmarksView->setDragDropMode(QAbstractItemView::InternalMove);
     ui_bookmarksview_base.bookmarksView->setSortingEnabled(true);
     ui_bookmarksview_base.bookmarksView->setAnimated(true);
     ui_bookmarksview_base.bookmarksView->setFocus();
+    ui_bookmarksview_base.bookmarksView->setSelectionMode( QAbstractItemView::ExtendedSelection );
     ui_bookmarksview_base.bookmarksView->setEditTriggers(QAbstractItemView::DoubleClicked);
     
     for(int i = KonqBookmarkModel::Url; i < KonqBookmarkModel::ColumnCount; i++) {
@@ -200,11 +197,8 @@ void BookmarksView::createModels()
         
     ui_bookmarksview_base.collectionsView->setFocusPolicy(Qt::NoFocus);
     ui_bookmarksview_base.collectionsView->header()->hide();
-    ui_bookmarksview_base.collectionsView->setSortingEnabled(false);
+    ui_bookmarksview_base.collectionsView->setSortingEnabled(true);
     ui_bookmarksview_base.collectionsView->setAnimated(true);
-    ui_bookmarksview_base.collectionsView->setDragEnabled(true);
-    ui_bookmarksview_base.collectionsView->viewport()->setAcceptDrops(true);
-    ui_bookmarksview_base.collectionsView->setDropIndicatorShown(true);
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
     
     connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),

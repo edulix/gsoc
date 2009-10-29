@@ -132,7 +132,8 @@ KonquerorBookmarksResource::KonquerorBookmarksResource( const QString &id )
     // TODO: What happens if it aleady exists? we should not create a new one
     // or at least we should remove the pre-existing virtual collection 
     
-//     Akonadi::SearchCreateJob *job = new Akonadi::SearchCreateJob( i18n("Latest Bookmarks"), query );
+//     Akonadi::SearchCreateJob *job = new Akonadi::SearchCreateJob( i18n("Latest Bookmarks"), latestBookmarksQuery );
+//     job->exec();
     
     d->mList << d->mBookmarksRootCollection;
 

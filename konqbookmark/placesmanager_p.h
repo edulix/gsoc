@@ -113,6 +113,7 @@ void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, in
 {
     for(int i = start; i <= end; i++) {
         QModelIndex index = m_bookmarksModel->index(i, KonqBookmarkModel::UniqueUri, parent);
+        
         if(index.data().toString().isEmpty()) {
             continue;
         }
@@ -123,7 +124,6 @@ void PlacesManager::Private::slotBookmarksInserted(const QModelIndex& parent, in
         }
         
         m_bookmarks[konqBookmark->url()] = konqBookmark;
-//         kDebug() << konqBookmark->url() << konqBookmark->uniqueUri();
         
         // Update/insert place
         q->place(konqBookmark->url())->setBookmark(konqBookmark);

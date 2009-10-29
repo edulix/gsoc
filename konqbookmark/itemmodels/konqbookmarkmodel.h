@@ -80,13 +80,6 @@ namespace Akonadi
     
         bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
         
-        // Drag & drop related functions
-        bool dropMimeData(const QMimeData *data, Qt::DropAction action,
-            int row, int column, const QModelIndex &parent);
-        QMimeData *mimeData(const QModelIndexList &indexes) const;
-        QStringList mimeTypes() const;
-        QString mimeType() const;
-        Qt::DropActions supportedDropActions() const;
     private:
         class Private;
         Private* const d;
