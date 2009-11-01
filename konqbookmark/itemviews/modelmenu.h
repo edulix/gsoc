@@ -61,10 +61,9 @@ public:
     
     enum MenuRole
     {
-        StatusBarTextRole = 0x1,
-        SeparatorRole = 0x2
+        SeparatorRole = 0x0, // If the item has this role, then it's a separator
     };
-    enum { MenuRolesSize = 2 };
+    enum { MenuRolesSize = 1 };
     
     enum MenuItemLocation
     {
@@ -188,7 +187,7 @@ protected:
      * appear in the menu either before or after the real model menu actions.
      * This is function is normally called in the constructor.
      *
-     * @note It will trigger a modelReset() internal call (all currentnly added
+     * @note It will trigger a modelReset() internal call (all currently added
      * model actions will be removed and einserted correctly) if it's the first
      * preAction added, so it's best if you call to this function before the
      * menu is shown.
@@ -286,6 +285,7 @@ private:
     Q_PRIVATE_SLOT(d, void slotAboutToShow())
     Q_PRIVATE_SLOT(d, void slotAboutToHide())
     Q_PRIVATE_SLOT(d, void actionTriggered(QAction *action))
+    Q_PRIVATE_SLOT(d, void showToolTip())
     Q_PRIVATE_SLOT(d, void actionDeleted(QObject* actionObj))
     Q_PRIVATE_SLOT(d, void dataChanged ( const QModelIndex & topLeft, const QModelIndex & bottomRight ))
     Q_PRIVATE_SLOT(d, void rowsInserted ( const QModelIndex & parent, int start, int end ))

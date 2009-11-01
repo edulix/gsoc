@@ -41,8 +41,6 @@
 #include <akonadi/session.h>
 
 #include <konqbookmark/placesmanager.h>
-#include <konqbookmark/konqbookmarkmodel.h>
-#include <konqbookmark/konqbookmarkmodelmenu.h>
 
 Bookmarks::Bookmarks()
     : KXmlGuiWindow(),
@@ -96,15 +94,6 @@ void Bookmarks::setupActions()
         this);
     QString resourceName("akonadi_konquerorbookmarks_resource");  
     interface->call("addResourceInstance", resourceName);
-    
-    Akonadi::KonqBookmarkModel* bookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
-    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, 0, actionCollection(), this);
-    
-    KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarksmenu");
-    actnBookmarksMenu->setIcon(KIcon("bookmarks"));
-    actnBookmarksMenu->setText(i18n("Bookmarks"));
-    actnBookmarksMenu->setShortcut(Qt::Key_B);
-    actnBookmarksMenu->setMenu(bookmarksMenu);
     
     // actions
     KAction* actnDelete = actionCollection()->addAction("delete");

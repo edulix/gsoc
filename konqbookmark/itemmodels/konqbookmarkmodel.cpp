@@ -145,6 +145,10 @@ QVariant KonqBookmarkModel::entityData( const Item &item, int column, int role )
             return QVariant();
         case Konqueror::Place::PlaceUrlRole:
             return konqBookmark.url().toString();
+        case Qt::ToolTipRole:
+            return konqBookmark.title() + "\n" + konqBookmark.url().toString();
+        case Qt::StatusTipRole:
+            return konqBookmark.url().toString();
         case Qt::DisplayRole:
         case Qt::EditRole:
             switch( column )

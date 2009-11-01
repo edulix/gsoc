@@ -93,7 +93,7 @@ public:
     virtual KonqBookmark currentPlace() const = 0;
     virtual bool supportsTabs() const { return false; }
     virtual QList<KonqBookmark> currentPlacesList() const { return QList<KonqBookmark>(); }
-    virtual bool enableOption(QString option) const = 0;
+    virtual bool enableOption(const QString &option) const = 0;
     
     virtual void openInNewTabs(const QList<KUrl> &urls) { Q_UNUSED(urls); }
     

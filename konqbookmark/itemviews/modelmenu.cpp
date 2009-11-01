@@ -20,8 +20,10 @@
 #include "modelmenu.h"
 
 #include <QApplication>
+#include <QCursor>
 #include <QEvent>
 #include <QTimer>
+#include <QToolTip>
 #include <QStyle>
 #include <QDesktopWidget>
 #include <QHash>
@@ -60,6 +62,11 @@ public:
      * Search line loses focus
      */
     void slotAboutToHide();
+    
+    /**
+     * Shows a tooltip, because apparently QMenu doesn't show QAction's tooltips
+     */
+    void showToolTip();
     
     /**
      * Called when an action is activated by the user. It will in turn emit
@@ -243,7 +250,7 @@ ModelMenu::Private::Private(ModelMenu *parentMenu, Private* copy)
 
 void ModelMenu::Private::init()
 {
-    m_menuRole[StatusBarTextRole] = m_menuRole[SeparatorRole] = 0;
+    m_menuRole[SeparatorRole] = 0;
     
     connect(q, SIGNAL(aboutToShow()), q, SLOT(slotAboutToShow()));
     connect(q, SIGNAL(aboutToHide()), q, SLOT(slotAboutToHide()));
@@ -307,6 +314,15 @@ void ModelMenu::Private::slotAboutToHide()
         QFocusEvent event(QEvent::FocusOut);
         QCoreApplication::sendEvent(m_searchLine, &event);
     }
+}
+
+void ModelMenu::Private::showToolTip()
+{
+    QAction *action = qobject_cast<QAction*>(q->sender());
+    if (!action) {
+        return;
+    }
+    QToolTip::showText(QCursor::pos(), action->toolTip());
 }
 
 QAction* ModelMenu::Private::createSubmenu(const QModelIndex &parent, QAction *before)
@@ -437,8 +453,14 @@ QAction *ModelMenu::Private::makeAction(const QModelIndex &index)
     
     QAction *action = q->makeAction(icon, smallText, q);
     
-    if (m_menuRole[StatusBarTextRole] != 0) {
-        action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+    
+    if (index.data(Qt::ToolTipRole).isValid()) {
+        kDebug() << index.data().toString() << index.data(Qt::ToolTipRole).toString();
+        action->setToolTip(index.data(Qt::ToolTipRole).toString());
+    }
+    
+    if (index.data(Qt::StatusTipRole).isValid()) {
+        action->setStatusTip(index.data(Qt::StatusTipRole).toString());
     }
 
     QVariant v;
@@ -486,10 +508,13 @@ void ModelMenu::Private::dataChanged(const QModelIndex & topLeft, const QModelIn
         QString smallText = fm.elidedText(index.data().toString(), Qt::ElideMiddle, m_maxWidth);
         action->setText(smallText);
         
-        if (m_menuRole[StatusBarTextRole] != 0) {
-            action->setStatusTip(index.data(m_menuRole[StatusBarTextRole]).toString());
+        if (index.data(Qt::StatusTipRole).isValid()) {
+            action->setStatusTip(index.data(Qt::StatusTipRole).toString());
         }
         
+        if (index.data(Qt::ToolTipRole).isValid()) {
+            action->setToolTip(index.data(Qt::ToolTipRole).toString());
+        }
     }
     
 }
@@ -571,7 +596,8 @@ void ModelMenu::Private::modelReset(bool force)
     QListIterator<QAction*> it(q->actions());
     while (it.hasNext()) {
         QAction* action = it.next();
-        if (m_preActions.contains(action) || m_postActions.contains(action)) {
+        if (m_preActions.contains(action) || m_postActions.contains(action) ||
+            m_postSeparator == action || m_preSeparator == action) {
             continue;
         }
         
@@ -595,12 +621,15 @@ void ModelMenu::Private::modelReset(bool force)
 ModelMenu::ModelMenu(QWidget *parent)
     : KMenu(parent), d(new Private(this))
 {
+    kDebug() << "bingo main menu";
     d->m_flags = IsRootFlag;
 }
 
 ModelMenu::ModelMenu(ModelMenu *parentMenu)
     : KMenu(parentMenu), d(new Private(this, parentMenu->d))
 {
+    kDebug() << "bingo submenu";
+    d->m_flags = 0;
     d->m_parentMenu = parentMenu;
 }
 
@@ -793,7 +822,9 @@ bool ModelMenu::isFolder(const QModelIndex& index) const
 
 QAction *ModelMenu::makeAction(const QIcon &icon, const QString &text, QObject *parent)
 {
-    return new QAction(icon, text, parent);
+    QAction *action = new QAction(icon, text, parent);
+    connect(action, SIGNAL(hovered()), this, SLOT(showToolTip()));
+    return action;
 }
 
 QAbstractItemModel* ModelMenu::currentModel() const
@@ -808,17 +839,22 @@ QModelIndex ModelMenu::currentRootIndex()
 
 void ModelMenu::addAction(QAction *action, MenuItemLocation location)
 {
+    kDebug() << action->text();
     if (location == PreModelItems) {
-        bool wasEmpty = d->m_preActions.empty();
+        kDebug() << "is pre";
         d->m_preActions.append(action);
         
+        kDebug() << "inserting action";
+        insertAction(d->m_preSeparator, action);
+        
+        bool wasEmpty = d->m_preActions.empty();
         if (wasEmpty) {
+            kDebug() << "creating separator";
             d->m_preSeparator = new QAction(this);
             d->m_preSeparator->setSeparator(true);
             insertAction(d->m_postSeparator, d->m_preSeparator);
             d->modelReset();
         }
-        insertAction(d->m_preSeparator, action);
         
     } else if (location == PostModelItems) {
         if (d->m_postActions.empty()) {
