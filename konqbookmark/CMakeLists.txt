@@ -62,7 +62,7 @@ set(konqbookmark_LIB_SRCS
     itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
-#     kbookmarkbridge/kbookmarkimporter.cpp
+    kbookmark/kbookmark_bridge.cpp
 )
 
 kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
@@ -113,7 +113,7 @@ set(konqbookmark_LIB_HDRS
     itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
     itemviews/klineeditview.h
-#     kbookmarkbridge/kbookmarkimporter.h
+    kbookmark/kbookmark_bridge.h
 )
 
 install( FILES ${konqbookmark_LIB_HDRS}

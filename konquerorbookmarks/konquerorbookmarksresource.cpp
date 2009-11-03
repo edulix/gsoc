@@ -363,7 +363,7 @@ void KonquerorBookmarksResource::collectionRemoved(const Akonadi::Collection &co
         }
     }
     bookmarkFolder.remove();
-    changeCommitted(collection);
+    changeProcessed();
 }
 
 AKONADI_RESOURCE_MAIN(KonquerorBookmarksResource)

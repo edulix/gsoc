@@ -313,6 +313,7 @@ void BookmarksView::slotAddFolder(const QString &folderName)
             i18n("Can't create new folder"));
         return;
     }
+    
     Akonadi::Collection collection;
     collection.setParent(parent);
     collection.setName(folderName);

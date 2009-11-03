@@ -91,6 +91,10 @@ PlacesManager::Private::Private(PlacesManager *parent)
 
     monitor->fetchCollection( true );
     monitor->setItemFetchScope( scope );
+    
+    // TODO, BUG: If we set only our own mimetype as monitored, then when collections
+    // are added or removed we don't get the notice!
+    monitor->setAllMonitored();
     monitor->setMimeTypeMonitored( KonqBookmark::mimeType() );
 
     m_bookmarksModel = new KonqBookmarkModel(session, monitor, q);
