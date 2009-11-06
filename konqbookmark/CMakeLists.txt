@@ -59,12 +59,16 @@ set(konqbookmark_LIB_SRCS
     itemviews/ktreeviewsearchline.cpp
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
+    itemviews/locationbarfaviconwidget.cpp
     itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
+    itemviews/klineeditviewbutton.cpp
+    itemviews/faviconupdater.cpp
     kbookmark/kbookmark_bridge.cpp
 )
 
+qt4_add_dbus_interface(konqbookmark_LIB_SRCS org.kde.FavIcon.xml favicon_interface)
 kde4_add_kcfg_files(konqbookmark_LIB_SRCS konqbookmarksettings.kcfgc )
 kde4_add_library(konqbookmark SHARED ${konqbookmark_LIB_SRCS})
 
@@ -78,6 +82,7 @@ target_link_libraries(konqbookmark
     ${KDE4_KDECORE_LIBS}
     ${KDE4_KDEUI_LIBS}
     ${KDE4_KIO_LIBS} # for KUrlCompletion
+    ${KDE4_KPARTS_LIBS} # for itemviews/faviconupdater
     ${NEPOMUK_LIBRARIES}
     ${SOPRANO_LIBRARIES}
 )
@@ -110,9 +115,12 @@ set(konqbookmark_LIB_HDRS
     itemviews/konqbookmarkmodelmenu.h
     itemviews/modelmenusearchline.h
     itemviews/locationbar.h
+    itemviews/locationbarfaviconwidget.h
     itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
     itemviews/klineeditview.h
+    itemviews/klineeditviewbutton.h
+    itemviews/faviconupdater.h
     kbookmark/kbookmark_bridge.h
 )
 

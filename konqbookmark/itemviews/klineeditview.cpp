@@ -31,6 +31,7 @@
 #include "kcompletionview.h"
 #include "klineeditview.h"
 #include "klineeditview_p.h"
+#include "klineeditviewbutton.h"
 #include "kdeuiwidgetsproxystyle_p.h"
 
 #include <kaction.h>
@@ -47,12 +48,14 @@
 #include <kstandardaction.h>
 #include <kstandardshortcut.h>
 
-#include <QtCore/QTimer>
-#include <QtGui/QClipboard>
-#include <QtGui/QStyleOption>
-#include <QtGui/QToolTip>
+#include <QTimer>
+#include <QClipboard>
+#include <QStyleOption>
+#include <QToolTip>
 #include <QSpacerItem>
 #include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QPainter>
 
 SideWidget::SideWidget(QWidget *parent)
     : QWidget(parent)

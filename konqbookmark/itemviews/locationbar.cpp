@@ -18,10 +18,11 @@
 */
 
 #include "locationbar.h"
+#include "locationbarfaviconwidget.h"
 #include "locationbardelegate.h"
 #include "kcompletionview.h"
 #include "placesmanager.h"
-#include "klineeditview_p.h"
+#include "klineeditviewbutton.h"
 #include "itemmodels/kcompletionmodel.h"
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kaggregatedmodel.h"
@@ -88,12 +89,7 @@ void LocationBar::init()
         d->m_unsortedModel, SLOT(setQuery(const QString &)));
     completionView()->setModel(d->m_model);
     
-    KLineEditViewButton* tempButton = new KLineEditViewButton(this);
-    tempButton->setCursor(Qt::ArrowCursor);
-    tempButton->setToolTip(i18nc("@action:button Bookmarks", "Bookmarks"));
-    tempButton->setPixmap(SmallIcon("bookmarks"));
-    addWidget(tempButton, LeftSide);
-    tempButton->animateVisible(true);
+    addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
 
 LocationBar::~LocationBar()

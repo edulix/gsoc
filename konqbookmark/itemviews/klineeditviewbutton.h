@@ -12,7 +12,7 @@
 
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
@@ -21,23 +21,53 @@
    Boston, MA 02110-1301, USA.
 */
 
-#ifndef KLINEEDITVIEW_P_H
-#define KLINEEDITVIEW_P_H
+#ifndef KLINEEDITVIEWBUTTON_H
+#define KLINEEDITVIEWBUTTON_H
 
+#include "konqbookmark_export.h"
+#include "favicon_interface.h"
+
+#include <QObject>
 #include <QWidget>
-#include <QEvent>
+#include <QPixmap>
+#include <QSize>
 
-class SideWidget : public QWidget
+class QTimeLine;
+
+/**
+ * Icon Button to be shown inside a KLineEditView.
+ * 
+ * It can be animated with fade in/out when it appears and disappears. It
+ * displays a given icon.
+ * 
+ * @author Eduardo Robles Elvira <edulix@gmail.com>
+ */
+class KONQBOOKMARK_EXPORT KLineEditViewButton : public QWidget
 {
     Q_OBJECT
+
 public:
-    SideWidget(QWidget *parent = 0);
+    KLineEditViewButton(QWidget *parent);
+
+    QSize sizeHint() const;
+
+    void animateVisible(bool visible);
+
+    void setPixmap(const QPixmap& p);
+
+    QPixmap pixmap();
+    
+    void setAnimationsEnabled(bool animationsEnabled);
 
 protected:
-    bool event(QEvent *event);
-    
-Q_SIGNALS:
-    void sizeHintChanged();
+    void paintEvent(QPaintEvent *event);
+
+protected Q_SLOTS:
+    void animationFinished();
+
+private:
+    QTimeLine *m_timeline;
+    QPixmap m_pixmap;
 };
 
-#endif // KLINEEDITVIEW_P_H
+#endif // KLINEEDITVIEWBUTTON_H
