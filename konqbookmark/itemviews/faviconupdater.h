@@ -22,30 +22,11 @@
 #define FAVICONUPDATER_H
 
 #include "konqbookmark_export.h"
-
 #include "favicon_interface.h"
 
 #include <kparts/part.h>
 #include <kparts/browserinterface.h>
 #include <kurl.h>
-
-class FavIconWebGrabber : public QObject
-{
-    Q_OBJECT
-public:
-    FavIconWebGrabber(KParts::ReadOnlyPart *part, const KUrl &url);
-    ~FavIconWebGrabber() {}
-
-protected Q_SLOTS:
-    void slotMimetype(KIO::Job *job, const QString &_type);
-    void slotFinished(KJob *job);
-
-private:
-    KParts::ReadOnlyPart *m_part;
-    KUrl m_url;
-};
-
-class FavIconBrowserInterface;
 
 class FavIconUpdater : public QObject
 {
@@ -53,38 +34,22 @@ class FavIconUpdater : public QObject
 
 public:
     FavIconUpdater(QObject *parent);
-    ~FavIconUpdater();
+    virtual ~FavIconUpdater();
     void downloadIcon(const KUrl &url);
     void downloadIconActual(const KUrl &url);
-
-private Q_SLOTS:
-    void setIconURL(const KUrl &iconURL);
-    KUrl iconUrl() const { return m_iconUrl; }
-    void slotCompleted();
-    void notifyChange(bool isHost, const QString& hostOrURL, const QString& iconName);
 
 Q_SIGNALS:
     void done(bool succeeded, KUrl iconURL);
 
 private:
-    KParts::ReadOnlyPart *m_part;
-    FavIconBrowserInterface *m_browserIface;
-    FavIconWebGrabber *m_webGrabber;
-    KUrl m_iconUrl;
-    KUrl m_url;
-    bool m_webupdate;
-    org::kde::FavIcon m_favIconModule;
+    // Move to d-pointer
+    class Private;
+    Private * const d;
+    
+    Q_PRIVATE_SLOT(d, void setIconURL(const KUrl &))
+    Q_PRIVATE_SLOT(d, void slotCompleted())
+    Q_PRIVATE_SLOT(d, void notifyChange(bool, const QString &, const QString &))
+    Q_PRIVATE_SLOT(d, void slotMimetype(KIO::Job *, const QString &))
 };
-
-class FavIconBrowserInterface : public KParts::BrowserInterface
-{
-    Q_OBJECT
-public:
-    FavIconBrowserInterface(FavIconUpdater *view)
-        : KParts::BrowserInterface(view), m_view(view) {}
-private:
-    FavIconUpdater *m_view;
-};
-
 
 #endif // FAVICONUPDATER_H

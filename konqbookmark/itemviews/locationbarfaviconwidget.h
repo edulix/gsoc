@@ -30,6 +30,7 @@
 
 namespace Konqueror
 {
+class Private;
 /**
  * Shows the favicon for current url.
  */
@@ -41,21 +42,15 @@ public:
     LocationBarFaviconWidget(LocationBar *locationBar);
     
     virtual ~LocationBarFaviconWidget();
-
-protected Q_SLOTS:
-    void urlChanged();
-    
-    void updateCurrentUrl();
-    
-    void updateFavicon(bool succeed, const KUrl &favicon);
     
 private:
-    QString m_currentUrl;
-    QString m_nextUrl;
-    QTimer m_wait;
-    LocationBar *m_locationBar;
-    FavIconUpdater m_faviconUpdater;
-//     org::kde::FavIcon m_favicon;
+    // Move to d-pointer
+    class Private;
+    Private * const d;
+    
+    Q_PRIVATE_SLOT(d, void urlChanged())
+    Q_PRIVATE_SLOT(d, void updateCurrentUrl())
+    Q_PRIVATE_SLOT(d, void updateFavicon(bool, const KUrl &))
 };
 
 }

@@ -30,17 +30,44 @@
 
 using namespace Konqueror;
 
-LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
-    : KLineEditViewButton(locationBar), m_locationBar(locationBar),
-    m_faviconUpdater(this)
+class LocationBarFaviconWidget::Private
 {
-    connect(&m_wait, SIGNAL(timeout()), this, SLOT(updateCurrentUrl()));
+public:
+    Private(LocationBarFaviconWidget *parent);
+    
+    void urlChanged();
+    
+    void updateCurrentUrl();
+    
+    void updateFavicon(bool succeed, const KUrl &favicon);
+    
+public:
+    LocationBarFaviconWidget *q;
+    
+    QString m_currentUrl;
+    QString m_nextUrl;
+    QTimer m_wait;
+    LocationBar *m_locationBar;
+    FavIconUpdater m_faviconUpdater;
+};
+
+LocationBarFaviconWidget::Private::Private(LocationBarFaviconWidget *parent)
+    : q(parent), m_faviconUpdater(0)
+{
+    
+}
+
+LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
+    : KLineEditViewButton(locationBar), d(new Private(this))
+{
+    d->m_locationBar = locationBar;
+    connect(&d->m_wait, SIGNAL(timeout()), this, SLOT(updateCurrentUrl()));
     connect(locationBar, SIGNAL(textChanged(const QString &)),
         this, SLOT(urlChanged()));
     connect(locationBar, SIGNAL(returnPressed(const QString &)),
         this, SLOT(urlChanged()));
         
-    connect(&m_faviconUpdater, SIGNAL(done(bool, KUrl)),
+    connect(&d->m_faviconUpdater, SIGNAL(done(bool, KUrl)),
         this, SLOT(updateFavicon(bool,KUrl)));
     
     setCursor(Qt::ArrowCursor);
@@ -54,14 +81,14 @@ LocationBarFaviconWidget::~LocationBarFaviconWidget()
 
 }
 
-void LocationBarFaviconWidget::urlChanged()
+void LocationBarFaviconWidget::Private::urlChanged()
 {
     kDebug();
     m_nextUrl = m_locationBar->text();
     m_wait.start(500);
 }
 
-void LocationBarFaviconWidget::updateCurrentUrl()
+void LocationBarFaviconWidget::Private::updateCurrentUrl()
 {
     kDebug() << m_nextUrl;
     m_wait.stop();
@@ -71,7 +98,7 @@ void LocationBarFaviconWidget::updateCurrentUrl()
     m_faviconUpdater.downloadIcon(m_currentUrl);
 }
 
-void LocationBarFaviconWidget::updateFavicon(bool succeed, const KUrl &favicon)
+void LocationBarFaviconWidget::Private::updateFavicon(bool succeed, const KUrl &favicon)
 {
     kDebug() << "favicon = " << favicon;
     if (!succeed) {
@@ -79,7 +106,7 @@ void LocationBarFaviconWidget::updateFavicon(bool succeed, const KUrl &favicon)
     }
     
     if (favicon.isValid()) {
-        setPixmap(SmallIcon(favicon.url()));
+        q->setPixmap(SmallIcon(favicon.url()));
     }
 }
 
