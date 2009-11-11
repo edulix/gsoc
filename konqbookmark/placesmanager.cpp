@@ -28,7 +28,9 @@
 #include <konq_historyentry.h> // Imported from libkonq
 #include <kurlcompletion.h>
 #include <kcompletion.h>
+#include <kmimetype.h>
 #include <kglobal.h>
+#include <kurl.h>
 
 #include <akonadi/monitor.h>
 #include <akonadi/session.h>
@@ -101,11 +103,14 @@ void PlacesManager::registerHistoryProvider(KonqHistoryProvider *historyProvider
     KonqHistoryList entries(historyProvider->entries());
 
     KonqHistoryList::const_iterator it = entries.constBegin();
+    
+    d->m_doingAnUpdateFlag = true;
     const KonqHistoryList::const_iterator end = entries.constEnd();
     for ( ; it != end ; ++it) {
-        kDebug() << (*it).url;
         d->slotHistoryEntryAdded(*it);
     }
+    d->m_doingAnUpdateFlag = false;
+    reset();
     
     connect(historyProvider, SIGNAL(entryAdded(const KonqHistoryEntry &)),
         this, SLOT(slotHistoryEntryAdded(const KonqHistoryEntry &)));
@@ -166,9 +171,13 @@ Place *PlacesManager::place(const QUrl &url)
     Place *place = new Place(url);
     d->m_places[url] = place;
     
-    beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
-    d->m_urls.append(url);
-    endInsertRows();
+    if (!d->m_doingAnUpdateFlag) {
+        beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
+        d->m_urls.append(url);
+        endInsertRows();
+    } else {
+        d->m_urls.append(url);
+    }
     
     return place;
 }
@@ -194,9 +203,13 @@ Place *PlacesManager::place(KonqBookmark *konqBookmark)
     d->m_places[url] = place;
     d->m_bookmarks[url] = konqBookmark;
     
-    beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
-    d->m_urls.append(url);
-    endInsertRows();
+    if (!d->m_doingAnUpdateFlag) {
+        beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
+        d->m_urls.append(url);
+        endInsertRows();
+    } else {
+        d->m_urls.append(url);
+    }
     return place;
 }
 
@@ -221,15 +234,24 @@ Place *PlacesManager::place(KonqHistoryEntry *historyEntry)
     d->m_places[url] = place;
     d->m_historyEntries[url] = historyEntry;
     
-    beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
-    d->m_urls.append(url);
-    endInsertRows();
+    if (!d->m_doingAnUpdateFlag) {
+        beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
+        d->m_urls.append(url);
+        endInsertRows();
+    } else {
+        d->m_urls.append(url);
+    }
     return place;
 }
 
 QIcon PlacesManager::icon(const QUrl &url)
 {
     Q_UNUSED(url);
+    
+    KUrl faviconUrl = KMimeType::favIconForUrl(url);
+    if (faviconUrl.isValid()) {
+        return SmallIcon(faviconUrl.url());
+    }
     
     return QIcon();
 }

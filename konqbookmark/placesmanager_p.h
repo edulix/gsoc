@@ -84,6 +84,10 @@ public:
     // i.e. we keep this list updated. The order of the items in the list
     // determines the order in the PlacesManager model.
     QList<QUrl> m_urls;
+    
+    // Useful flag to be able to add a bunch of new places without sending an update to
+    // the itemmodel for each of the added/removed element
+    bool m_doingAnUpdateFlag;
 };
 
 PlacesManager::Private::Private(PlacesManager *parent)
@@ -280,7 +284,7 @@ void PlacesManager::Private::slotHistoryEntryAdded(const KonqHistoryEntry &entry
 {
     // When the history entry is being added, it means it's not being updated
     // and thus it should not be already there
-    if (!m_historyEntries.contains(entry.url)) {
+    if (m_historyEntries.contains(entry.url)) {
         return;
     }
     

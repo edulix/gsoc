@@ -65,7 +65,7 @@ namespace Konqueror
          * not have a KonqHistoryEntry to refer to it because it might have
          * already expired.
          */
-        Place(KonqHistoryEntry* historyEntry = 0, KonqBookmark *konqBookmark = 0, QObject* parent = 0);
+        Place(KonqHistoryEntry *historyEntry = 0, KonqBookmark *konqBookmark = 0, QObject *parent = 0);
         
         /**
          * @brief Creates a place with no history entry o konqBookmark attached.
@@ -73,9 +73,9 @@ namespace Konqueror
          * Useful if you need to create a place for a match in a PlaceCompletionModel
          * where the place has not been visited or bookmarked.
          */
-        Place(const QUrl &url, QObject* parent = 0);
+        Place(const QUrl &url, QObject *parent = 0);
         
-        void setHistoryEntry(KonqHistoryEntry* historyEntry);
+        void setHistoryEntry(KonqHistoryEntry *historyEntry);
         
         void setBookmark(KonqBookmark *konqBookmark);
         
@@ -95,7 +95,7 @@ namespace Konqueror
          * Copy constructor.
          * @overload
          */
-        Place(const Place& other);
+        Place(const Place &other);
 
         /**
          * Copy operator, same as copy contructor.
@@ -132,13 +132,13 @@ namespace Konqueror
         
         QDateTime lastVisited() const;
         
-        KonqBookmark* bookmark() const;
+        KonqBookmark *bookmark() const;
         
-        KonqHistoryEntry* historyEntry() const;
+        KonqHistoryEntry *historyEntry() const;
         
     private:
         class Private;
-        Private* const d;
+        Private *const d;
     };
 }
 

@@ -105,7 +105,6 @@ int PlacesProxyModel::Private::matches(Place* place)
     matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
     matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
     matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
-    kDebug() << "query" << m_strQuery << "url" << place->url().toString();
     return matches;
 }
 

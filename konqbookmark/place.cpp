@@ -20,7 +20,7 @@
 
 #include "place.h"
 #include "konqbookmark.h"
-#include "konq_historyentry.h" // Imported from libkonq
+#include <konq_historyentry.h> // libkonq
 
 using namespace Konqueror;
 
@@ -53,14 +53,14 @@ Place::Private::~Private()
 }
 //@endcond
 
-Place::Place(KonqHistoryEntry* historyEntry, KonqBookmark *konqBookmark, QObject* parent)
+Place::Place(KonqHistoryEntry *historyEntry, KonqBookmark *konqBookmark, QObject *parent)
     : QObject(parent), d(new Private(this))
 {
     d->m_historyEntry = historyEntry;
     d->m_konqBookmark = konqBookmark;
 }
 
-Place::Place(const QUrl& url, QObject* parent)
+Place::Place(const QUrl &url, QObject *parent)
     : QObject(parent), d(new Private(this))
 {
     d->m_url = url;
@@ -77,19 +77,19 @@ Place::Place(const Place &other)
     operator=(other);
 }
 
-const Place& Place::operator=(const Place& other)
+const Place& Place::operator=(const Place &other)
 {
     d->m_historyEntry = other.historyEntry();
     d->m_konqBookmark = other.bookmark();
     return other;
 }
 
-bool Place::operator==(const Place& other) const
+bool Place::operator==(const Place &other) const
 {
     return other.url() == url();
 }
 
-void Place::setHistoryEntry(KonqHistoryEntry* historyEntry)
+void Place::setHistoryEntry(KonqHistoryEntry *historyEntry)
 {
     d->m_historyEntry = historyEntry;
 }
@@ -101,84 +101,97 @@ void Place::setBookmark(KonqBookmark *konqBookmark)
 
 QString Place::title() const
 {
-    if(d->m_historyEntry)
+    if (d->m_historyEntry) {
         return d->m_historyEntry->title;
+    }
     
-    if(d->m_konqBookmark)
+    if (d->m_konqBookmark) {
         return d->m_konqBookmark->title();
+    }
     
     return QString();
 }
 
 QUrl Place::url() const
 {
-    if(d->m_historyEntry)
+    if (d->m_historyEntry) {
         return d->m_historyEntry->url;
+    }
     
-    if(d->m_konqBookmark)
+    if (d->m_konqBookmark) {
         return d->m_konqBookmark->url();
+    }
     
-    if(!d->m_url.isEmpty() && d->m_url.isValid())
+    if (!d->m_url.isEmpty() && d->m_url.isValid()) {
         return d->m_url;
+    }
     
     return QUrl();
 }
 
 QString Place::description() const
 {
-    if(d->m_konqBookmark)
+    if (d->m_konqBookmark) {
         return d->m_konqBookmark->description();
+    }
     
     return QString();    
 }
 
 QStringList Place::tags() const
 {
-    if(d->m_konqBookmark)
+    if (d->m_konqBookmark) {
         return d->m_konqBookmark->tags();
+    }
     
     return QStringList();
 }
 
 long Place::numVisits() const
 {
-   if(d->m_historyEntry)
+   if (d->m_historyEntry) {
         return d->m_historyEntry->numberOfTimesVisited;
+   }
  
-   if(d->m_konqBookmark)
+   if (d->m_konqBookmark) {
         return d->m_konqBookmark->numVisits();
+   }
     
     return 0;
 }
 
 QDateTime Place::created() const
 {
-   if(d->m_historyEntry)
+   if (d->m_historyEntry) {
         return d->m_historyEntry->firstVisited;
+   }
  
-   if(d->m_konqBookmark)
+   if(d->m_konqBookmark) {
         return d->m_konqBookmark->created();
+   }
     
     return QDateTime();
 }
 
 QDateTime Place::lastVisited() const
 {
-   if(d->m_historyEntry)
+   if (d->m_historyEntry) {
         return d->m_historyEntry->lastVisited;
+   }
  
-   if(d->m_konqBookmark)
+   if (d->m_konqBookmark) {
         return d->m_konqBookmark->lastVisited();
+   }
     
     return QDateTime();
 }
 
-KonqBookmark* Place::bookmark() const
+KonqBookmark *Place::bookmark() const
 {
     return d->m_konqBookmark;
 }
 
-KonqHistoryEntry* Place::historyEntry() const
+KonqHistoryEntry *Place::historyEntry() const
 {
     return d->m_historyEntry;
 }
