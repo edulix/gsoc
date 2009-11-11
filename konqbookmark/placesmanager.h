@@ -33,6 +33,8 @@
 #include <QAbstractListModel>
 #include <QAbstractItemModel>
 
+#include <konq_historyprovider.h>
+
 class KonqHistoryEntry;
 class KonqBookmark;
 class KCompletionModel;
@@ -64,30 +66,32 @@ namespace Konqueror
      * which you'll be able to access to the QModelIndexes places url using
      * Konqueror::Place::PlaceUrlRole.
      */
+    class HistoryManager;
     class KONQBOOKMARK_EXPORT PlacesManager : public QAbstractListModel
     {
         Q_OBJECT
     public:
         static PlacesManager* self();
         
-        virtual Akonadi::KonqBookmarkModel* bookmarkModel();
-        virtual QAbstractItemModel* historyEntriesModel() { return 0; }
-        void registerUrlCompletionModel(KCompletionModel* urlCompletionModel);
+        Akonadi::KonqBookmarkModel *bookmarkModel();
+        KonqHistoryProvider *historyProvider();
+        void registerHistoryProvider(KonqHistoryProvider *historyProvider);
+        void registerUrlCompletionModel(KCompletionModel *urlCompletionModel);
         
-        KonqBookmark* bookmark(const QUrl& url);
-        KonqBookmark* bookmark(const KonqHistoryEntry* historyEntry);
+        KonqBookmark* bookmark(const QUrl &url);
+        KonqBookmark* bookmark(const KonqHistoryEntry *historyEntry);
         
-        KonqHistoryEntry* historyEntry(const QUrl& url);
-        KonqHistoryEntry* historyEntry(const KonqBookmark* konqBookmark);
+        KonqHistoryEntry* historyEntry(const QUrl &url);
+        KonqHistoryEntry* historyEntry(const KonqBookmark *konqBookmark);
         
-        Place* place(const QUrl& url);
-        Place* place(const KonqBookmark* konqBookmark);
-        Place* place(const KonqHistoryEntry* historyEntry);
+        Place* place(const QUrl &url);
+        Place* place(KonqBookmark* konqBookmark);
+        Place* place(KonqHistoryEntry* historyEntry);
         
-        virtual QIcon icon(const QUrl& url);
-        virtual QIcon icon(const KonqBookmark* konqBookmark);
-        virtual QIcon icon(const KonqHistoryEntry* historyEntry);
-        virtual QIcon icon(const Place* place);
+        virtual QIcon icon(const QUrl &url);
+        virtual QIcon icon(const KonqBookmark *konqBookmark);
+        virtual QIcon icon(const KonqHistoryEntry *historyEntry);
+        virtual QIcon icon(const Place *place);
         
         /**
          * Used by PlacesModels to know if a given Place (refered by its url)
@@ -96,13 +100,13 @@ namespace Konqueror
          * nor by the given KCompletionModel (which should be the one 
          * associated with the PlaceModel).
          */
-        bool filterAcceptUrl(const QUrl& url, KCompletionModel* completionModel) const;
+        bool filterAcceptUrl(const QUrl &url, KCompletionModel *completionModel) const;
 
         /**
          * Returns the number of places.
          * (Implementation of QAbstractListModel)
          */
-        int rowCount(const QModelIndex&) const;
+        int rowCount(const QModelIndex &) const;
         
         /**
          * Returns the place url corresponding to the given index using 
@@ -110,7 +114,7 @@ namespace Konqueror
          *
          * (Implementation of QAbstractListModel)
          */
-        QVariant data(const QModelIndex&, int) const;
+        QVariant data(const QModelIndex &, int) const;
 
     protected:
         PlacesManager();
@@ -127,7 +131,7 @@ namespace Konqueror
         friend class Private;
         class Private;
         static PlacesManager *s_self;
-        Private* const d;
+        Private * const d;
         
         Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex &, int, int))
         Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex &, int, int))
@@ -137,8 +141,8 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryCleared())
         
-        Q_PRIVATE_SLOT(d, void slotUrlsInserted(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void slotUrlsRemoved(const QModelIndex&, int, int))
+        Q_PRIVATE_SLOT(d, void slotUrlsInserted(const QModelIndex &, int, int))
+        Q_PRIVATE_SLOT(d, void slotUrlsRemoved(const QModelIndex &, int, int))
     };
 }
 #endif // KONQUEROR_PLACESMANAGER_H

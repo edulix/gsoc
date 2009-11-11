@@ -51,12 +51,24 @@ namespace Konqueror
         LocationBar(QWidget* parent = 0);
         virtual ~LocationBar();
         
+    public Q_SLOTS:
+        void setURL(const QString& url);
+        
+    Q_SIGNALS:
+        /**
+        Specialized signal that emits the state of the modifier
+        keys along with the actual activated text.
+        */
+        void returnPressed(const QString &, Qt::KeyboardModifiers);
+        
     protected:
         void init();
         
     private:
         class Private;
         Private* const d;
+        
+        Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
     };
 }
 

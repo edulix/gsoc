@@ -72,7 +72,7 @@ LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
     
     setCursor(Qt::ArrowCursor);
     setToolTip(i18nc("@action:button Favicon", "Favicon"));
-    setPixmap(SmallIcon("bookmarks"));
+    setPixmap(SmallIcon("folder"));
     animateVisible(true);
 }
 

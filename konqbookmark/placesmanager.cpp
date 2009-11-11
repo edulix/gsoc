@@ -25,7 +25,7 @@
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kcompletionmodel.h"
 
-#include "konq_historyentry.h" // Imported from libkonq
+#include <konq_historyentry.h> // Imported from libkonq
 #include <kurlcompletion.h>
 #include <kcompletion.h>
 #include <kglobal.h>
@@ -49,9 +49,9 @@ PlacesManager::~PlacesManager()
     delete d;
 }
 
-PlacesManager* PlacesManager::self()
+PlacesManager *PlacesManager::self()
 {
-    if(s_self) {
+    if (s_self) {
         return s_self;
     }
     
@@ -60,15 +60,21 @@ PlacesManager* PlacesManager::self()
     return s_self;
 }
 
-KonqBookmarkModel* PlacesManager::bookmarkModel()
+KonqBookmarkModel *PlacesManager::bookmarkModel()
 {
     return d->m_bookmarksModel;
 }
 
 
-bool PlacesManager::filterAcceptUrl(const QUrl& url, KCompletionModel* completionModel) const
+KonqHistoryProvider *PlacesManager::historyProvider()
 {
-    if(d->m_bookmarks.contains(url) || d->m_historyEntries.contains(url)) {
+    return d->m_historyProvider;
+}
+
+
+bool PlacesManager::filterAcceptUrl(const QUrl &url, KCompletionModel *completionModel) const
+{
+    if (d->m_bookmarks.contains(url) || d->m_historyEntries.contains(url)) {
         return true;
     }
 
@@ -76,38 +82,62 @@ bool PlacesManager::filterAcceptUrl(const QUrl& url, KCompletionModel* completio
         d->m_completedUrls[completionModel]->contains(url);
 }
 
-void PlacesManager::registerUrlCompletionModel(KCompletionModel* urlCompletionModel)
+void PlacesManager::registerUrlCompletionModel(KCompletionModel *urlCompletionModel)
 {
     d->m_completedUrls[urlCompletionModel] = new QList<QUrl>();
     
-//     connect(urlCompletionModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-//         this, SLOT(slotUrlsInserted(const QModelIndex&, int, int)));
+    connect(urlCompletionModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
+        this, SLOT(slotUrlsInserted(const QModelIndex &, int, int)));
         
-//     connect(urlCompletionModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
-//         this, SLOT(slotUrlsRemoved(const QModelIndex&, int, int)));
+    connect(urlCompletionModel, SIGNAL(rowsRemoved(const QModelIndex &, int, int)),
+        this, SLOT(slotUrlsRemoved(const QModelIndex &, int, int)));
 }
 
-
-KonqBookmark* PlacesManager::bookmark(const QUrl& url)
+void PlacesManager::registerHistoryProvider(KonqHistoryProvider *historyProvider)
 {
-    if(d->m_bookmarks.contains(url))
+    Q_ASSERT(historyProvider != 0);
+    d->m_historyProvider = historyProvider;
+    
+    KonqHistoryList entries(historyProvider->entries());
+
+    KonqHistoryList::const_iterator it = entries.constBegin();
+    const KonqHistoryList::const_iterator end = entries.constEnd();
+    for ( ; it != end ; ++it) {
+        kDebug() << (*it).url;
+        d->slotHistoryEntryAdded(*it);
+    }
+    
+    connect(historyProvider, SIGNAL(entryAdded(const KonqHistoryEntry &)),
+        this, SLOT(slotHistoryEntryAdded(const KonqHistoryEntry &)));
+        
+    connect(historyProvider, SIGNAL(entryRemoved(const KonqHistoryEntry &)),
+        this, SLOT(slotHistoryEntryRemoved(const KonqHistoryEntry &)));
+        
+    connect(historyProvider, SIGNAL(cleared()),
+        this, SLOT(slotHistoryCleared()));
+}
+
+KonqBookmark *PlacesManager::bookmark(const QUrl &url)
+{
+    if (d->m_bookmarks.contains(url)) {
         return d->m_bookmarks[url];
+    }
     
     return 0;
 }
 
-KonqBookmark* PlacesManager::bookmark(const KonqHistoryEntry* historyEntry)
+KonqBookmark *PlacesManager::bookmark(const KonqHistoryEntry *historyEntry)
 {
-    if(!historyEntry) {
+    if (!historyEntry) {
         return 0;
     }
     
     return bookmark(historyEntry->url);
 }
 
-KonqHistoryEntry* PlacesManager::historyEntry(const QUrl& url)
+KonqHistoryEntry *PlacesManager::historyEntry(const QUrl &url)
 {
-    if(d->m_historyEntries.contains(url)) {
+    if (d->m_historyEntries.contains(url)) {
         return d->m_historyEntries[url];
     }
  
@@ -117,18 +147,18 @@ KonqHistoryEntry* PlacesManager::historyEntry(const QUrl& url)
     return 0;
 }
 
-KonqHistoryEntry* PlacesManager::historyEntry(const KonqBookmark* konqBookmark)
+KonqHistoryEntry *PlacesManager::historyEntry(const KonqBookmark *konqBookmark)
 {
-    if(!konqBookmark) {
+    if (!konqBookmark) {
         return 0;
     }
     
     return historyEntry(konqBookmark->url());
 }
 
-Place* PlacesManager::place(const QUrl& url)
+Place *PlacesManager::place(const QUrl &url)
 {
-    if(d->m_places.contains(url)) {
+    if (d->m_places.contains(url)) {
         return d->m_places[url];
     }
     
@@ -143,32 +173,68 @@ Place* PlacesManager::place(const QUrl& url)
     return place;
 }
 
-Place* PlacesManager::place(const KonqBookmark* konqBookmark)
+Place *PlacesManager::place(KonqBookmark *konqBookmark)
 {
-    if(!konqBookmark) {
+    if (!konqBookmark) {
         return 0;
     }
     
-    return place(konqBookmark->url());
+    QUrl url = konqBookmark->url();
+    Place *place = 0;
+    if (d->m_places.contains(url)) {
+        place = d->m_places[url];
+        place->setBookmark(konqBookmark);
+        d->m_bookmarks[url] = konqBookmark;
+        return place;
+    }
+    
+    // Create the place and set its konqBookmark
+    place = new Place(url);
+    place->setBookmark(konqBookmark);
+    d->m_places[url] = place;
+    d->m_bookmarks[url] = konqBookmark;
+    
+    beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
+    d->m_urls.append(url);
+    endInsertRows();
+    return place;
 }
 
-Place* PlacesManager::place(const KonqHistoryEntry* historyEntry)
+Place *PlacesManager::place(KonqHistoryEntry *historyEntry)
 {
     if (!historyEntry) {
         return 0;
     }
+
+    QUrl url = historyEntry->url;
+    Place *place = 0;
+    if (d->m_places.contains(url)) {
+        place = d->m_places[url];
+        place->setHistoryEntry(historyEntry);
+        d->m_historyEntries[url] = historyEntry;
+        return place;
+    }
     
-    return place(historyEntry->url);
+    // Create the place and set its historyEntry
+    place = new Place(url);
+    place->setHistoryEntry(historyEntry);
+    d->m_places[url] = place;
+    d->m_historyEntries[url] = historyEntry;
+    
+    beginInsertRows(QModelIndex(), d->m_urls.count(), d->m_urls.count());
+    d->m_urls.append(url);
+    endInsertRows();
+    return place;
 }
 
-QIcon PlacesManager::icon(const QUrl& url)
+QIcon PlacesManager::icon(const QUrl &url)
 {
     Q_UNUSED(url);
     
     return QIcon();
 }
 
-QIcon PlacesManager::icon(const KonqBookmark* konqBookmark)
+QIcon PlacesManager::icon(const KonqBookmark *konqBookmark)
 {
     if (!konqBookmark) {
         return QIcon();
@@ -177,7 +243,7 @@ QIcon PlacesManager::icon(const KonqBookmark* konqBookmark)
     return icon(konqBookmark->url());
 }
 
-QIcon PlacesManager::icon(const KonqHistoryEntry* historyEntry)
+QIcon PlacesManager::icon(const KonqHistoryEntry *historyEntry)
 {
     if (!historyEntry) {
         return QIcon();
@@ -186,7 +252,7 @@ QIcon PlacesManager::icon(const KonqHistoryEntry* historyEntry)
     return icon(historyEntry->url);
 }
 
-QIcon PlacesManager::icon(const Place* place)
+QIcon PlacesManager::icon(const Place *place)
 {
     if (!place) {
         return QIcon();
@@ -207,7 +273,7 @@ bool PlacesManager::hasInstance()
 }
 
 
-int PlacesManager::rowCount(const QModelIndex& index) const
+int PlacesManager::rowCount(const QModelIndex &index) const
 {
     if (index.isValid()) {
         return 0;
@@ -216,7 +282,7 @@ int PlacesManager::rowCount(const QModelIndex& index) const
     return d->m_urls.count();
 }
 
-QVariant PlacesManager::data(const QModelIndex& index, int role) const
+QVariant PlacesManager::data(const QModelIndex &index, int role) const
 {
     if (index.parent().isValid() || index.row() < 0 || index.row() > d->m_urls.count()) {
         return QVariant();

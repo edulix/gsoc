@@ -73,6 +73,7 @@ void KLineEditViewButton::animateVisible(bool visible)
 void KLineEditViewButton::setPixmap(const QPixmap& p)
 {
     m_pixmap = p;
+    update();
 }
 
 QPixmap KLineEditViewButton::pixmap()

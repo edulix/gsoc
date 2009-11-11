@@ -153,7 +153,6 @@ BookmarksView::~BookmarksView()
 void BookmarksView::createModels()
 {
     d->mBookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
-    
     d->mCollectionProxyModel = new Konqueror::CollectionsProxyModel(this);
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
     

@@ -105,6 +105,7 @@ int PlacesProxyModel::Private::matches(Place* place)
     matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
     matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
     matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
+    kDebug() << "query" << m_strQuery << "url" << place->url().toString();
     return matches;
 }
 
@@ -195,7 +196,6 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
-//     d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
     kDebug() << rowCount() << hasChildren();
 
     query = query.trimmed();
@@ -204,6 +204,7 @@ void PlacesProxyModel::setQuery(QString query)
         return;
     }
 
+    d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
     d->m_strQuery = query;
     d->m_relevance.clear();
     invalidate();
@@ -302,7 +303,11 @@ public:
     {
         int leftRelevance = sourceLeft.data(Place::PlaceRelevanceRole).value<qreal>();
         int rightRelevance = sourceRight.data(Place::PlaceRelevanceRole).value<qreal>();
-        return leftRelevance > rightRelevance;
+        int ret = leftRelevance > rightRelevance;
+        if (leftRelevance == rightRelevance) {
+            return sourceLeft.data().toString() > sourceRight.data().toString();
+        }
+        return ret;
     }
 };
 
