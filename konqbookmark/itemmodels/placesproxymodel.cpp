@@ -21,9 +21,9 @@
 #include "placesproxymodel.h"
 #include "placesmanager.h"
 #include "kcompletionmodel.h"
+#include "kdescendantsproxymodel_p.h"
 
 #include <kurlcompletion.h>
-#include <kdescendantsproxymodel.h>
 #include <kdebug.h>
 
 #include <QString>
@@ -37,18 +37,18 @@
 using namespace Konqueror;
 
 
-static const int relevance_match_bonus  = 10;
+static const int relevanceMatchBonus  = 10;
 
-static const int first_bucket_days      = 4;
-static const int second_bucket_days     = 14;
-static const int third_bucket_days      = 31;
-static const int fourth_bucket_days     = 90;
+static const int firstBucketDays      = 4;
+static const int secondBucketDays     = 14;
+static const int thirdBucketDays      = 31;
+static const int fourthBucketDays     = 90;
 
-static const int first_bucket_weight    = 100;
-static const int second_bucket_weight   = 70;
-static const int third_bucket_weight    = 50;
-static const int fourth_bucket_weight   = 30;
-static const int default_bucket_weight  = 10;
+static const int firstBucketWeight    = 100;
+static const int secondBucketWeight   = 70;
+static const int thirdBucketWeight    = 50;
+static const int fourthBucketWeight   = 30;
+static const int defaultBucketWeight  = 10;
 
 /**
  * Private class that helps to provide binary compatibility between releases.
@@ -60,23 +60,23 @@ class PlacesProxyModel::Private
 public:
     Private(PlacesProxyModel *parent);
     ~Private();
-    
-    int matches(Place* place);
-    bool updateRelevance(const QModelIndex& index);
-    Place* placeFromIndex(const QModelIndex& index);
-    
-    void slotRowsInserted(const QModelIndex& source_parent, int start, int end);
-    void slotRowsRemoved(const QModelIndex& source_parent, int start, int end);
+
+    int matches(Place *place);
+    bool updateRelevance(const QModelIndex &index);
+    Place *placeFromIndex(const QModelIndex &index);
+
+    void slotRowsInserted(const QModelIndex &source_parent, int start, int end);
+    void slotRowsRemoved(const QModelIndex &source_parent, int start, int end);
     void slotModelReset();
-    
-    PlacesProxyModel* q;
+
+    PlacesProxyModel *q;
 
     KCompletionModel *m_urlCompletionModel;
     QString m_strQuery;
     QHash<const QPersistentModelIndex, qreal> m_relevance;
 };
 
-PlacesProxyModel::Private::Private(PlacesProxyModel* parent)
+PlacesProxyModel::Private::Private(PlacesProxyModel *parent)
     : q(parent), m_strQuery(QString())
 {
 
@@ -87,18 +87,18 @@ PlacesProxyModel::Private::~Private()
 
 }
 
-Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex& index)
+Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex &index)
 {
     QUrl placeUrl = index.data(Place::PlaceUrlRole).toString();
-    Place* place = PlacesManager::self()->place(placeUrl);
-    
+    Place *place = PlacesManager::self()->place(placeUrl);
+
     // Places manager should have all the places!
     Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");
-    
+
     return place;
 }
 
-int PlacesProxyModel::Private::matches(Place* place)
+int PlacesProxyModel::Private::matches(Place *place)
 {
     int matches = 0;
     matches += place->title().count(m_strQuery, Qt::CaseInsensitive);
@@ -108,40 +108,40 @@ int PlacesProxyModel::Private::matches(Place* place)
     return matches;
 }
 
-bool PlacesProxyModel::Private::updateRelevance(const QModelIndex& index)
+bool PlacesProxyModel::Private::updateRelevance(const QModelIndex &index)
 {
-    Place* place = placeFromIndex(index);
+    Place *place = placeFromIndex(index);
     QDateTime currentTime = QDateTime::currentDateTime();
-    
+
     qreal relevance = 0;
     int matches = this->matches(place);
     int weight = 0;
-    
+
     int days = place->lastVisited().daysTo(currentTime);
-    
-    if (days < first_bucket_days) {
-        weight = first_bucket_weight;
-    } else if (days < second_bucket_days) {
-        weight = second_bucket_weight;
-    } else if (days < third_bucket_days) {
-        weight = third_bucket_weight;
-    } else if (days < fourth_bucket_days) {
-        weight = fourth_bucket_weight;
+
+    if (days < firstBucketDays) {
+        weight = firstBucketWeight;
+    } else if (days < secondBucketDays) {
+        weight = secondBucketWeight;
+    } else if (days < thirdBucketDays) {
+        weight = thirdBucketWeight;
+    } else if (days < fourthBucketDays) {
+        weight = fourthBucketWeight;
     } else {
-        weight = default_bucket_weight;
+        weight = defaultBucketWeight;
     }
-    
+
     relevance += matches * weight + place->numVisits() * weight;
 
     if (m_relevance.contains(index) && m_relevance[index] == relevance) {
         return false;
     }
-    
+
     m_relevance[index] = relevance;
     return true;
 }
 
-void PlacesProxyModel::Private::slotRowsInserted(const QModelIndex& parent, int start, int end)
+void PlacesProxyModel::Private::slotRowsInserted(const QModelIndex &parent, int start, int end)
 {
     Q_UNUSED(parent);
     for (int i = start; i <= end; i++) {
@@ -150,7 +150,7 @@ void PlacesProxyModel::Private::slotRowsInserted(const QModelIndex& parent, int 
     }
 }
 
-void PlacesProxyModel::Private::slotRowsRemoved(const QModelIndex& parent, int start, int end)
+void PlacesProxyModel::Private::slotRowsRemoved(const QModelIndex &parent, int start, int end)
 {
     Q_UNUSED(parent);
     for (int i = start; i <= end; i++) {
@@ -164,7 +164,7 @@ void PlacesProxyModel::Private::slotModelReset()
     m_relevance.clear();
 
     QModelIndexList persistentIndexList = q->persistentIndexList();
-    foreach(const QModelIndex& index, persistentIndexList) {
+    foreach(const QModelIndex &index, persistentIndexList) {
         updateRelevance(index);
     }
 }
@@ -178,10 +178,10 @@ PlacesProxyModel::PlacesProxyModel(QObject *parent)
     d->m_urlCompletionModel->setCompletion(new KUrlCompletion());
     PlacesManager::self()->registerUrlCompletionModel(d->m_urlCompletionModel);
     QSortFilterProxyModel::setSourceModel(PlacesManager::self());
-    connect(this, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-        this, SLOT(slotRowsInserted(const QModelIndex&, int, int)));
-    connect(this, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
-        this, SLOT(slotRowsRemoved(const QModelIndex&, int, int)));
+    connect(this, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
+        this, SLOT(slotRowsInserted(const QModelIndex &, int, int)));
+    connect(this, SIGNAL(rowsRemoved(const QModelIndex &, int, int)),
+        this, SLOT(slotRowsRemoved(const QModelIndex &, int, int)));
     connect(this, SIGNAL(modelReset()),
         this, SLOT(slotModelReset()));
     connect(this, SIGNAL(layoutChanged()),
@@ -198,7 +198,7 @@ void PlacesProxyModel::setQuery(QString query)
     kDebug() << rowCount() << hasChildren();
 
     query = query.trimmed();
-    
+
     if (query.isEmpty()) {
         return;
     }
@@ -214,8 +214,12 @@ QString PlacesProxyModel::query() const
     return d->m_strQuery;
 }
 
-QVariant PlacesProxyModel::data(const QModelIndex& index, int role) const
+QVariant PlacesProxyModel::data(const QModelIndex &index, int role) const
 {
+    if (!index.isValid()) {
+        return QVariant();
+    }
+
     switch (role) {
     case Place::PlaceRelevanceRole:
         if(!d->m_relevance.contains(index)) {
@@ -232,23 +236,23 @@ void PlacesProxyModel::setSourceModel(QAbstractItemModel */*sourceModel*/)
     Q_ASSERT_X(false, "source model", "Shouldn't be called, this proxy model has PlacesManager model as the fixed source model");
 }
 
-bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     Q_UNUSED(source_parent);
 
     Q_ASSERT(sourceModel());
     // 1. Obtain the place URL for the given row
     QModelIndex sourceIndex = sourceModel()->index(source_row, 0, QModelIndex());
-    
+
     if (!sourceIndex.isValid()) {
         return false;
     }
-    
+
     QVariant variant = sourceIndex.data(Place::PlaceUrlRole);
     if (variant == QVariant()) {
         return false;
     }
-    
+
     QUrl url = variant.toString();
     if(url.isEmpty()) {
         return false;
@@ -258,7 +262,7 @@ bool PlacesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& sourc
     if(!PlacesManager::self()->filterAcceptUrl(url, d->m_urlCompletionModel)) {
         return false;
     }
-    
+
     Place* place = PlacesManager::self()->place(url);
     // Places manager should have all the places!
     Q_ASSERT_X(place != 0, "placemanager", "Places manager should have all the places!");
@@ -316,13 +320,13 @@ void LocationBarCompletionModel::Private::slotModelReset()
     QModelIndexList values;
     m_mapFromSource.clear();
     m_mapToSource.clear();
-    for(int i = 0; i < q->sourceModel()->rowCount(); i++) {
+    for (int i = 0; i < q->sourceModel()->rowCount(); i++) {
         QModelIndex sourceIndex = q->sourceModel()->index(i, 0);
         values.append(sourceIndex);
     }
     qSort(values.begin(), values.end(), ComparePlaces());
     int i = 0;
-    foreach(const QModelIndex sourceIndex, values) {
+    Q_FOREACH (const QModelIndex sourceIndex, values) {
         m_mapToSource[i] = sourceIndex.row();
         m_mapFromSource[sourceIndex.row()] = i;
         i++;
@@ -330,7 +334,8 @@ void LocationBarCompletionModel::Private::slotModelReset()
     emit q->layoutChanged();
 }
 
-LocationBarCompletionModel::LocationBarCompletionModel(PlacesProxyModel *sourceModel, QObject *parent)
+LocationBarCompletionModel::LocationBarCompletionModel(PlacesProxyModel *sourceModel, QObject
+    *parent)
     : QAbstractProxyModel(parent), d(new Private(this))
 {
     QAbstractProxyModel::setSourceModel(sourceModel);
@@ -340,7 +345,7 @@ LocationBarCompletionModel::LocationBarCompletionModel(PlacesProxyModel *sourceM
     connect(sourceModel, SIGNAL(modelReset()),
         this, SLOT(slotModelReset()));
     connect(sourceModel, SIGNAL(layoutChanged()),
-        this, SLOT(slotModelReset()));   
+        this, SLOT(slotModelReset()));
 }
 
 QModelIndex LocationBarCompletionModel::mapToSource(const QModelIndex &proxyIndex) const
@@ -353,25 +358,25 @@ QModelIndex LocationBarCompletionModel::mapFromSource(const QModelIndex &sourceI
     return index(d->m_mapFromSource[sourceIndex.row()], 0);
 }
 
-QModelIndex LocationBarCompletionModel::index(int row, int column, const QModelIndex& parent) const
+QModelIndex LocationBarCompletionModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (column != 0 || parent.isValid()) {
         return QModelIndex();
     }
-    
+
     if (row < 0 || row > rowCount(QModelIndex())) {
         return QModelIndex();
     }
-    
+
     return createIndex(row, column);
 }
 
-QModelIndex LocationBarCompletionModel::parent(const QModelIndex&) const
+QModelIndex LocationBarCompletionModel::parent(const QModelIndex &) const
 {
     return QModelIndex();
 }
 
-int LocationBarCompletionModel::rowCount(const QModelIndex& index) const
+int LocationBarCompletionModel::rowCount(const QModelIndex &index) const
 {
     if(index.isValid()) {
         return 0;
@@ -380,12 +385,12 @@ int LocationBarCompletionModel::rowCount(const QModelIndex& index) const
     return sourceModel()->rowCount();
 }
 
-int LocationBarCompletionModel::columnCount(const QModelIndex&) const
+int LocationBarCompletionModel::columnCount(const QModelIndex &) const
 {
     return sourceModel()->columnCount();
 }
 
-QVariant LocationBarCompletionModel::data(const QModelIndex& index, int role) const
+QVariant LocationBarCompletionModel::data(const QModelIndex &index, int role) const
 {
     return sourceModel()->data(mapToSource(index), role);
 }

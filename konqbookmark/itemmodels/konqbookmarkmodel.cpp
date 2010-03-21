@@ -63,7 +63,7 @@ class KonqBookmarkModel::Private
 //@endcond
 
 KonqBookmarkModel::KonqBookmarkModel( Akonadi::Session *session, Akonadi::ChangeRecorder *monitor, QObject *parent )
-  : EntityTreeModel( session, monitor, parent ),
+  : EntityTreeModel( monitor, parent ),
     d( new Private() )
 {
 }
@@ -76,12 +76,12 @@ KonqBookmarkModel::~KonqBookmarkModel()
 int KonqBookmarkModel::columnCount(const QModelIndex& index) const
 {
     Q_UNUSED(index);
-    
+
     return 9;
 }
 
 QVariant KonqBookmarkModel::entityHeaderData(int section, Qt::Orientation orientation, int role, HeaderGroup headerGroup ) const
-{   
+{
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
         switch(section) {
         case Title:
@@ -106,7 +106,7 @@ QVariant KonqBookmarkModel::entityHeaderData(int section, Qt::Orientation orient
             return QString();
         }
     }
-    
+
     return EntityTreeModel::entityHeaderData( section, orientation, role, headerGroup );
 }
 
@@ -222,10 +222,10 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
     // For EntityTree::entityData(... EntityTreeModel::ItemRole) column's index must be 0,
     // same with EntityTree::setData(... EntityTreeModel::ItemRole), etc
     QModelIndex indexZero = EntityTreeModel::index(index.row(), 0, index.parent());
-    
+
     if (index.isValid() && role == Qt::EditRole)
     {
-        
+
         Item item = qVariantValue<Item>(data(indexZero, EntityTreeModel::ItemRole));
         Collection collection = qVariantValue<Collection>(data(indexZero, EntityTreeModel::CollectionRole));
         if ( item.isValid() )
@@ -284,7 +284,7 @@ bool KonqBookmarkModel::setData(const QModelIndex &index, const QVariant &value,
             default:
                 break;
             }
-            
+
             emit dataChanged(index, index);
 //             EntityTreeModel::setData(indexZero, QVariant::fromValue(item), EntityTreeModel::ItemRole);
             return true;
@@ -308,7 +308,7 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
         if (!entityIndex.isValid()) {
             continue;
         }
-        
+
         Item item = qVariantValue<Item>(data(entityIndex, EntityTreeModel::ItemRole));
         Collection collection = qVariantValue<Collection>(data(entityIndex, EntityTreeModel::CollectionRole));
         if ( item.isValid() && !item.remoteId().isEmpty()) {
@@ -326,4 +326,3 @@ bool KonqBookmarkModel::removeRows( int row, int count, const QModelIndex & pare
     }
     return true;
 }
- 

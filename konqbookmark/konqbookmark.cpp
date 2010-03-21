@@ -18,14 +18,14 @@
     02110-1301, USA.
 */
 
-#include <QDateTime>
-#include <QList>
-#include <QString>
-#include <QStringList>
-#include <QUrl>
+#include <QtCore/QDateTime>
+#include <QtCore/QList>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QUrl>
 
 #include <krandom.h>
-#include <kdebug.h>
+#include <KDebug>
 #include <nepomuk/ontologies/bookmarkfolder.h>
 #include <nepomuk/ontologies/informationelement.h>
 #include <nepomuk/ontologies/dataobject.h>
@@ -42,19 +42,21 @@ class KonqBookmark::Private : public QSharedData
 {
 public:
     Private()
-        : m_bookmark(KonqBookmark::generateUniqueUri())
     {
+        kDebug() << m_bookmark.resourceUri();
     }
 
-    Private( const Private& other )
-        : QSharedData( other ), m_bookmark(other.m_bookmark)
+    Private(const Private &other)
+        : QSharedData(other), m_bookmark(other.m_bookmark)
     {
+        kDebug() << m_bookmark.resourceUri();
     }
-    
-    
-    Private( const QString& uniqueUri )
+
+
+    Private(const QString &uniqueUri)
         : m_bookmark(uniqueUri)
     {
+        kDebug() << uniqueUri << m_bookmark.resourceUri();
     }
 
 public:
@@ -62,16 +64,16 @@ public:
 };
 
 
-KonqBookmark::KonqBookmark(const QString& uniqueUri) : d( new Private(uniqueUri) )
+KonqBookmark::KonqBookmark(const QString &uniqueUri) : d(new Private(uniqueUri))
 {
 }
 
-KonqBookmark::KonqBookmark(const QUrl& uniqueUri) : d( new Private(uniqueUri.toString()) )
+KonqBookmark::KonqBookmark(const QUrl &uniqueUri) : d(new Private(uniqueUri.toString()))
 {
 }
 
 KonqBookmark::KonqBookmark() : d(new Private)
-{   
+{
 }
 
 KonqBookmark::KonqBookmark(const KonqBookmark &other) : d(other.d)
@@ -102,36 +104,38 @@ Nepomuk::Bookmark KonqBookmark::bookmark() const
 }
 
 
-void KonqBookmark::setUrl( const QUrl &url )
+void KonqBookmark::setUrl(const QUrl &url)
 {
     Nepomuk::DataObject dataObject(url);
     dataObject.setLabel(url.toString());
-    d->m_bookmark.setBookmarkses( QList<Nepomuk::DataObject>() << dataObject );
-    
+    d->m_bookmark.setBookmarkses(QList<Nepomuk::DataObject>() << dataObject);
+
 }
 
 QUrl KonqBookmark::url() const
 {
-    if(!d->m_bookmark.bookmarkses().empty())
+    if (!d->m_bookmark.bookmarkses().empty()) {
         return d->m_bookmark.bookmarkses().first().label();
-    
+    }
+
     return QUrl();
 }
 
-void KonqBookmark::setTitle( const QString &title )
+void KonqBookmark::setTitle(const QString &title)
 {
-    d->m_bookmark.setTitles( QStringList(title) );
+    d->m_bookmark.setTitles(QStringList(title));
 }
 
 QString KonqBookmark::title() const
 {
-    if(!d->m_bookmark.titles().empty())
+    if (!d->m_bookmark.titles().empty()) {
         return d->m_bookmark.titles().first();
-    
+    }
+
     return QString();
 }
 
-void KonqBookmark::setUniqueUri( const QString &uniqueUri )
+void KonqBookmark::setUniqueUri(const QString &uniqueUri)
 {
 //     delete d;
     d = new Private(uniqueUri);
@@ -142,53 +146,46 @@ QString KonqBookmark::uniqueUri() const
     return d->m_bookmark.resourceUri().toString();
 }
 
-QString KonqBookmark::generateUniqueUri()
-{
-    // if you get two equal random strings.. go buy a lottery ticket afterwards
-    return "konqbookmark:/" + KRandom::randomString( 40 ); 
-}
-
 
 QStringList KonqBookmark::tags() const
 {
     QStringList tagStrings;
     QList<Nepomuk::Tag> tags = d->m_bookmark.tags();
-    foreach( const Nepomuk::Tag& tag, tags)
-    {
+    Q_FOREACH (const Nepomuk::Tag &tag, tags) {
         tagStrings.append(tag.label());
     }
     return tagStrings;
 }
 
-void KonqBookmark::addTag(const QString& tag)
+void KonqBookmark::addTag(const QString &tag)
 {
     Nepomuk::Tag nTag(tag);
     d->m_bookmark.addTag(nTag);
 }
 
-void KonqBookmark::removeTag(const QString& tag)
+void KonqBookmark::removeTag(const QString &tag)
 {
     QList<Nepomuk::Tag> tags = d->m_bookmark.tags();
     Nepomuk::Tag nTag(tag);
-    if(tags.removeOne(tag))
+    if (tags.removeOne(tag)) {
         d->m_bookmark.setTags(tags);
+    }
 }
 
-void KonqBookmark::setTags(const QStringList& tags)
+void KonqBookmark::setTags(const QStringList &tags)
 {
     QList<Nepomuk::Tag> currentTags = d->m_bookmark.tags();
     QList<Nepomuk::Tag> newTags;
-    
-    foreach( const QString& tag, tags)
-    {
+
+    Q_FOREACH (const QString &tag, tags) {
         Nepomuk::Tag newTag(tag);
         newTag.setLabel(tag);
         newTags.append(newTag);
     }
-    d->m_bookmark.setTags(newTags);    
+    d->m_bookmark.setTags(newTags);
 }
 
-bool KonqBookmark::hasTag(const QString& tag) const
+bool KonqBookmark::hasTag(const QString &tag) const
 {
     QList<Nepomuk::Tag> tags = d->m_bookmark.tags();
     Nepomuk::Tag nTag(tag);
@@ -197,15 +194,16 @@ bool KonqBookmark::hasTag(const QString& tag) const
 
 QString KonqBookmark::description() const
 {
-    if(!d->m_bookmark.descriptions().empty())
+    if (!d->m_bookmark.descriptions().empty()) {
         return d->m_bookmark.descriptions().first();
-    
+    }
+
     return QString();
 }
 
-void KonqBookmark::setDescription(const QString& description)
+void KonqBookmark::setDescription(const QString &description)
 {
-    d->m_bookmark.setDescriptions( QStringList(description) );
+    d->m_bookmark.setDescriptions(QStringList(description));
 }
 
 long KonqBookmark::numVisits() const
@@ -230,7 +228,7 @@ QDateTime KonqBookmark::created() const
     return d->m_bookmark.property(Soprano::Vocabulary::NAO::created().toString()).toDateTime();
 }
 
-void KonqBookmark::setCreated(const QDateTime& created)
+void KonqBookmark::setCreated(const QDateTime &created)
 {
     d->m_bookmark.setProperty(Soprano::Vocabulary::NAO::created().toString(), created);
 }
@@ -240,20 +238,21 @@ QDateTime KonqBookmark::lastModified() const
     return d->m_bookmark.contentLastModified();
 }
 
-void KonqBookmark::setLastModified(const QDateTime& lastModified)
+void KonqBookmark::setLastModified(const QDateTime &lastModified)
 {
     d->m_bookmark.setContentCreated(lastModified);
 }
 
 QDateTime KonqBookmark::lastVisited() const
 {
-    if(!d->m_bookmark.informationElementDates().empty())
+    if (!d->m_bookmark.informationElementDates().empty()) {
         return d->m_bookmark.informationElementDates().first();
-    
+    }
+
     return QDateTime();
 }
 
-void KonqBookmark::setLastVisited(const QDateTime& lastVisited)
+void KonqBookmark::setLastVisited(const QDateTime &lastVisited)
 {
     d->m_bookmark.setInformationElementDates(QList<QDateTime>() << lastVisited);
 }

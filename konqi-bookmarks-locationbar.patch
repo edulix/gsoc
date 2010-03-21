@@ -1,0 +1,587 @@
+Index: konqueror/src/konqmainwindow.h
+===================================================================
+--- konqueror/src/konqmainwindow.h	(revision 1104744)
++++ konqueror/src/konqmainwindow.h	(working copy)
+@@ -36,6 +36,11 @@
+ #include <kparts/mainwindow.h>
+ #include <kglobalsettings.h>
+ #include <kservice.h>
++#include <config-konqueror.h>
++#ifdef HAVE_KONQBOOKMARK
++#include <konqbookmark/locationbar.h>
++#endif
++
+ #include "konqcombo.h"
+ #include "konqframe.h"
+ #include "konqframecontainer.h"
+@@ -84,6 +89,7 @@
+ }
+ 
+ class KonqExtendedBookmarkOwner;
++class KonqExtendedBookmarkMenuHelper;
+ 
+ 
+ class KONQ_TESTS_EXPORT KonqMainWindow : public KParts::MainWindow, public KonqFrameContainerBase
+@@ -113,8 +119,16 @@
+      * Filters the URL and calls the main openUrl method.
+      */
+     void openFilteredUrl(const QString& url, const KonqOpenURLRequest& req);
+-
++    
+     /**
++     * Functions called by KonqExtendedBookmarkOwner and KonqExtendedBookmarkMenuHelper.
++     */
++#ifdef HAVE_KONQBOOKMARK
++    void openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km);
++    void openBookmark(const KUrl& url);
++    void openInNewTabs(const QList<KUrl> &urls);
++#endif
++    /**
+      * Convenience overload for openFilteredUrl(url, req)
+      */
+     void openFilteredUrl(const QString& url, bool inNewTab = false, bool tempFile = false);
+@@ -704,7 +718,10 @@
+   QPointer<KonqView> m_currentView;
+ 
+   KBookmarkMenu* m_pBookmarkMenu;
++#ifdef HAVE_KONQBOOKMARK
+   KonqExtendedBookmarkOwner *m_pBookmarksOwner;
++#endif
++  KonqExtendedBookmarkMenuHelper *m_pBookmarksMenuHelper;
+   KActionCollection* m_bookmarksActionCollection;
+   bool m_bookmarkBarInitialized;
+ 
+@@ -727,6 +744,9 @@
+ 
+   QLabel* m_locationLabel;
+   QPointer<KonqCombo> m_combo;
++  #ifdef HAVE_KONQBOOKMARK
++  Konqueror::LocationBar *m_locationBar;
++  #endif
+   static KConfig *s_comboConfig;
+   KUrlCompletion *m_pURLCompletion;
+   // just a reference to KonqHistoryManager's completionObject
+Index: konqueror/src/config-konqueror.h.cmake
+===================================================================
+--- konqueror/src/config-konqueror.h.cmake	(revision 1104744)
++++ konqueror/src/config-konqueror.h.cmake	(working copy)
+@@ -13,3 +13,6 @@
+ /* mallinfo() is available in <stdlib.h> */
+ #cmakedefine KDE_MALLINFO_STDLIB 1
+ 
++/* For the new bookmarks */
++#cmakedefine HAVE_KONQBOOKMARK 1
++
+Index: konqueror/src/konqmainwindow.cpp
+===================================================================
+--- konqueror/src/konqmainwindow.cpp	(revision 1104744)
++++ konqueror/src/konqmainwindow.cpp	(working copy)
+@@ -48,7 +48,17 @@
+ #include "konqbookmarkbar.h"
+ #include "konqundomanager.h"
+ #include "konqhistorydialog.h"
+-#include <config-konqueror.h>
++#ifdef HAVE_KONQBOOKMARK
++#include <akonadi/monitor.h>
++#include <akonadi/session.h>
++#include <akonadi/control.h>
++#include <Nepomuk/ResourceManager> 
++#include <konqbookmark/konqbookmark.h>
++#include <konqbookmark/locationbar.h>
++#include <konqbookmark/konqbookmarkmodel.h>
++#include <konqbookmark/placesmanager.h>
++#include "konqextendedbookmarkmenuhelper.h"
++#endif
+ #include <kstringhandler.h>
+ 
+ #include <konq_events.h>
+@@ -176,6 +186,14 @@
+    m_pKonqMainWindow = w;
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++KonqExtendedBookmarkMenuHelper::KonqExtendedBookmarkMenuHelper(KonqMainWindow *w)
++{
++    m_pKonqMainWindow = w;
++}
++#endif
++
++
+ KonqMainWindow::KonqMainWindow( const KUrl &initialURL, const QString& xmluiFile)
+     : KParts::MainWindow()
+     , m_paClosedItems(0)
+@@ -269,10 +287,16 @@
+ 
+   createGUI( 0 );
+ 
++  #ifdef HAVE_KONQBOOKMARK
++  m_locationBar->setParent( toolBar("locationToolBar") );
++  m_locationBar->setFont( KGlobalSettings::generalFont() );
++  m_locationBar->show();
++  #else
+   m_combo->setParent( toolBar("locationToolBar") );
+   m_combo->setFont( KGlobalSettings::generalFont() );
+   m_combo->show();
+-
++  #endif
++  
+   checkDisableClearButton();
+ 
+   connect(toolBarMenuAction(),SIGNAL(triggered()),this,SLOT(slotForceSaveMainWindowSettings()) );
+@@ -346,6 +370,10 @@
+   m_configureDialog = 0;
+   delete m_combo;
+   m_combo = 0;
++  #ifdef HAVE_KONQBOOKMARK
++  delete m_locationBar;
++  m_locationBar = 0;
++  #endif
+   delete m_locationLabel;
+   m_locationLabel = 0;
+   m_pUndoManager->disconnect();
+@@ -1434,7 +1462,11 @@
+ void KonqMainWindow::slotOpenLocation()
+ {
+     focusLocationBar();
++    #ifdef HAVE_KONQBOOKMARK
++    m_locationBar->selectAll();
++    #else
+     m_combo->lineEdit()->selectAll();
++    #endif
+ }
+ 
+ void KonqMainWindow::slotOpenFile()
+@@ -2298,7 +2330,11 @@
+     m_bURLEnterLock = true;
+ 
+     if ((modifiers & Qt::ControlModifier) || (modifiers & Qt::AltModifier)) {
++        #ifdef HAVE_KONQBOOKMARK
++        m_locationBar->setURL(m_currentView ? m_currentView->url().prettyUrl() : QString());
++        #else
+         m_combo->setURL(m_currentView ? m_currentView->url().prettyUrl() : QString());
++        #endif
+         openFilteredUrl(text.trimmed(), true /*inNewTab*/);
+     } else {
+         openFilteredUrl(text.trimmed());
+@@ -2351,9 +2387,13 @@
+     QWidget *widget = newView->frame() && newView->frame()->part() ?
+                       newView->frame()->part()->widget() : 0;
+     QWidget* origFocusProxy = widget ? widget->focusProxy() : 0;
++    #ifdef HAVE_KONQBOOKMARK
+     if (widget)
++        widget->setFocusProxy(m_locationBar);
++    #else
++    if (widget)
+         widget->setFocusProxy(m_combo);
+-
++    #endif
+     m_pViewManager->showTab( newView );
+ 
+     if (widget)
+@@ -3016,6 +3056,13 @@
+ 
+ void KonqMainWindow::initCombo()
+ {
++  #ifdef HAVE_KONQBOOKMARK
++  m_locationBar = new Konqueror::LocationBar();
++  Konqueror::PlacesManager::self()->registerHistoryProvider(KonqHistoryManager::kself());
++  connect(m_locationBar, SIGNAL(returnPressed(const QString&,Qt::KeyboardModifiers)),
++        this, SLOT(slotURLEntered(const QString&,Qt::KeyboardModifiers)));
++  #endif
++        
+   m_combo = new KonqCombo(0);
+ 
+   m_combo->init( s_pCompletion );
+@@ -3300,7 +3347,11 @@
+ 
+ void KonqMainWindow::slotCheckComboSelection()
+ {
++  #ifdef HAVE_KONQBOOKMARK
+   bool hasSelection = m_combo->lineEdit()->hasSelectedText();
++  #else
++  bool hasSelection = m_locationBar->hasSelectedText();
++  #endif
+   //kDebug() << "m_combo->lineEdit()->hasMarkedText():" << hasSelection;
+   m_paCopy->setEnabled( hasSelection );
+   m_paCut->setEnabled( hasSelection );
+@@ -3308,8 +3359,13 @@
+ 
+ void KonqMainWindow::slotClearLocationBar()
+ {
++    kDebug();
+     slotStop();
++    #ifdef HAVE_KONQBOOKMARK
++    m_locationBar->clear();
++    #else
+     m_combo->clearTemporary();
++    #endif
+     focusLocationBar();
+ }
+ 
+@@ -3409,7 +3465,12 @@
+     // or if the user had time to edit the url since the last call to openUrl (#64868)
+     if (url != m_combo->lineEdit()->text() && !m_combo->lineEdit()->isModified()) {
+         //kDebug() << "url=" << url;
++        #ifdef HAVE_KONQBOOKMARK
++        m_locationBar->setURL( url );
++        #else
+         m_combo->setURL( url );
++        #endif
++        m_combo->setURL( url );
+         updateWindowIcon();
+     }
+ }
+@@ -3467,8 +3528,13 @@
+ 
+ void KonqMainWindow::focusLocationBar()
+ {
++  #ifdef HAVE_KONQBOOKMARK
++  if ( m_locationBar->isVisible() || !isVisible() )
++    m_locationBar->setFocus();
++  #else
+   if ( m_combo->isVisible() || !isVisible() )
+     m_combo->setFocus();
++  #endif
+ }
+ 
+ void KonqMainWindow::startAnimation()
+@@ -3806,17 +3872,26 @@
+   locationAction->setText( i18n("L&ocation: ") );
+   connect(locationAction, SIGNAL(triggered()), SLOT( slotLocationLabelActivated() ));
+   locationAction->setDefaultWidget(m_locationLabel);
+-  m_locationLabel->setBuddy( m_combo );
++  #ifndef HAVE_KONQBOOKMARK
++  m_locationLabel->setBuddy(m_combo);
++  #else
++  m_locationLabel->setBuddy(m_locationBar);
++  #endif
+ 
+   KAction *comboAction = new KAction( this );
+   actionCollection()->addAction( "toolbar_url_combo", comboAction );
+   comboAction->setText( i18n( "Location Bar" ) );
+   comboAction->setShortcut(Qt::Key_F6);
+   connect(comboAction, SIGNAL(triggered()), SLOT( slotLocationLabelActivated() ));
++  #ifdef HAVE_KONQBOOKMARK
++  comboAction->setDefaultWidget(m_locationBar);
++  m_locationBar->setWhatsThis( i18n( "<html>Location Bar<br /><br />Enter a web address or search term.</html>" ) );
++  #else
+   comboAction->setDefaultWidget(m_combo);
++  m_combo->setWhatsThis( i18n( "<html>Location Bar<br /><br />Enter a web address or search term.</html>" ) );
++  #endif
+   comboAction->setShortcutConfigurable( false );
+ 
+-  m_combo->setWhatsThis( i18n( "<html>Location Bar<br /><br />Enter a web address or search term.</html>" ) );
+ 
+   KAction *clearLocation = actionCollection()->addAction("clear_location");
+   clearLocation->setIcon( KIcon(QApplication::isRightToLeft() ? "edit-clear-locationbar-rtl" : "edit-clear-locationbar-ltr") );
+@@ -3830,7 +3905,23 @@
+   // Bookmarks menu
+   m_pamBookmarks = new KBookmarkActionMenu(s_bookmarkManager->root(),
+                                               i18n( "&Bookmarks" ), this);
+-  actionCollection()->addAction( "bookmarks", m_pamBookmarks );
++  #ifndef HAVE_KONQBOOKMARK
++    actionCollection()->addAction( "bookmarks", m_pamBookmarks );
++  #else
++    Nepomuk::ResourceManager::instance()->init();
++    
++    if ( !Akonadi::Control::start() ) {
++        kError() << "Unable to start Akonadi server";
++    }
++    
++    Akonadi::KonqBookmarkModel* bookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
++    KonqBookmarkModelMenu* bookmarksMenu = new KonqBookmarkModelMenu(bookmarkModel, new     
++        KonqExtendedBookmarkMenuHelper(this), actionCollection(), this);
++    
++    KAction* actnBookmarksMenu = actionCollection()->addAction("bookmarks");
++    actnBookmarksMenu->setText(i18n("Bookmarks"));
++    actnBookmarksMenu->setMenu(bookmarksMenu);
++  #endif
+ 
+   // The actual menu needs a different action collection, so that the bookmarks
+   // don't appear in kedittoolbar
+@@ -3934,10 +4025,31 @@
+ 
+ void KonqExtendedBookmarkOwner::openBookmark(const KBookmark & bm, Qt::MouseButtons mb, Qt::KeyboardModifiers km)
+ {
+-    kDebug() << bm.url() << km << mb;
++    kDebug(1202) << bm.url() << km << mb;
++    m_pKonqMainWindow->openBookmark(bm.url(), mb, km);
++}
+ 
+-    const QString url = bm.url().url();
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openBookmark(const KUrl& url)
++{
++    Qt::MouseButtons mb;
++    Qt::KeyboardModifiers km;
++    m_pKonqMainWindow->openBookmark(url, mb, km);
++}
+ 
++bool KonqExtendedBookmarkMenuHelper::enableOption(const QString &option) const
++{
++    QStringList enabledOptions;
++    enabledOptions << "editbookmarks" << "addbookmark" << "openintabs" << "newfolder";
++    return enabledOptions.contains(option);
++
++}
++#endif
++ 
++void KonqMainWindow::openBookmark(const KUrl& url, Qt::MouseButtons mb, Qt::KeyboardModifiers km)
++{
++    kDebug(1202) << url << km << mb;
++
+     KonqOpenURLRequest req;
+     req.browserArgs.setNewTab(true);
+     req.newTabInFront = KonqSettings::newTabsInFront();
+@@ -3948,17 +4060,17 @@
+     }
+ 
+     if( km & Qt::ControlModifier ) { // Ctrl Left/MMB
+-        m_pKonqMainWindow->openFilteredUrl( url, req);
++        openFilteredUrl( url.url(), req );
+     } else if( mb & Qt::MidButton ) {
+         if(KonqSettings::mmbOpensTab()) {
+-            m_pKonqMainWindow->openFilteredUrl( url, req);
++            openFilteredUrl( url.url(), req );
+         } else {
+-            KUrl finalURL = KonqMisc::konqFilteredURL( m_pKonqMainWindow, url );
++            KUrl finalURL = KonqMisc::konqFilteredURL( this, url.url() );
+             KonqMisc::createNewWindow( finalURL );
+         }
+     }
+     else {
+-        m_pKonqMainWindow->openFilteredUrl( url, false );
++        openFilteredUrl( url.url(), false );
+     }
+ }
+ 
+@@ -4303,7 +4415,42 @@
+   }
+   actionCollection()->action( "quit" )->setEnabled( true );
+ }
++ 
++#ifdef HAVE_KONQBOOKMARK
++KonqBookmark KonqExtendedBookmarkMenuHelper::currentPlace() const
++{
++    KonqBookmark bookmark;
++    bookmark.setTitle(m_pKonqMainWindow->currentTitle());
++    bookmark.setUrl(m_pKonqMainWindow->currentView()->url());
++    return bookmark;
++}
+ 
++
++bool KonqExtendedBookmarkMenuHelper::supportsTabs() const
++{
++  return true;
++}
++
++QList<KonqBookmark> KonqExtendedBookmarkMenuHelper::currentPlacesList() const
++{
++  QList<KonqBookmark> list;
++  KonqFrameTabs* tabContainer = m_pKonqMainWindow->viewManager()->tabContainer();
++
++  foreach ( KonqFrameBase* frame, tabContainer->childFrameList() )
++  {
++    if ( !frame || !frame->activeChildView() )
++      continue;
++    if( frame->activeChildView()->locationBarURL().isEmpty() )
++      continue;
++    KonqBookmark konqBookmark;
++    konqBookmark.setTitle(frame->activeChildView()->caption());
++    konqBookmark.setUrl(frame->activeChildView()->url());
++    list << konqBookmark;
++  }
++  return list;
++}
++#endif
++
+ void KonqMainWindow::disableActionsNoView()
+ {
+     // No view -> there are some things we can't do
+@@ -4431,6 +4578,19 @@
+ 
+ void KonqExtendedBookmarkOwner::openInNewTab(const KBookmark &bm)
+ {
++    m_pKonqMainWindow->openBookmark(bm.url());
++}
++
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewTab(const KUrl &url)
++{
++    kDebug() << url;
++    m_pKonqMainWindow->openBookmark(url);
++}
++#endif
++
++void KonqMainWindow::openBookmark(const KUrl &url)
++{
+   bool newTabsInFront = KonqSettings::newTabsInFront();
+   if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+     newTabsInFront = !newTabsInFront;
+@@ -4441,11 +4601,24 @@
+   req.openAfterCurrentPage = false;
+   req.forceAutoEmbed = true;
+ 
+-  m_pKonqMainWindow->openUrl( 0, bm.url(), QString(), req );
++  openUrl( 0, url.url(), QString(), req );
+ }
+ 
+ void KonqExtendedBookmarkOwner::openFolderinTabs(const KBookmarkGroup &grp)
+ {
++  m_pKonqMainWindow->openInNewTabs(grp.groupUrlList());
++}
++
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewTabs(const QList<KUrl> &urls)
++{
++  kDebug() << urls;
++  m_pKonqMainWindow->openInNewTabs(urls);
++}
++#endif
++
++void KonqMainWindow::openInNewTabs(const QList<KUrl> &urls)
++{
+   bool newTabsInFront = KonqSettings::newTabsInFront();
+   if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+     newTabsInFront = !newTabsInFront;
+@@ -4455,30 +4628,30 @@
+   req.openAfterCurrentPage = false;
+   req.forceAutoEmbed = true;
+ 
+-  const QList<KUrl> list = grp.groupUrlList();
+-  if (list.isEmpty())
++  if (urls.isEmpty())
+     return;
+ 
+-  if (list.size() > 20) {
+-    if(KMessageBox::questionYesNo(m_pKonqMainWindow,
+-				  i18n("You have requested to open more than 20 bookmarks in tabs. "
++  
++  if (urls.size() > 20) {
++    if(KMessageBox::questionYesNo(this,
++                  i18n("You have requested to open more than 20 bookmarks in tabs. "
+                                        "This might take a while. Continue?"),
+-				  i18n("Open bookmarks folder in new tabs")) != KMessageBox::Yes)
++                  i18n("Open bookmarks folder in new tabs")) != KMessageBox::Yes)
+       return;
+   }
+ 
+-  QList<KUrl>::ConstIterator it = list.constBegin();
+-  QList<KUrl>::ConstIterator end = list.constEnd();
++  QList<KUrl>::ConstIterator it = urls.constBegin();
++  QList<KUrl>::ConstIterator end = urls.constEnd();
+   --end;
+   for (; it != end; ++it )
+   {
+-    m_pKonqMainWindow->openUrl( 0, *it, QString(), req );
++     openUrl( 0, *it, QString(), req );
+   }
+   if ( newTabsInFront )
+   {
+     req.newTabInFront = true;
+   }
+-  m_pKonqMainWindow->openUrl( 0, *end, QString(), req );
++  openUrl( 0, *end, QString(), req );
+ }
+ 
+ void KonqExtendedBookmarkOwner::openInNewWindow(const KBookmark &bm)
+@@ -4486,6 +4659,13 @@
+   KonqMisc::createNewWindow( bm.url(), KParts::OpenUrlArguments() );
+ }
+ 
++#ifdef HAVE_KONQBOOKMARK
++void KonqExtendedBookmarkMenuHelper::openInNewWindow(const KUrl &url)
++{
++  KonqMisc::createNewWindow( url, KParts::OpenUrlArguments() );
++}
++#endif
++
+ QString KonqMainWindow::currentTitle() const
+ {
+   return m_currentView ? m_currentView->caption() : QString();
+@@ -5212,7 +5392,11 @@
+ void KonqMainWindow::slotLocationLabelActivated()
+ {
+   focusLocationBar();
++  #ifdef HAVE_KONQBOOKMARK
++  m_locationBar->selectAll();
++  #else
+   m_combo->lineEdit()->selectAll();
++  #endif
+ }
+ 
+ void KonqMainWindow::slotOpenURL( const KUrl& url )
+Index: konqueror/src/tests/CMakeLists.txt
+===================================================================
+--- konqueror/src/tests/CMakeLists.txt	(revision 1104744)
++++ konqueror/src/tests/CMakeLists.txt	(working copy)
+@@ -1,7 +1,8 @@
+ if (NOT WIN32)
+ 
+ set( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR} )
+-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/.. ${KDE4_INCLUDES} )
++# ${CMAKE_CURRENT_BINARY_DIR}/..  used for config-konqueror.h
++include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/.. ${KDE4_INCLUDES} )
+ 
+ ########### centralwidget ###############
+ 
+Index: konqueror/src/CMakeLists.txt
+===================================================================
+--- konqueror/src/CMakeLists.txt	(revision 1104744)
++++ konqueror/src/CMakeLists.txt	(working copy)
+@@ -1,3 +1,12 @@
++macro_optional_find_package(KonqBookmark)
++macro_log_feature(KonqBookmark_FOUND "KonqBookmark" "KonqBookmark" "http://www.kde.org" FALSE "" "New Konqueror Bookmarks based on Nepomuk and Akonadi")
++macro_bool_to_01(KonqBookmark_FOUND HAVE_KONQBOOKMARK)
++
++if(HAVE_KONQBOOKMARK)
++    find_package(KdepimLibs REQUIRED)
++    find_package(Nepomuk REQUIRED)
++endif(HAVE_KONQBOOKMARK)
++
+ if(KDE4_BUILD_TESTS)
+     # only with this definition will the KONQ_TESTS_EXPORT macro do something
+     add_definitions(-DCOMPILING_TESTS)
+@@ -12,8 +21,13 @@
+ # TODO KDE_MALLINFO_FIELD_usmblks
+ configure_file(config-konqueror.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-konqueror.h )
+ 
+-# For crc32 in konqhistorymanager.cpp
+-include_directories( ${ZLIB_INCLUDE_DIR} )
++# ZLIB For crc32 in konqhistorymanager.cpp
++# KDEPIMIBS and NEPOMUK for KonqBookmark
++include_directories(
++    ${ZLIB_INCLUDE_DIR}
++    ${KDEPIMLIBS_INCLUDE_DIRS} 
++    ${NEPOMUK_INCLUDE_DIRS}
++)
+ 
+ ########### libkonquerorprivate, shared with unit tests and sidebar modules ###############
+ 
+@@ -96,6 +110,12 @@
+   target_link_libraries(kdeinit_konqueror ${X11_LIBRARIES})
+ endif (UNIX)
+ 
++if (HAVE_KONQBOOKMARK)
++  target_link_libraries(kdeinit_konqueror
++    konqbookmark
++    ${KDEPIMLIBS_AKONADI_LIBS}
++    ${NEPOMUK_LIBRARIES})
++endif (HAVE_KONQBOOKMARK)
+ 
+ if (NOT WIN32)
+     install(TARGETS kdeinit_konqueror  ${INSTALL_TARGETS_DEFAULT_ARGS} )
+Index: lib/konq/CMakeLists.txt
+===================================================================
+--- lib/konq/CMakeLists.txt	(revision 1104744)
++++ lib/konq/CMakeLists.txt	(working copy)
+@@ -51,6 +51,9 @@
+ 
+ install( FILES directory_bookmarkbar.desktop   DESTINATION  ${DATA_INSTALL_DIR}/kbookmark )
+ install( FILES
++ konq_historyentry.h
++ konq_historyloader.h
++ konq_historyprovider.h
+  konq_popupmenu.h
+  konq_popupmenuinformation.h
+  konq_popupmenuplugin.h

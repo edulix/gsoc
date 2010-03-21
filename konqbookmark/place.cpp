@@ -34,18 +34,19 @@ class Place::Private
 public:
     Private(Place *parent);
     ~Private();
-    
+
     Place *q;
-    
+
     KonqHistoryEntry *m_historyEntry;
     KonqBookmark *m_konqBookmark;
     QUrl m_url;
+    Akonadi::Item m_item;
 };
 
 Place::Private::Private(Place *parent)
     : q(parent), m_historyEntry(0), m_konqBookmark(0)
 {
-    
+
 }
 
 Place::Private::~Private()
@@ -92,11 +93,13 @@ bool Place::operator==(const Place &other) const
 void Place::setHistoryEntry(KonqHistoryEntry *historyEntry)
 {
     d->m_historyEntry = historyEntry;
+    emit updated();
 }
-        
+
 void Place::setBookmark(KonqBookmark *konqBookmark)
 {
     d->m_konqBookmark = konqBookmark;
+    emit updated();
 }
 
 QString Place::title() const
@@ -104,11 +107,11 @@ QString Place::title() const
     if (d->m_historyEntry) {
         return d->m_historyEntry->title;
     }
-    
+
     if (d->m_konqBookmark) {
         return d->m_konqBookmark->title();
     }
-    
+
     return QString();
 }
 
@@ -117,15 +120,15 @@ QUrl Place::url() const
     if (d->m_historyEntry) {
         return d->m_historyEntry->url;
     }
-    
+
     if (d->m_konqBookmark) {
         return d->m_konqBookmark->url();
     }
-    
+
     if (!d->m_url.isEmpty() && d->m_url.isValid()) {
         return d->m_url;
     }
-    
+
     return QUrl();
 }
 
@@ -134,8 +137,8 @@ QString Place::description() const
     if (d->m_konqBookmark) {
         return d->m_konqBookmark->description();
     }
-    
-    return QString();    
+
+    return QString();
 }
 
 QStringList Place::tags() const
@@ -143,7 +146,7 @@ QStringList Place::tags() const
     if (d->m_konqBookmark) {
         return d->m_konqBookmark->tags();
     }
-    
+
     return QStringList();
 }
 
@@ -152,11 +155,11 @@ long Place::numVisits() const
    if (d->m_historyEntry) {
         return d->m_historyEntry->numberOfTimesVisited;
    }
- 
+
    if (d->m_konqBookmark) {
         return d->m_konqBookmark->numVisits();
    }
-    
+
     return 0;
 }
 
@@ -165,11 +168,11 @@ QDateTime Place::created() const
    if (d->m_historyEntry) {
         return d->m_historyEntry->firstVisited;
    }
- 
+
    if(d->m_konqBookmark) {
         return d->m_konqBookmark->created();
    }
-    
+
     return QDateTime();
 }
 
@@ -178,11 +181,11 @@ QDateTime Place::lastVisited() const
    if (d->m_historyEntry) {
         return d->m_historyEntry->lastVisited;
    }
- 
+
    if (d->m_konqBookmark) {
         return d->m_konqBookmark->lastVisited();
    }
-    
+
     return QDateTime();
 }
 
@@ -195,6 +198,17 @@ KonqHistoryEntry *Place::historyEntry() const
 {
     return d->m_historyEntry;
 }
+
+Akonadi::Item Place::item() const
+{
+    return d->m_item;
+}
+
+void Place::setItem(const Akonadi::Item &item)
+{
+    d->m_item = item;
+}
+
 
 #include "place.moc"
 

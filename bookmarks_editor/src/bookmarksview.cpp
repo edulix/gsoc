@@ -22,42 +22,37 @@
 #include "modeltest.h"
 #include "settings.h"
 
+#include <QtCore/QTimer>
+#include <QtGui/QLabel>
+#include <QtGui/QHeaderView>
+#include <QtGui/QDirModel>
+#include <QtGui/QAction>
+#include <QtGui/QDataWidgetMapper>
+#include <QtGui/QItemDelegate>
+#include <QtGui/QStringListModel>
+#include <QtGui/QTreeView>
 
-#include <QTimer>
-#include <QLabel>
-#include <QHeaderView>
-#include <QDirModel>
-#include <QString>
-#include <QAction>
-#include <QDataWidgetMapper>
-#include <QItemDelegate>
-#include <QStringListModel>
-#include <QTreeView>
-#include <QStringList>
-
-#include <kmessagebox.h>
+#include <KMessageBox>
 #include <kselectionproxymodel.h>
-#include <kdescendantsproxymodel.h>
-#include <klocale.h>
-#include <kmenu.h>
-#include <klineedit.h>
-#include <kurlcompletion.h>
-#include <kcompletion.h>
-#include <kjob.h>
-#include <kurl.h>
+#include <KLocale>
+#include <KMenu>
+#include <KLineEdit>
+#include <KUrlCompletion>
+#include <KCompletion>
+#include <KJob>
+#include <KUrl>
 
-#include <akonadi/collectionfilterproxymodel.h>
-#include <akonadi/collectionmodel.h>
-#include <akonadi/collectioncreatejob.h>
-#include <akonadi/collectiondeletejob.h>
-#include <akonadi/itemcreatejob.h>
-#include <akonadi/itemdeletejob.h>
-#include <akonadi/itemfetchscope.h>
-#include <akonadi/changerecorder.h>
-#include <akonadi/session.h>
-#include <akonadi/entitytreemodel.h>
-#include <akonadi/entityfilterproxymodel.h>
-#include <akonadi/item.h>
+#include <Akonadi/CollectionFilterProxyModel>
+#include <Akonadi/CollectionModel>
+#include <Akonadi/CollectionCreateJob>
+#include <Akonadi/CollectionDeleteJob>
+#include <Akonadi/ItemCreateJob>
+#include <Akonadi/ItemDeleteJob>
+#include <Akonadi/ItemFetchJob>
+#include <Akonadi/ChangeRecorder>
+#include <Akonadi/Session>
+#include <Akonadi/EntityTreeModel>
+#include <Akonadi/Item>
 
 #include <konqbookmark/konqbookmark.h>
 #include <konqbookmark/kcompletionview.h>
@@ -69,6 +64,7 @@
 #include <konqbookmark/modelwatcher.h>
 #include <konqbookmark/konqbookmarkdelegate.h>
 #include <konqbookmark/kdatawidgetselectionmapper.h>
+#include <konqbookmark/kdescendantsproxymodel_p.h>
 
 using namespace Akonadi;
 
@@ -76,11 +72,11 @@ class BookmarksView::Private : public QSharedData
 {
 public:
     Private(BookmarksView *parent);
-    
-    void expandCollectionsView(const QModelIndex& index);
-    void expandBookmarksView(const QModelIndex& index);
-    void selectBookmarkFolder(const QModelIndex& index = QModelIndex(), int start = -1);
-    
+
+    void expandCollectionsView(const QModelIndex &index);
+    void expandBookmarksView(const QModelIndex &index);
+    void selectBookmarkFolder(const QModelIndex &index = QModelIndex(), int start = -1);
+
     Akonadi::KonqBookmarkModel *mBookmarkModel;
     Akonadi::KonqBookmarkProxyModel *mBookmarkProxyModel;
     Konqueror::CollectionsProxyModel *mCollectionProxyModel;
@@ -92,10 +88,10 @@ public:
 BookmarksView::Private::Private(BookmarksView *parent)
     : mParent(parent)
 {
-    
+
 }
 
-void BookmarksView::Private::expandCollectionsView(const QModelIndex& index)
+void BookmarksView::Private::expandCollectionsView(const QModelIndex &index)
 {
     // If index is invalid it means that the inserted index is the root index
     // and thus we need to expand all children
@@ -108,7 +104,7 @@ void BookmarksView::Private::expandCollectionsView(const QModelIndex& index)
     }
 }
 
-void BookmarksView::Private::expandBookmarksView(const QModelIndex& index)
+void BookmarksView::Private::expandBookmarksView(const QModelIndex &index)
 {
     // If index is invalid it means that the inserted index is the root index
     // and thus we need to expand all children
@@ -121,22 +117,23 @@ void BookmarksView::Private::expandBookmarksView(const QModelIndex& index)
     }
 }
 
-void BookmarksView::Private::selectBookmarkFolder(const QModelIndex& index, int start)
+void BookmarksView::Private::selectBookmarkFolder(const QModelIndex &index, int start)
 {
-    QModelIndex newChild = mParent->ui_bookmarksview_base.collectionsView->model()->index(start, 0, index);
-    
+    QModelIndex newChild = mParent->ui_bookmarksview_base.collectionsView->model()->index(start, 0,
+        index);
+
     kDebug() << newChild << newChild.data(Akonadi::KonqBookmarkModel::Title);
-    
+
     if (!newChild.isValid()) {
         return;
     }
-    
+
     disconnect(mParent->ui_bookmarksview_base.collectionsView->model(),
-        SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        SIGNAL(rowsInserted(const QModelIndex &, int, int)),
         mParent, SLOT(selectBookmarkFolder(const QModelIndex&, int)));
-        
-    mParent->ui_bookmarksview_base.collectionsView->selectionModel()->
-        setCurrentIndex(newChild, QItemSelectionModel::SelectCurrent);
+
+    mParent->ui_bookmarksview_base.collectionsView->selectionModel()->setCurrentIndex(
+        newChild, QItemSelectionModel::SelectCurrent);
 }
 
 BookmarksView::BookmarksView(QWidget *)
@@ -155,23 +152,25 @@ void BookmarksView::createModels()
     d->mBookmarkModel = Konqueror::PlacesManager::self()->bookmarkModel();
     d->mCollectionProxyModel = new Konqueror::CollectionsProxyModel(this);
     d->mCollectionProxyModel->setSourceModel(d->mBookmarkModel);
-    
+
     ui_bookmarksview_base.collectionsView->setModel(d->mCollectionProxyModel);
     ui_bookmarksview_base.navigatorBreadCrumb->setModel(d->mCollectionProxyModel);
-    ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel(ui_bookmarksview_base.collectionsView->selectionModel());
-    
-    KSelectionProxyModel *selectionProxy = new KSelectionProxyModel(ui_bookmarksview_base.collectionsView->selectionModel(), this);
+    ui_bookmarksview_base.navigatorBreadCrumb->setSelectionModel(
+        ui_bookmarksview_base.collectionsView->selectionModel());
+
+    KSelectionProxyModel *selectionProxy = new
+        KSelectionProxyModel(ui_bookmarksview_base.collectionsView->selectionModel(), this);
     selectionProxy->setSourceModel(d->mBookmarkModel);
-    
+
     d->mBookmarkProxyModel = new Akonadi::KonqBookmarkProxyModel(this);
     d->mBookmarkProxyModel->setSourceModel(selectionProxy);
-    
+
     Akonadi::KonqBookmarkDelegate *itemDelegate = new Akonadi::KonqBookmarkDelegate(this);
     ui_bookmarksview_base.bookmarksView->setModel(d->mBookmarkProxyModel);
     ui_bookmarksview_base.bookmarksView->setItemDelegate(itemDelegate);
     ui_bookmarksview_base.searchBox->setTreeView(ui_bookmarksview_base.bookmarksView);
     ui_bookmarksview_base.searchBox->setClickMessage(i18n("Search in bookmarks..."));
-    
+
     d->mMapper = new KDataWidgetSelectionMapper(this);
     d->mMapper->setModel(d->mBookmarkProxyModel);
     d->mMapper->setSelectionModel(ui_bookmarksview_base.bookmarksView->selectionModel());
@@ -180,55 +179,61 @@ void BookmarksView::createModels()
     d->mMapper->addMapping(ui_bookmarksview_base.tagsBox, Akonadi::KonqBookmarkModel::Tags);
     d->mMapper->addMapping(ui_bookmarksview_base.descriptionBox, Akonadi::KonqBookmarkModel::Description, "plainText");
     d->mMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
-    
+
     d->mModelWatcher = 0;
-    
+
     // Setup drag & drop
     ui_bookmarksview_base.bookmarksView->setSortingEnabled(true);
     ui_bookmarksview_base.bookmarksView->setAnimated(true);
     ui_bookmarksview_base.bookmarksView->setFocus();
-    ui_bookmarksview_base.bookmarksView->setSelectionMode( QAbstractItemView::ExtendedSelection );
+    ui_bookmarksview_base.bookmarksView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui_bookmarksview_base.bookmarksView->setEditTriggers(QAbstractItemView::DoubleClicked);
-    
-    for(int i = KonqBookmarkModel::Url; i < KonqBookmarkModel::ColumnCount; i++) {
+
+    for (int i = KonqBookmarkModel::Url; i < KonqBookmarkModel::ColumnCount; i++) {
         ui_bookmarksview_base.collectionsView->setColumnHidden(i, true);
     }
-        
+
     ui_bookmarksview_base.collectionsView->setFocusPolicy(Qt::NoFocus);
     ui_bookmarksview_base.collectionsView->header()->hide();
     ui_bookmarksview_base.collectionsView->setSortingEnabled(true);
     ui_bookmarksview_base.collectionsView->setAnimated(true);
     ui_bookmarksview_base.collectionsView->setStyleSheet("QTreeView { background: transparent; border-style: none; }");
-    
-    connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-            this, SLOT(expandCollectionsView(const QModelIndex&)));
-    
-    connect(ui_bookmarksview_base.collectionsView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+
+    connect(ui_bookmarksview_base.collectionsView->model(),
+        SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        this, SLOT(expandCollectionsView(const QModelIndex&)));
+
+    connect(ui_bookmarksview_base.collectionsView->model(),
+        SIGNAL(rowsInserted(const QModelIndex&, int, int)),
         this, SLOT(selectBookmarkFolder(const QModelIndex&, int)));
-        
-    connect(ui_bookmarksview_base.bookmarksView->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)),
-            this, SLOT(expandBookmarksView(const QModelIndex&)));
+
+    connect(ui_bookmarksview_base.bookmarksView->model(),
+        SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+        this, SLOT(expandBookmarksView(const QModelIndex&)));
 }
 
 void BookmarksView::addBookmark()
 {
-    //TODO: disable newbookmark and some other actions when needed, connecting to the 
+    //TODO: disable newbookmark and some other actions when needed, connecting to the
     // appropiate konqbookmarkmodel signals (which don't exist yet)
-    
+
     QModelIndex current = ui_bookmarksview_base.bookmarksView->selectionModel()->currentIndex();
     Collection parent = getParentCollection(current);
-    if(parent == Collection::root()) {
-        KMessageBox::sorry(this, i18n("Please select first a valid parent folder in which to insert the new bookmark"),
+    if (parent == Collection::root()) {
+        KMessageBox::sorry(this,
+            i18n("Please select first a valid parent folder in which to insert the new bookmark"),
             i18n("Can't create new bookmark"));
         return;
     }
-    
+
     KonqBookmark bookmark;
-    
+    bookmark.setTitle(""); // this way it adquires an unique uri
+    kDebug() << "adding bookmark with unique uri:" << bookmark.uniqueUri();
+
     Item item;
     item.setMimeType(KonqBookmark::mimeType());
     item.setPayload<KonqBookmark>(bookmark);
-    
+
     ItemCreateJob *job = new ItemCreateJob(item, parent);
     if (job->exec()) {
         d->mModelWatcher = new ModelWatcher(job->item().id(), d->mBookmarkProxyModel, this);
@@ -251,11 +256,11 @@ void BookmarksView::slotDelete()
 {
     QModelIndex currentIndex = ui_bookmarksview_base.bookmarksView->currentIndex();
     kDebug() << currentIndex;
-    
+
     if (!currentIndex.isValid()) {
         return;
     }
-        
+
     Akonadi::Item item = qVariantValue<Akonadi::Item>(currentIndex.data(EntityTreeModel::ItemRole));
     Akonadi::Collection collection = qVariantValue<Akonadi::Collection>(currentIndex.data(EntityTreeModel::CollectionRole));
     if (item.isValid() && !item.remoteId().isEmpty()) {
@@ -269,18 +274,21 @@ void BookmarksView::slotDelete()
 
 Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current)
 {
-    QModelIndex defaultIndex = ui_bookmarksview_base.collectionsView->selectionModel()->currentIndex();
-    Collection defaultCollection = defaultIndex.data(EntityTreeModel::CollectionRole).value<Akonadi::Collection>();
+    QModelIndex defaultIndex =
+        ui_bookmarksview_base.collectionsView->selectionModel()->currentIndex();
+    Collection defaultCollection =
+        defaultIndex.data(EntityTreeModel::CollectionRole).value<Akonadi::Collection>();
     return getParentCollection(current, defaultCollection);
 }
 
-Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Collection defaultCollection)
+Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Collection
+    defaultCollection)
 {
     Akonadi::Collection parent = defaultCollection;
     if (!current.isValid()) {
         return parent;
     }
-    
+
     QVariant var = current.data(EntityTreeModel::ItemRole);
     Akonadi::Item item = var.value<Akonadi::Item>();
     // If current selection is an item, then the parent collection for our new
@@ -298,7 +306,7 @@ Akonadi::Collection BookmarksView::getParentCollection(QModelIndex current, Coll
     if (collection.isValid()) {
         parent = collection;
     }
-    
+
     return parent;
 }
 
@@ -312,12 +320,12 @@ void BookmarksView::slotAddFolder(const QString &folderName)
             i18n("Can't create new folder"));
         return;
     }
-    
+
     Akonadi::Collection collection;
     collection.setParent(parent);
     collection.setName(folderName);
     collection.setContentMimeTypes(QStringList(KonqBookmark::mimeType()));
-    
+
     new Akonadi::CollectionCreateJob(collection);
 }
 

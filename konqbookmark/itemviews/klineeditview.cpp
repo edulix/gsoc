@@ -7,7 +7,7 @@
    Re-designed for KDE 2.x by
    Copyright (c) 2000, 2001 Dawit Alemayehu <adawit@kde.org>
    Copyright (c) 2000, 2001 Carsten Pfeiffer <pfeiffer@kde.org>
-   
+
    Copyright (c) 2009 Benjamin C. Meyer  <ben@meyerhome.net>
    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
 
@@ -48,14 +48,14 @@
 #include <kstandardaction.h>
 #include <kstandardshortcut.h>
 
-#include <QTimer>
-#include <QClipboard>
-#include <QStyleOption>
-#include <QToolTip>
-#include <QSpacerItem>
-#include <QHBoxLayout>
-#include <QKeyEvent>
-#include <QPainter>
+#include <QtCore/QTimer>
+#include <QtGui/QClipboard>
+#include <QtGui/QStyleOption>
+#include <QtGui/QToolTip>
+#include <QtGui/QSpacerItem>
+#include <QtGui/QHBoxLayout>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QPainter>
 
 SideWidget::SideWidget(QWidget *parent)
     : QWidget(parent)
@@ -106,20 +106,20 @@ public:
         // for some languages and scripts (e.g. for CJK ideographs).
         QString metaMsg = i18nc("Italic placeholder text in line edits: 0 no, 1 yes", "1");
         italicizePlaceholder = (metaMsg.trimmed() != QString('0'));
-        
-        
+
+
         // Initialize code related to the subwidgets lineedit support
         m_leftWidget = new SideWidget(q);
         m_leftWidget->resize(0, 0);
         m_leftLayout = new QHBoxLayout(m_leftWidget);
         m_leftLayout->setContentsMargins(0, 0, 0, 0);
         m_leftLayout->setSizeConstraint(QLayout::SetFixedSize);
-        
+
         m_rightWidget = new SideWidget(q);
         m_rightWidget->resize(0, 0);
         m_rightLayout = new QHBoxLayout(m_rightWidget);
         m_rightLayout->setContentsMargins(0, 0, 0, 0);
-        
+
         if (q->isRightToLeft()) {
             m_leftLayout->setDirection(QBoxLayout::RightToLeft);
             m_rightLayout->setDirection(QBoxLayout::RightToLeft);
@@ -204,7 +204,7 @@ public:
 
     QMap<KGlobalSettings::Completion, bool> disableCompletionMap;
     KLineEditView* q;
-    
+
     SideWidget *m_leftWidget;
     SideWidget *m_rightWidget;
     QHBoxLayout *m_leftLayout;
@@ -299,13 +299,13 @@ int KLineEditView::textMargin(WidgetPosition position) const
 {
     int spacing = d->m_rightLayout->spacing();
     int w = 0;
-    
+
     if (position == LeftSide) {
         w = d->m_leftWidget->sizeHint().width();
     } else {
-        w = d->m_rightWidget->sizeHint().width();   
+        w = d->m_rightWidget->sizeHint().width();
     }
-    
+
     if (w == 0) {
         return 0;
     }
@@ -434,11 +434,11 @@ void KLineEditView::setCompletionMode(KGlobalSettings::Completion mode)
     if (echoMode() != QLineEdit::Normal) {
         mode = KGlobalSettings::CompletionNone; // Override the request.
     }
-    
+
     if (kapp && !KAuthorized::authorize("lineedit_text_completion")) {
         mode = KGlobalSettings::CompletionNone;
     }
-    
+
     if (mode == KGlobalSettings::CompletionPopupAuto ||
         mode == KGlobalSettings::CompletionAuto ||
         mode == KGlobalSettings::CompletionMan) {
@@ -464,11 +464,11 @@ void KLineEditView::setCompletedText(const QString& t, bool marked)
     const QString txt = text();
 
     if (t != txt) {
-        
+
         const bool blocked = blockSignals(true);
         setText(t);
         blockSignals(blocked);
-        
+
         if (marked) {
             setSelection(t.length(), txt.length()-t.length());
         }
@@ -497,15 +497,15 @@ void KLineEditView::rotateText(KCompletionBase::KeyBindingType type)
         type == KCompletionBase::NextCompletionMatch)) {
         QString input;
         QItemSelectionModel* selModel = d->completionView->selectionModel();
-        
+
         input = selModel->selectedIndexes().first().data().toString();
         kDebug() << input;
-        
+
         if (d->completionView->currentIndex() == selModel->selectedIndexes().first() ||
             input.isEmpty() || input == displayText()) {
             return;
         }
-        
+
         d->autoSuggest = true;
         setCompletedText(input, hasSelectedText());
     }
@@ -518,7 +518,7 @@ void KLineEditView::makeCompletion(const QString& text)
     if (!d->completionView || !d->completionView->model() || mode == KGlobalSettings::CompletionNone) {
         return;  // No completion object...
     }
-    
+
     QAbstractItemModel* model = d->completionView->model();
     const QString match = model->index(0,0).data().toString();
 
@@ -637,7 +637,7 @@ void KLineEditView::setSqueezedText()
                 squeezedText = fullText.left(letters) + "..." + fullText.right(letters);
                 squeezedWidth = fm.width(squeezedText);
             } while (squeezedWidth < labelWidth);
-            
+
             letters--;
             squeezedText = fullText.left(letters) + "..." + fullText.right(letters);
         } else if (squeezedWidth > labelWidth) {
@@ -659,7 +659,7 @@ void KLineEditView::setSqueezedText()
             d->squeezedEnd = fullText.length() - letters;
         }
         setToolTip(fullText);
-        
+
     } else {
       QLineEdit::setText(fullText);
 
@@ -684,20 +684,20 @@ bool KLineEditView::copySqueezedText(bool clipboard) const
         if (!that->hasSelectedText()) {
             return false;
         }
-        
+
         int start = selectionStart(), end = start + selectedText().length();
         if (start >= d->squeezedStart+3) {
             start = start - 3 - d->squeezedStart + d->squeezedEnd;
         } else if (start > d->squeezedStart) {
             start = d->squeezedStart;
         }
-        
+
         if (end >= d->squeezedStart+3) {
             end = end - 3 - d->squeezedStart + d->squeezedEnd;
         } else if (end > d->squeezedStart) {
             end = d->squeezedEnd;
         }
-        
+
         if (start == end) {
             return false;
         }
@@ -1243,7 +1243,7 @@ bool KLineEditView::event(QEvent* ev)
         }
     } else if (ev->type() == QEvent::KeyPress) {
         // Hmm -- all this could be done in keyPressEvent too...
-        
+
         QKeyEvent *e = static_cast<QKeyEvent *>(ev);
         if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
             kDebug() << "enter";
@@ -1375,7 +1375,7 @@ bool KLineEditView::Private::overrideShortcut(const QKeyEvent* e)
     } else {
         scKey = keys[KLineEditView::TextCompletion];
     }
-    
+
     if (scKey.contains(key)) {
         return true;
     }
@@ -1481,7 +1481,7 @@ void KLineEditView::updateCompletedItems(bool autoSuggest)
             if (!wasSelected) {
                 matchedItem = d->completionView->model()->index(0,0);
             }
-            
+
             if (matchedItem.isValid()) {
                 const bool blocked = d->completionView->blockSignals(true);
                 d->completionView->selectionModel()->select(matchedIndex, QItemSelectionModel::SelectCurrent);
@@ -1655,7 +1655,7 @@ void KLineEditView::focusOutEvent(QFocusEvent *ev)
         d->drawClickMsg = true;
         update();
     }
-    
+
     QLineEdit::focusOutEvent(ev);
 }
 

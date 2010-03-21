@@ -36,6 +36,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${KDE4_ENABLE_EXCEPTIONS}")
 
 set(konqbookmark_LIB_SRCS
     konqbookmark.cpp
+    itemmodels/kdescendantsproxymodel.cpp
     itemmodels/konqbookmarkproxymodel.cpp
     itemmodels/collectionsproxymodel.cpp
     itemmodels/konqbookmarkmodel.cpp
@@ -60,6 +61,7 @@ set(konqbookmark_LIB_SRCS
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
     itemviews/locationbarfaviconwidget.cpp
+    itemviews/locationbarbookmarkwidget.cpp
     itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
@@ -97,6 +99,7 @@ set(konqbookmark_LIB_HDRS
     itemmodels/collectionsproxymodel.h
     itemmodels/konqbookmarkproxymodel.h
     itemmodels/konqbookmarkmodel.h
+    itemmodels/kdescendantsproxymodel_p.h
     itemmodels/kcompletionmodel.h
     itemmodels/placesproxymodel.h
     itemmodels/kaggregatedmodel.h
@@ -116,6 +119,7 @@ set(konqbookmark_LIB_HDRS
     itemviews/modelmenusearchline.h
     itemviews/locationbar.h
     itemviews/locationbarfaviconwidget.h
+    itemviews/locationbarbookmarkwidget.h
     itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
     itemviews/klineeditview.h
@@ -182,7 +186,7 @@ install( FILES
   DESTINATION ${DATA_INSTALL_DIR}/akonadi/plugins/serializer)
 
 set(_KONQBOOKMARKCONFIG_INSTALL_DIR ${LIB_INSTALL_DIR}/KonqBookmark/cmake/)
-   
+
 install(FILES ${KONQBOOMARK_BIN_DIR}/KonqBookmarkConfig.cmake
         DESTINATION ${_KONQBOOKMARKCONFIG_INSTALL_DIR} )
 

@@ -22,22 +22,21 @@
 #include "konqbookmark.h"
 #include "placesmanager.h"
 
-#include <kfiledialog.h>
-#include <kstringhandler.h>
-#include <klocale.h>
-#include <kdebug.h>
+#include <KFileDialog>
+#include <KStringHandler>
+#include <KLocale>
+#include <KDebug>
 
 #include <nepomuk/ontologies/bookmark.h>
 #include <nepomuk/ontologies/bookmarkfolder.h>
 #include <nepomuk/ontologies/dataobject.h>
 
-#include <QTextCodec>
-#include <QApplication>
+#include <QtGui/QApplication>
 
 /**
  * A class for importing bookmarks
  */
-namespace Konqueror 
+namespace Konqueror
 {
 class  KBookmarkImporter : public QObject
 {
@@ -49,7 +48,7 @@ public:
     void parseBookmarks();
 protected:
     void parseBookmarks(const Nepomuk::BookmarkFolder &parent);
-    
+
 Q_SIGNALS:
     void newBookmark( const QString & text, const QString & url, const QString & additionalInfo );
     void newFolder( const QString & text, bool open, const QString & additionalInfo );
@@ -69,21 +68,21 @@ void Konqueror::KBookmarkImporter::parseBookmarks(const Nepomuk::BookmarkFolder 
     if (!parent.hasProperty(Nepomuk::BookmarkFolder::containsBookmarkFolderUri())) {
         return;
     }
-    
+
     QString title = parent.titles().empty() ? QString() : parent.titles().first();
     emit newFolder(title, false, "");
-    
+
     QList<Nepomuk::BookmarkFolder> bookmarkFolders = parent.containsBookmarkFolders();
 
     foreach (const Nepomuk::BookmarkFolder& bookmarkFolder, bookmarkFolders) {
         parseBookmarks(bookmarkFolder);
     }
-    
+
     QList<Nepomuk::Bookmark> bookmarks = parent.containsBookmarks();
     foreach (const Nepomuk::Bookmark& bookmark, bookmarks) {
         KonqBookmark konqBookmark(bookmark.resourceUri());
         emit newBookmark(konqBookmark.title(), konqBookmark.url().toString(), "");
-        
+
     }
     emit endFolder();
 }
@@ -109,16 +108,16 @@ class KBookmarkExporter : private KBookmarkGroupTraverser
 {
 public:
     KBookmarkExporter();
-    
+
     void write( const KBookmarkGroup &grp ) { traverse(grp); }
-    
+
 private:
     virtual void visit( const KBookmark & );
-    
+
     virtual void visitEnter( const KBookmarkGroup & );
-    
+
     virtual void visitLeave( const KBookmarkGroup & );
-    
+
 private:
     Nepomuk::BookmarkFolder m_currentBookmarkFolder;
 };
@@ -139,7 +138,8 @@ void Konqueror::KBookmarkExporter::visit(const KBookmark &bk)
 
 void Konqueror::KBookmarkExporter::visitEnter(const KBookmarkGroup &grp)
 {
-    Nepomuk::BookmarkFolder newFolder(KonqBookmark::generateUniqueUri());
+    Nepomuk::BookmarkFolder newFolder;
+    newFolder.setTitles(QStringList()); // so that the resource unique uri is actually created
     m_currentBookmarkFolder.addContainsBookmarkFolder( newFolder );
     newFolder.setTitles(QStringList(grp.fullText()));
     m_currentBookmarkFolder = newFolder;

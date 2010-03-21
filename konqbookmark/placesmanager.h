@@ -23,15 +23,15 @@
 
 #include "konqbookmark_export.h"
 
-#include <QObject>
-#include <QHash>
-#include <QUrl>
-#include <QString>
-#include <QIcon>
-#include <QStringList>
-#include <QDateTime>
-#include <QAbstractListModel>
-#include <QAbstractItemModel>
+#include <QtCore/QObject>
+#include <QtCore/QHash>
+#include <QtCore/QUrl>
+#include <QtCore/QString>
+#include <QtGui/QIcon>
+#include <QtCore/QStringList>
+#include <QtCore/QDateTime>
+#include <QtCore/QAbstractListModel>
+#include <QtCore/QAbstractItemModel>
 
 #include <konq_historyprovider.h>
 
@@ -41,26 +41,26 @@ class KCompletionModel;
 
 namespace Akonadi {
     class KonqBookmarkModel;
+    class Collection;
 }
 
 namespace Konqueror
 {
     class Place;
-    
+
     /**
      * @brief Class that provides access to places related information.
-     * 
+     *
      * This is a singleton class, so to access to it you should call to
      * @p self(); the PlacesManager will be created the first time you call it:
-     * 
+     *
      * Inherit from this class if you want the history entries to be filled or
-     * if you want to provide an icon for items (hould just reimplement @p
-     * icon(QUrl).
-     * 
+     * if you want to provide an icon for items (just reimplement @p icon(QUrl).
+     *
      * @code
      * PlacesManager::self();
      * @endcode
-     * 
+     *
      * For the sake of simplicity, this class also acts directly as a model.
      * The model will be a list of the places contained in the manager, to
      * which you'll be able to access to the QModelIndexes places url using
@@ -71,33 +71,47 @@ namespace Konqueror
     {
         Q_OBJECT
     public:
-        static PlacesManager* self();
-        
+        static PlacesManager *self();
+
         Akonadi::KonqBookmarkModel *bookmarkModel();
         KonqHistoryProvider *historyProvider();
+        /**
+         * This can be called only once: there's only one history provider and it cannot change.
+         */
         void registerHistoryProvider(KonqHistoryProvider *historyProvider);
+
+        /**
+         * You can register as many url completion models as you need. Typically you register
+         * an url completion model for each LocationBar.
+         */
         void registerUrlCompletionModel(KCompletionModel *urlCompletionModel);
-        
+
         KonqBookmark* bookmark(const QUrl &url);
         KonqBookmark* bookmark(const KonqHistoryEntry *historyEntry);
-        
-        KonqHistoryEntry* historyEntry(const QUrl &url);
-        KonqHistoryEntry* historyEntry(const KonqBookmark *konqBookmark);
-        
-        Place* place(const QUrl &url);
-        Place* place(KonqBookmark* konqBookmark);
-        Place* place(KonqHistoryEntry* historyEntry);
-        
+
+        KonqHistoryEntry *historyEntry(const QUrl &url);
+        KonqHistoryEntry *historyEntry(const KonqBookmark *konqBookmark);
+
+        Place *place(const QUrl &url);
+        Place *place(KonqBookmark *konqBookmark);
+        Place *place(KonqHistoryEntry *historyEntry);
+
         virtual QIcon icon(const QUrl &url);
         virtual QIcon icon(const KonqBookmark *konqBookmark);
         virtual QIcon icon(const KonqHistoryEntry *historyEntry);
         virtual QIcon icon(const Place *place);
-        
+
+        /**
+         * @returns the folder where you should add unsorted bookmarks, for example those
+         * added clicking in the bookmark icon in the location bar.
+         */
+        Akonadi::Collection unsortedBookmarksFolder();
+
         /**
          * Used by PlacesModels to know if a given Place (refered by its url)
          * should be shown in the model. Basically it will always return true
          * but when the place is not refered by any history entry or bookmark
-         * nor by the given KCompletionModel (which should be the one 
+         * nor by the given KCompletionModel (which should be the one
          * associated with the PlaceModel).
          */
         bool filterAcceptUrl(const QUrl &url, KCompletionModel *completionModel) const;
@@ -107,9 +121,9 @@ namespace Konqueror
          * (Implementation of QAbstractListModel)
          */
         int rowCount(const QModelIndex &) const;
-        
+
         /**
-         * Returns the place url corresponding to the given index using 
+         * Returns the place url corresponding to the given index using
          * Konqueror::Place::PlaceUrlRole.
          *
          * (Implementation of QAbstractListModel)
@@ -119,28 +133,28 @@ namespace Konqueror
     protected:
         PlacesManager();
         virtual ~PlacesManager();
-        
+
         /**
          * If you create a custom PlacesManager and want self() to refer to it,
          * call to setSelf(this) in the constructor of you custom PlacesManager.
          */
         static void setSelf(PlacesManager *manager);
         static bool hasInstance();
-        
+
     private:
         friend class Private;
         class Private;
         static PlacesManager *s_self;
         Private * const d;
-        
+
         Q_PRIVATE_SLOT(d, void slotBookmarksInserted(const QModelIndex &, int, int))
         Q_PRIVATE_SLOT(d, void slotBookmarksRemoved(const QModelIndex &, int, int))
         Q_PRIVATE_SLOT(d, void slotBookmarksChanged(const QModelIndex &, const QModelIndex &))
-        
+
         Q_PRIVATE_SLOT(d, void slotHistoryEntryAdded(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryEntryRemoved(const KonqHistoryEntry &))
         Q_PRIVATE_SLOT(d, void slotHistoryCleared())
-        
+
         Q_PRIVATE_SLOT(d, void slotUrlsInserted(const QModelIndex &, int, int))
         Q_PRIVATE_SLOT(d, void slotUrlsRemoved(const QModelIndex &, int, int))
     };

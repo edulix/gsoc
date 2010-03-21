@@ -26,8 +26,8 @@
 
 #include "konqbookmark_export.h"
 
-#include <QListView>
-#include <QModelIndex>
+#include <QtGui/QListView>
+#include <QtCore/QModelIndex>
 
 class QEvent;
 

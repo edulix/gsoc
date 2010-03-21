@@ -28,20 +28,20 @@
 #include "itemmodels/kaggregatedmodel.h"
 #include "itemmodels/placesproxymodel.h"
 
-#include <QAbstractItemView>
-#include <QAbstractItemModel>
-#include <QTreeView>
-#include <QStringListModel>
-#include <QStringList>
-#include <QWidget>
-#include <QSortFilterProxyModel>
-#include <QCompleter>
-#include <QApplication>
+#include <QtGui/QAbstractItemView>
+#include <QtCore/QAbstractItemModel>
+#include <QtGui/QTreeView>
+#include <QtGui/QStringListModel>
+#include <QtCore/QStringList>
+#include <QtGui/QWidget>
+#include <QtGui/QSortFilterProxyModel>
+#include <QtGui/QCompleter>
+#include <QtGui/QApplication>
 
-#include <kurlcompletion.h>
-#include <kurl.h>
-#include <klocale.h>
-#include <kiconloader.h>
+#include <KUrlCompletion>
+#include <KUrl>
+#include <KLocale>
+#include <KIconLoader>
 
 using namespace Konqueror;
 using namespace Akonadi;
@@ -49,27 +49,28 @@ using namespace Akonadi;
 class LocationBar::Private
 {
 public:
-    Private(LocationBar* parent);
+    Private(LocationBar *parent);
     ~Private();
 
     void sort();
-    
+
     void slotReturnPressed(const QString &text);
-    
-    LocationBar* q;
-    PlacesProxyModel* m_unsortedModel;
-    LocationBarCompletionModel* m_model;
-    QAbstractItemView* m_view;
+    void slotCompletionActivated(const QModelIndex &index);
+
+    LocationBar *q;
+    PlacesProxyModel *m_unsortedModel;
+    LocationBarCompletionModel *m_model;
+    QAbstractItemView *m_view;
 };
 
-LocationBar::Private::Private(LocationBar* parent)
+LocationBar::Private::Private(LocationBar *parent)
     : q(parent)
 {
 }
 
 LocationBar::Private::~Private()
 {
-    
+
 }
 
 void LocationBar::Private::slotReturnPressed(const QString &text)
@@ -78,7 +79,13 @@ void LocationBar::Private::slotReturnPressed(const QString &text)
     emit q->returnPressed(text, qApp->keyboardModifiers());
 }
 
-LocationBar::LocationBar(QWidget* parent)
+void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
+{
+    kDebug() << index.data().toString();
+    emit q->returnPressed(index.data().toString(), qApp->keyboardModifiers());
+}
+
+LocationBar::LocationBar(QWidget *parent)
     : KLineEditView(parent), d(new Private(this))
 {
     init();
@@ -90,26 +97,29 @@ void LocationBar::init()
     setClearButtonShown(true);
     setClickMessage(i18n("Search Bookmarks and History"));
     completionView()->setItemDelegate(new LocationBarDelegate(this));
-    
+
     // Setting up models
     d->m_unsortedModel = new PlacesProxyModel(this);
     d->m_model = new LocationBarCompletionModel(d->m_unsortedModel, this);
-    connect(this, SIGNAL(textChanged(const QString&)),
+    connect(this, SIGNAL(textChanged(const QString &)),
         d->m_unsortedModel, SLOT(setQuery(const QString &)));
+
     completionView()->setModel(d->m_model);
-    
+    connect(completionView(), SIGNAL(activated(QModelIndex)), this,
+        SLOT(slotCompletionActivated(QModelIndex)));
+
     connect(this, SIGNAL(returnPressed(const QString &)),
         this, SLOT(slotReturnPressed(const QString &)));
-    
+
     addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
 
 LocationBar::~LocationBar()
 {
-    
+
 }
 
-void LocationBar::setURL(const QString& url)
+void LocationBar::setURL(const QString &url)
 {
     //TODO: see konqcombo.cpp KonqCombo::setURL() for ideas
     setText(url);

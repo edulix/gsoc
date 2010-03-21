@@ -20,8 +20,7 @@
 #ifndef BOOKMARKS_H
 #define BOOKMARKS_H
 
-
-#include <kxmlguiwindow.h>
+#include <KXmlGuiWindow>
 
 class BookmarksView;
 class QPrinter;
@@ -50,7 +49,7 @@ public:
      */
     virtual ~Bookmarks();
 
-private slots:
+private Q_SLOTS:
     void delayedInit();
 
 private:

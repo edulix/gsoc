@@ -24,9 +24,9 @@
 #include "konqbookmark_export.h"
 #include "place.h"
 
-#include <QSortFilterProxyModel>
-#include <QAbstractProxyModel>
-#include <QObject>
+#include <QtGui/QSortFilterProxyModel>
+#include <QtGui/QAbstractProxyModel>
+#include <QtCore/QObject>
 
 namespace Konqueror
 {
@@ -37,10 +37,10 @@ namespace Konqueror
      * history entries, bookmarks, and URLs. It's done by adding an URL
      * completion model to the PlacesManager, and then using the PlacesManager
      * model as the source model and filtering the relevant places.
-     * 
+     *
      * Those places are also filtered by using the query string, which should
      * be set by the LocationBar when the user writes in it.
-     * 
+     *
      * Depending on the query string each item has a Relevance which can be
      * accessed by using the RelevanceRole. The intention is to be able to
      * sort the items in the completion view in descending order. To do that,
@@ -50,32 +50,33 @@ namespace Konqueror
     class KONQBOOKMARK_EXPORT PlacesProxyModel : public QSortFilterProxyModel
     {
         Q_OBJECT
-    public:        
+    public:
         friend class LocationBarCompletionModel;
         PlacesProxyModel(QObject *parent = 0);
         virtual ~PlacesProxyModel();
-        
+
         /**
          * @returns the query string previously set by calling @p setQuery().
-         * 
+         *
          * @note that if it hasn't been set, returns QString().
-         * 
+         *
          * @see setQuery()
          */
         QString query() const;
-        
+
         /**
          * Adds support for RelevanceRole. For other roles, proxies the call to
          * the sourceModel.
          */
-        virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
+        virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
         /**
-         * Do not call this method, because the source model can't change (it
-         * always be the PlacesManager model).
+         * @warning Do not call this method, because the source model can't change (it
+         * always be the PlacesManager model). This method is here only because
+         * QSortFilterProxyModel needs it.
          */
         virtual void setSourceModel(QAbstractItemModel *sourceModel);
-        
+
     public Q_SLOTS:
         /**
          * Updates the query string, and filters again the model by using the
@@ -91,14 +92,14 @@ namespace Konqueror
          *  - Only accept items which are relevant to the given query string.
          */
         virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const;
-        
+
     private:
         class Private;
-        Private* const d;
+        Private *const d;
         Q_DISABLE_COPY(PlacesProxyModel)
-        
-        Q_PRIVATE_SLOT(d, void slotRowsInserted(const QModelIndex&, int, int))
-        Q_PRIVATE_SLOT(d, void slotRowsRemoved(const QModelIndex&, int, int))
+
+        Q_PRIVATE_SLOT(d, void slotRowsInserted(const QModelIndex &, int, int))
+        Q_PRIVATE_SLOT(d, void slotRowsRemoved(const QModelIndex &, int, int))
         Q_PRIVATE_SLOT(d, void slotModelReset())
     };
 
@@ -114,21 +115,21 @@ namespace Konqueror
         Q_OBJECT
     public:
         LocationBarCompletionModel(PlacesProxyModel *sourceModel, QObject *parent);
-    
+
         virtual QModelIndex mapToSource(const QModelIndex &proxyIndex) const;
         virtual QModelIndex mapFromSource(const QModelIndex &sourceIndex) const;
         virtual QModelIndex index(int row, int dcolumn, const QModelIndex &parent = QModelIndex()) const;
-        virtual QModelIndex parent(const QModelIndex&) const;
-        virtual int rowCount(const QModelIndex&) const;
-        virtual int columnCount(const QModelIndex&) const;
-        virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
+        virtual QModelIndex parent(const QModelIndex &) const;
+        virtual int rowCount(const QModelIndex &) const;
+        virtual int columnCount(const QModelIndex &) const;
+        virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
         // Do not use
         virtual void setSourceModel(QAbstractItemModel */*sourceModel*/) {}
     private:
         class Private;
-        Private* const d;
-        
+        Private *const d;
+
         Q_PRIVATE_SLOT(d, void slotModelReset());
     };
 }

@@ -23,17 +23,17 @@
 #include "konqbookmark_export.h"
 #include "klineeditview.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 namespace Konqueror
 {
     /**
-     * Konqueror Location Bar. It has support for plugin that can be added to
+     * Konqueror Location Bar. It has support for plugins that can be added to
      * the left and right of the line edit. It also features a completion popup.
      * The completion popup is an items view with a custom item delegate called
      * LocationBarDelegate. The items model used is a sorted PlacesProxy. The
      * tree of proxies models is like this:
-     * 
+     *
      *   QSortedFilterProxyModel
      *             ^
      *             |
@@ -48,27 +48,28 @@ namespace Konqueror
     {
         Q_OBJECT
     public:
-        LocationBar(QWidget* parent = 0);
+        LocationBar(QWidget *parent = 0);
         virtual ~LocationBar();
-        
+
     public Q_SLOTS:
-        void setURL(const QString& url);
-        
+        void setURL(const QString &url);
+
     Q_SIGNALS:
         /**
-        Specialized signal that emits the state of the modifier
-        keys along with the actual activated text.
-        */
+         * Specialized signal that emits the state of the modifier
+         * keys along with the actual activated text.
+         */
         void returnPressed(const QString &, Qt::KeyboardModifiers);
-        
+
     protected:
         void init();
-        
+
     private:
         class Private;
         Private* const d;
-        
+
         Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
+        Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
     };
 }
 

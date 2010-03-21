@@ -23,7 +23,7 @@
 #include "actionsimpl.h"
 #include <kinputdialog.h>
 
-ActionsImpl* ActionsImpl::s_self = 0;
+ActionsImpl *ActionsImpl::s_self = 0;
 
 ActionsImpl::ActionsImpl()
     : mBookmarksView(0)
@@ -34,7 +34,7 @@ ActionsImpl::~ActionsImpl()
 {
 }
 
-void ActionsImpl::setBookmarksView(BookmarksView* view)
+void ActionsImpl::setBookmarksView(BookmarksView *view)
 {
     mBookmarksView = view;
 }
@@ -100,29 +100,30 @@ void ActionsImpl::slotDelete()
 
 void ActionsImpl::slotNewFolder()
 {
-    
+
     bool ok;
     QString folderName;
-    while(!ok)
-    {
-         folderName = KInputDialog::getText( i18n( "Create New Bookmark Folder" ),
-            i18n( "New folder:" ), QString(), &ok, mBookmarksView );
-        if(!ok)
+    while (!ok) {
+         folderName = KInputDialog::getText(i18n("Create New Bookmark Folder"),
+            i18n("New folder:"), QString(), &ok, mBookmarksView);
+        if (!ok) {
             return;
-        
+        }
+
         // Folder name can't be empty
-        if(folderName.isEmpty())
+        if (folderName.isEmpty()) {
             ok = false;
+        }
     }
-    
+
     mBookmarksView->slotAddFolder(folderName);
-        
+
 }
 
 
 void ActionsImpl::slotNewBookmark()
 {
-    
+
     mBookmarksView->addBookmark();
 }
 

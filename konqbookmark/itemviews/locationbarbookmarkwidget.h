@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2009 Eduardo Robles Elvira <edulix@gmail.com>
+    Copyright (c) 2010 Eduardo Robles Elvira <edulix@gmail.com>
 
     This library is free software; you can redistribute it and/or modify it
     under the terms of the GNU Library General Public License as published by
@@ -17,42 +17,44 @@
     02110-1301, USA.
 */
 
-#ifndef LOCATIONBARFAVICONWIDGET_H
-#define LOCATIONBARFAVICONWIDGET_H
+#ifndef LOCATIONBARBOOKMARKWIDGET_H
+#define LOCATIONBARBOOKMARKWIDGET_H
 
 #include "klineeditviewbutton.h"
 #include "locationbar.h"
-#include "faviconupdater.h"
 #include "konqbookmark_export.h"
 
-#include <QtCore/QString>
-#include <QtCore/QTimer>
 
 namespace Konqueror
 {
 class Private;
 /**
- * Shows the favicon for current url.
+ * This location bar widget shows a star that is filled if the current location bar url
+ * is bookmarked, and a greyed out star if it's not. It also lets you add a bookmark clicking in
+ * the star icon.
  */
-class KONQBOOKMARK_EXPORT LocationBarFaviconWidget : public KLineEditViewButton
+class KONQBOOKMARK_EXPORT LocationBarBookmarkWidget : public KLineEditViewButton
 {
     Q_OBJECT
 
 public:
-    LocationBarFaviconWidget(LocationBar *locationBar);
+    LocationBarBookmarkWidget(LocationBar *locationBar);
+    virtual ~LocationBarBookmarkWidget();
 
-    virtual ~LocationBarFaviconWidget();
+
+protected:
+    void mouseReleaseEvent(QMouseEvent *event);
 
 private:
-    // Move to d-pointer
     class Private;
     Private * const d;
 
     Q_PRIVATE_SLOT(d, void urlChanged())
     Q_PRIVATE_SLOT(d, void updateCurrentUrl())
-    Q_PRIVATE_SLOT(d, void updateFavicon(bool, const KUrl &))
+    Q_PRIVATE_SLOT(d, void placeUpdated())
+
 };
 
 }
 
-#endif
+#endif // LOCATIONBARBOOKMARKWIDGET_H

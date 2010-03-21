@@ -22,7 +22,7 @@
 
 #include <QtGui/QWidget>
 #include <QtCore/QSharedDataPointer>
-#include <akonadi/collection.h>
+#include <Akonadi/Collection>
 #include <konqbookmark/konqbookmark.h>
 
 #include "ui_bookmarksview_base.h"
@@ -55,7 +55,7 @@ public:
      * Destructor
      */
     virtual ~BookmarksView();
-    
+
     void createModels();
     void addBookmark();
 
@@ -63,12 +63,12 @@ Q_SIGNALS:
     /**
      * Use this signal to change the content of the statusbar
      */
-    void signalChangeStatusbar(const QString& text);
+    void signalChangeStatusbar(const QString &text);
 
 public Q_SLOTS:
     void slotAddFolder(const QString &folderName);
     void slotDelete();
-    
+
 protected Q_SLOTS:
     void slotBookmarkAdded(const QModelIndex &index);
 
@@ -79,19 +79,23 @@ private:
      * current selection.
      */
     Akonadi::Collection getParentCollection(QModelIndex current);
-    
+
     /**
      * Helper function for the one above, you shouldn't use it.
      */
-    Akonadi::Collection getParentCollection(QModelIndex current, Akonadi::Collection defaultCollection);
+    Akonadi::Collection getParentCollection(QModelIndex current, Akonadi::Collection
+        defaultCollection);
 
 private:
     Ui::bookmarksview_base ui_bookmarksview_base;
+
     class Private;
     QSharedDataPointer<Private> d;
+
     Q_PRIVATE_SLOT(d, void expandCollectionsView(const QModelIndex& index))
-    Q_PRIVATE_SLOT(d, void expandBookmarksView(const QModelIndex& index))
-    Q_PRIVATE_SLOT(d, void selectBookmarkFolder(const QModelIndex& index = QModelIndex(), int start = -1))
+    Q_PRIVATE_SLOT(d, void expandBookmarksView(const QModelIndex &index))
+    Q_PRIVATE_SLOT(d, void selectBookmarkFolder(const QModelIndex &index = QModelIndex(),
+        int start = -1))
 };
 
 #endif // BOOKMARSVIEW_H

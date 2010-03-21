@@ -64,9 +64,9 @@ kde4_add_executable(akonadi_konquerorbookmarks_resource RUN_UNINSTALLED ${konque
 target_link_libraries(akonadi_konquerorbookmarks_resource
     konqbookmark
     nepomukquery
-    nepomukqueryclient
+#    nepomukqueryclient
     ontologies
-    akonadi_next
+#    akonadi-kde
     ${KDE4_AKONADI_LIBS}
     ${QT_QTCORE_LIBRARY}
     ${QT_QTDBUS_LIBRARY}

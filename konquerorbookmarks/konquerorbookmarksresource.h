@@ -21,36 +21,37 @@ Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #define KONQUERORBOOKMARKSRESOURCE_H
 
 #include <QtCore/QSharedDataPointer>
-#include <akonadi/resourcebase.h>
+#include <Akonadi/ResourceBase>
 #include <nepomuk/queryserviceclient.h>
 
 class KonquerorBookmarksResource : public Akonadi::ResourceBase,
-                           public Akonadi::AgentBase::Observer
+    public Akonadi::AgentBase::Observer
 {
-  Q_OBJECT
+Q_OBJECT
 
-  public:
-    KonquerorBookmarksResource( const QString &id );
+public:
+    KonquerorBookmarksResource(const QString &id);
     ~KonquerorBookmarksResource();
 
-  public Q_SLOTS:
-    virtual void configure( WId windowId );
+public Q_SLOTS:
+    virtual void configure(WId windowId);
 
-  protected Q_SLOTS:
+protected Q_SLOTS:
     void retrieveCollections();
-    void retrieveItems( const Akonadi::Collection &col );
-    bool retrieveItem( const Akonadi::Item &item, const QSet<QByteArray> &parts );
+    void retrieveItems(const Akonadi::Collection &col);
+    bool retrieveItem(const Akonadi::Item &item, const QSet<QByteArray> &parts);
 
-  protected:
+protected:
     virtual void aboutToQuit();
 
-    virtual void itemAdded( const Akonadi::Item &item, const Akonadi::Collection &collection );
-    virtual void itemChanged( const Akonadi::Item &item, const QSet<QByteArray> &parts );
-    virtual void itemRemoved( const Akonadi::Item &item );
-    
-    virtual void collectionAdded( const Akonadi::Collection &collection, const Akonadi::Collection &parent );
-    virtual void collectionChanged( const Akonadi::Collection &collection );
-    virtual void collectionRemoved( const Akonadi::Collection &collection );
+    virtual void itemAdded(const Akonadi::Item &item, const Akonadi::Collection &collection);
+    virtual void itemChanged(const Akonadi::Item &item, const QSet<QByteArray> &parts);
+    virtual void itemRemoved(const Akonadi::Item &item);
+
+    virtual void collectionAdded(const Akonadi::Collection &collection, const Akonadi::Collection
+        &parent);
+    virtual void collectionChanged(const Akonadi::Collection &collection);
+    virtual void collectionRemoved(const Akonadi::Collection &collection);
 
 private:
     class Private;

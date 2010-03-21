@@ -32,9 +32,9 @@
 #include <QtGui/QScrollBar>
 #include <QtGui/QKeyEvent>
 
-#include <kdebug.h>
-#include <kconfig.h>
-#include <kglobalsettings.h>
+#include <KDebug>
+#include <KConfig>
+#include <KGlobalSettings>
 
 class KCompletionView::Private
 {
@@ -385,12 +385,12 @@ void KCompletionView::down()
     if (!model() || !model()->hasChildren()) {
         return;
     }
-    
+
     if (selectionModel()->selectedIndexes().empty()) {
         selectionModel()->select(model()->index(0,0), QItemSelectionModel::SelectCurrent);
         return;
     }
-    
+
     QModelIndex current = selectionModel()->selectedIndexes().first();
     if (current.row() + 1 < model()->rowCount()) {
         selectionModel()->select(model()->index(current.row() + 1, 0), QItemSelectionModel::SelectCurrent);
@@ -404,19 +404,19 @@ void KCompletionView::up()
     if (!model() || !model()->hasChildren()) {
         return;
     }
-    
+
     if (selectionModel()->selectedIndexes().empty()) {
         selectionModel()->select(model()->index(model()->rowCount() - 1, 0), QItemSelectionModel::SelectCurrent);
         return;
     }
-    
+
     QModelIndex current = selectionModel()->selectedIndexes().first();
     if (current.row() > 0) {
         selectionModel()->select(model()->index(current.row() - 1, 0), QItemSelectionModel::SelectCurrent);
     } else {
         selectionModel()->select(model()->index(model()->rowCount() - 1,0), QItemSelectionModel::SelectCurrent);
     }
-    
+
     if (!model() || !model()->hasChildren()) {
         return;
     }
@@ -449,7 +449,7 @@ void KCompletionView::end()
     if (!model()) {
         return;
     }
-    
+
     setCurrentIndex(model()->index(model()->rowCount(QModelIndex()) - 1, 0));
 }
 
@@ -481,7 +481,7 @@ void KCompletionView::canceled()
     if (!d->cancelText.isNull()) {
         emit userCancelled( d->cancelText );
     }
-    
+
     if (isVisible()) {
         hide();
     }

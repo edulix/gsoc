@@ -45,45 +45,37 @@
 using namespace std;
 
 int processArgs(int argc, char **argv);
-int addResource(int argc, char **argv);
-int showResource(int argc, char **argv);
-int clearResources(int argc, char **argv);
+int addResource(const QString& uri, const QString& url, const QString& tagName);
+int showResource(const QString& resUri);
+int clearResources();
 int showResources();
-void processCommand(QString command);
+void processCommand(QString command, QList< QString > args);
 
 int main(int argc, char **argv)
-{    
+{
     QApplication app(argc, argv);
-    
+
     Nepomuk::ResourceManager::instance()->init();
-    
-    processArgs(argc, argv);
     string command;
-    
+
     while(1)
     {
         cout << "terminal > ";
         cin >> command;
-        processCommand(QString(command.c_str()));
+        QString qcommand(command.c_str());
+        QStringList args = qcommand.split(",", QString::SkipEmptyParts);
+        kDebug() << args;
+
+        if (!args.isEmpty()) {
+            processCommand(args.first(), args);
+        }
     }
 }
 
-void processCommand(QString command)
+void processCommand(QString command, QList<QString> args)
 {
-    if(command == "set")
-    {
-        string desc;
-        cin >> desc;
-        Nepomuk::Bookmark bookmark("example:/");
-        bookmark.setDescription(QString(desc.c_str()));
-        kDebug() << "set description: " << bookmark.description();
-    } else if(command == "get")
-    {
-    
-        Nepomuk::Bookmark bookmark("example:/");
-        kDebug() << "description is: " << bookmark.description();
-    } else if(command == "query")
-    {
+    int numArgs = args.length();
+    if (command == "query") {
         QString query = QString(
             "PREFIX nao: <%1> "
             "PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie> "
@@ -95,7 +87,7 @@ void processCommand(QString command)
             "ORDER BY DESC(?time) "
             "LIMIT 20")
             .arg( Soprano::Vocabulary::NAO::naoNamespace().toString() );
-            
+
         Soprano::QueryResultIterator it = Nepomuk::ResourceManager::instance()->mainModel()->executeQuery( query,
             Soprano::Query::QueryLanguageSparql );
         kDebug() << "query done:";
@@ -106,112 +98,87 @@ void processCommand(QString command)
             kDebug() << "resource.titles: " << bookmark.titles();
             kDebug() << "resource.created: " << bookmark.property( Soprano::Vocabulary::NAO::naoNamespace().toString() + "created" ).toDateTime();
         }
+    } else if (command == "clear") {
+        clearResources();
+    } else if (command == "list") {
+        showResources();
+    } else if (command == "add" && numArgs >= 4) {
+        addResource(args[1], args[2], args[3]);
+    } else {
+        cout << "command not found: " << command.toStdString() << endl;
     }
 }
 
-int processArgs(int argc, char **argv)
-{
-    if(argc < 2)
-    {
-        printf("Usage: %s <command>. Use command 'list' to show available commands\n", argv[0]);
-        return 1;
-    }
-    
-    if(strcmp(argv[1], "list") == 0)
-    {
-        printf("Available commands: add, show, clear\n");
-        return 0;
-    } else if(strcmp(argv[1], "add") == 0)
-    {
-        return addResource(argc, argv);
-    } else if(strcmp(argv[1], "show") == 0)
-    {
-        return showResource(argc, argv);
-    } else if(strcmp(argv[1], "clear") == 0)
-    {
-        return clearResources(argc, argv);
-    }
-    
-    return 1;
-}
 
-int addResource(int argc, char **argv)
+int addResource(const QString& uri, const QString& url, const QString& tagName)
 {
-    if(argc < 4)
-    {
-        printf("Usage: %s add <uri> <tagName>\n", argv[0]);
-        return 1;
-    }
-    Nepomuk::Resource res(argv[2], QUrl("http://www.konqueror.com/#Bookmark"));
-    Nepomuk::Tag newTag( argv[3] );
-    newTag.setLabel( argv[3] );
-    newTag.addIdentifier( argv[3] );
-    
-    if(!res.tags().contains(newTag))
-    {
+    kDebug();
+    Nepomuk::Resource res(uri, url);
+    Nepomuk::Tag newTag(tagName);
+    newTag.setLabel(tagName);
+    newTag.addIdentifier(tagName);
+
+    if(!res.tags().contains(newTag)) {
         res.addTag(newTag);
         kDebug() << res.resourceUri().toString() << ": added tag " << newTag.label();
-    } else
+    } else {
         kDebug() << res.resourceUri().toString() << ": resource has already tag " << newTag.label();
-    
+    }
+
     return 0;
 }
 
-int showResource(int argc, char **argv)
+int showResource(const QString& resUri)
 {
-    if(argc < 3)
-    {
-        showResources();
-        return 1;
-    }
-    
-    Nepomuk::Resource res(argv[2]/*, QUrl("http://www.konqueror.com/#Bookmark")*/);
+    kDebug();
+    Nepomuk::Resource res(resUri);
     kDebug() << "resource " << res.resourceUri() << ":";
-    
+
     QHash<QUrl, Nepomuk::Variant> properties = res.properties();
     QHash<QUrl, Nepomuk::Variant>::const_iterator it = properties.constBegin();
-    
-    for(; it != properties.constEnd(); ++it)
-    {
+
+    for (; it != properties.constEnd(); ++it) {
         QUrl propertyUri = it.key();
         Nepomuk::Variant value = it.value();
         Nepomuk::Types::Class propertyType( propertyUri );
-        
+
         kDebug() << "label: " << propertyType.name() << ": " << value.toString();
     }
-        
+
     return 0;
 }
 
 int showResources()
 {
+    kDebug();
     QList<Nepomuk::Bookmark> bookmarks = Nepomuk::Bookmark::allBookmarks();
     kDebug()  << "There are" << bookmarks.count() << " bookmarks";
-    
+
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
         kDebug() << "\nresource " << bookmark.resourceUri() << ":";
         QHash<QUrl, Nepomuk::Variant> properties = bookmark.properties();
         QHash<QUrl, Nepomuk::Variant>::const_iterator it = properties.constBegin();
-        
+
         for(; it != properties.constEnd(); ++it)
         {
             QUrl propertyUri = it.key();
             Nepomuk::Variant value = it.value();
             Nepomuk::Types::Class propertyType( propertyUri );
-            
+
             kDebug() << propertyType.name() << ": " << value.toString();
         }
     }
     return 0;
 }
 
-int clearResources(int argc, char **argv)
+int clearResources()
 {
+    kDebug();
     kDebug() << "Removing all existing resources";
     QList<Nepomuk::Bookmark> bookmarks = Nepomuk::Bookmark::allBookmarks();
     kDebug()  << "There are " << bookmarks.count() << " bookmarks";
-    
+
     foreach( const Nepomuk::Bookmark& bookmark, bookmarks )
     {
         kDebug() << "Removing: " << bookmark.resourceUri();

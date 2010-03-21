@@ -25,10 +25,10 @@
 
 #include <nepomuk/ontologies/bookmark.h>
 #include <QtCore/QSharedDataPointer>
-#include <QMetaType>
-#include <QDateTime>
-#include <QStringList>
-#include <QLatin1String>
+#include <QtCore/QMetaType>
+#include <QtCore/QDateTime>
+#include <QtCore/QStringList>
+#include <QtCore/QLatin1String>
 
 class QDateTime;
 class QString;
@@ -39,7 +39,7 @@ template <class T> class QList;
 
 /**
  *  @short KonqBookmark is a wrapper class that stores information about a konqueror bookmark in Nepomuk.
- *   
+ *
  *  @author Eduardo Robles Elvira <edulix@gmail.com>
  */
 class KONQBOOKMARK_EXPORT KonqBookmark
@@ -54,16 +54,16 @@ public:
      * Given the URI of the bookmark, reads the bookmark related data from the
      * backend (Nepomuk).
      */
-    KonqBookmark(const QString& uniqueUri);
-    
-    
+    KonqBookmark(const QString &uniqueUri);
+
+
     /**
      * Given the URI of the bookmark, reads the bookmark related data from the
      * backend (Nepomuk).
      * @overload
      */
-    KonqBookmark(const QUrl& uniqueUri);
-    
+    KonqBookmark(const QUrl &uniqueUri);
+
     /**
      * Copy constructor.
      * @overload
@@ -79,9 +79,9 @@ public:
     bool operator==(const KonqBookmark &other);
 
 // Properties
-    
+
     Nepomuk::Bookmark bookmark() const;
-    
+
     void setUrl(const QUrl &url);
 
     QUrl url() const;
@@ -89,54 +89,52 @@ public:
     void setTitle(const QString &title);
 
     QString title() const;
-    
+
     QString uniqueUri() const;
-    
+
     /**
      * Be careful, this creates a new instance of Private class and deletes the
      * old one. This is useful for complete delayed intialization.
      */
     void setUniqueUri(const QString &uniqueUri);
-    
-    static QString generateUniqueUri();
 
     QStringList tags() const;
-    
-    void addTag(const QString& tag);
-    
-    void removeTag(const QString& tag);
-    
-    void setTags(const QStringList& tags);
-    
-    bool hasTag(const QString& tag) const;
-    
+
+    void addTag(const QString &tag);
+
+    void removeTag(const QString &tag);
+
+    void setTags(const QStringList &tags);
+
+    bool hasTag(const QString &tag) const;
+
     QString description() const;
-    
-    void setDescription(const QString& description);
-    
+
+    void setDescription(const QString &description);
+
     long numVisits() const;
-    
+
     void incrementVisits();
-    
+
     void setNumVisits(const long visits);
-    
+
     QDateTime created() const;
-    
-    void setCreated(const QDateTime& created);
-    
+
+    void setCreated(const QDateTime &created);
+
     QDateTime lastModified() const;
-    
-    void setLastModified(const QDateTime& lastModified);
-    
+
+    void setLastModified(const QDateTime &lastModified);
+
     QDateTime lastVisited() const;
-    
-    void setLastVisited(const QDateTime& lastVisited);
-    
+
+    void setLastVisited(const QDateTime &lastVisited);
+
     static QString mimeType()
     {
         return QLatin1String("application/x-vnd.kde.konqbookmark");
     };
-    
+
 private:
     class Private;
     QSharedDataPointer<Private> d;
