@@ -231,7 +231,7 @@ void KonquerorBookmarksResource::itemAdded(const Akonadi::Item &item, const Akon
 {
     kDebug() << collection.name();
     if (!item.hasPayload<KonqBookmark>()) {
-        kDebug() << "!item.hasPayload<KonqBookmark>()";
+        cancelTask(i18n("!item.hasPayload<KonqBookmark>()"));
         return;
     }
 
@@ -253,7 +253,7 @@ void KonquerorBookmarksResource::itemChanged(const Akonadi::Item &item, const QS
     kDebug() << item.remoteId();
     Q_UNUSED(parts);
     if (!item.hasPayload<KonqBookmark>()) {
-        kDebug() << "!item.hasPayload<KonqBookmark>()";
+        cancelTask(i18n("!item.hasPayload<KonqBookmark>()"));
         return;
     }
 
@@ -326,6 +326,7 @@ void KonquerorBookmarksResource::collectionRemoved(const Akonadi::Collection &co
     kDebug() << collection.name();
     // Root collection cannot be removed
     if (collection.remoteId() == "konqbookmark:/") {
+        cancelTask(i18n("Root collection cannot be removed"));
         return;
     }
 
@@ -337,7 +338,8 @@ void KonquerorBookmarksResource::collectionRemoved(const Akonadi::Collection &co
         item.setRemoteId(bookmark.resourceUri().toString());
         Akonadi::ItemDeleteJob *job = new Akonadi::ItemDeleteJob(item);
         if (!job->exec()) {
-            kDebug() << "Error deleting an bookmark item";
+            cancelTask(i18n("Error deleting an bookmark item"));
+            return;
         }
     }
 
@@ -349,7 +351,8 @@ void KonquerorBookmarksResource::collectionRemoved(const Akonadi::Collection &co
 
         Akonadi::CollectionDeleteJob *job = new Akonadi::CollectionDeleteJob(subCollection);
         if (!job->exec()) {
-            kDebug() << "Error deleting a bookmark folder";
+            cancelTask(i18n("Error deleting a bookmark folder"));
+            return;
         }
     }
     bookmarkFolder.remove();
