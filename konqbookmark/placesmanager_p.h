@@ -316,6 +316,7 @@ void PlacesManager::Private::slotHistoryEntryRemoved(const KonqHistoryEntry &ent
 
     delete m_historyEntries[entry.url];
     m_historyEntries.remove(entry.url);
+    m_places[entry.url]->setHistoryEntry(0);
 
     if (m_places.contains(entry.url) &&  !m_bookmarks[entry.url]
         && m_places[entry.url]->url() == QUrl()) {
