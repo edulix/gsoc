@@ -79,6 +79,16 @@ void KCompletionView::slotActivated(const QModelIndex &index)
     hide();
 }
 
+void KCompletionView::selectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+    QListView::selectionChanged(selected, deselected);
+    if (selected.empty()) {
+        return;
+    }
+
+    scrollTo(selected.first().indexes().first());
+}
+
 bool KCompletionView::eventFilter(QObject *o, QEvent *e)
 {
     int type = e->type();

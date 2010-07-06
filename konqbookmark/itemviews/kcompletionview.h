@@ -194,6 +194,11 @@ protected Q_SLOTS:
      */
     virtual void slotActivated(const QModelIndex &index);
 
+    /**
+     * Reimplemented to ensure the selected items are visible.
+     */
+    void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+
 private Q_SLOTS:
     void canceled();
 

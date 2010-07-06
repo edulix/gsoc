@@ -104,6 +104,7 @@ void LocationBar::init()
     connect(this, SIGNAL(textChanged(const QString &)),
         d->m_unsortedModel, SLOT(setQuery(const QString &)));
 
+
     completionView()->setModel(d->m_model);
     connect(completionView(), SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));

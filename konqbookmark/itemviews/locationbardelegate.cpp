@@ -55,8 +55,9 @@ void LocationBarDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     // Start painting
     painter->save();
-    QStyledItemDelegate::paint(painter, option, index);
-
+    QStyleOptionViewItemV4 option2(option);
+    option2.state = option2.state | QStyle::State_Active;
+    QStyledItemDelegate::paint(painter, option2, index);
     painter->translate(option.rect.x(), option.rect.y());
     // Paint background and stablish main text colors depending on if we are
     // painting the currently selected index or not
