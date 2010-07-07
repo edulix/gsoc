@@ -22,13 +22,14 @@
 #include "place.h"
 #include "placesmanager.h"
 
+#include <limits.h>
+
 #include <QtCore/QObject>
 #include <QtGui/QFontMetrics>
 #include <QtGui/QColor>
 #include <QtGui/QPainter>
 #include <QtGui/QApplication>
 
-#include <KDebug>
 #include <KIconLoader>
 
 using namespace Konqueror;
@@ -139,10 +140,65 @@ QSize LocationBarDelegate::sizeHint(const QStyleOptionViewItem& option, const QM
     return s;
 }
 
+
+/**
+ * Returns the next position of any of the needles in the haystack starting from startPos,
+ * and also takes startPos and endPos as references which get updated.
+ */
+bool nextPosition(const QString &haystack, const QStringList &needles, int &startPos,
+    const int oldPos, int &endPos)
+{
+    bool foundMatch = false;
+    Q_FOREACH (QString needle, needles) {
+        int pos = haystack.indexOf(needle, oldPos, Qt::CaseInsensitive);
+
+        // First appearance
+        if (!foundMatch && pos > startPos) {
+            startPos = pos;
+            foundMatch = true;
+            endPos = pos + needle.size();
+        // Find a joined word. This happens if for example:
+        //  - haystack = "Qt QScrollArea: help system"
+        //  - needles is = ["qscroll", "scrollarea"]
+        //  - startPos = 0
+        // Then in first iteration of this loop, startPos = 3, endPos = 3 + 7 = 10
+        // Then here we check that the second match starts between 3 and 10 in order to be 
+        // a "joined word".
+        } else if (pos >= startPos && pos <= endPos) {
+            int posPlusSize = pos + needle.size();
+            if (posPlusSize > endPos) {
+                endPos = posPlusSize;
+            }
+        // Find a previous word. This is a completely different case. We might have:
+        // - haystack = "sabes que nepomuk kmola que si que nepomukmola"
+        // - needles is = ["kmola", "nepomuk"]
+        // - startPos = 0
+        // Then at first, we get  startPos = 19, endPos = 22 for the first match of "kmola",
+        // but at next iteration of the needles we need to find out that, actually nepomuk
+        // word at [11, 18] is first.
+        // Same happens with startPos > 18. First, we get match for kmola in [42, 47], but
+        // then we need to get the match for "nepomuk" in [26, 43], but also noting that
+        // there's a "joined word" because the correct match is the complete word
+        // "nepomukmola", at [36, 47]
+        } else if (foundMatch && pos != -1 && pos < startPos) {
+            int needleSize = needle.size();
+            if (pos + needleSize < startPos) {
+                startPos = pos;
+                endPos = startPos + needleSize;
+            // endPos continues to be valid because we got a "joined word", like
+            // in the example with "nepomukmola"!:
+            } else {
+                startPos = pos;
+            }
+        }
+    }
+    return foundMatch;
+}
+
 int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QString text, TextAlignment textAlignment, int maxWidth) const
 {
     if (maxWidth == -1) {
-        maxWidth = 5000; // TODO: set to max int
+        maxWidth = INT_MAX;
     }
 
     // In this function we iterate the text for each match of the location bar
@@ -162,16 +218,25 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     // position from which we should start painting until we have finished
     // finding the matches.
 
-    QString query = m_parent->userText().trimmed();
+    QStringList query = m_parent->words();
+    QFont fontNormal(painter->font());
+    QFontMetrics fontMetrics(painter->fontMetrics());
+
+    if (query.isEmpty()) {
+        painter->setFont(fontNormal);
+        painter->drawText(x, bottomY, text);
+        return fontMetrics.width(text);
+    }
+
     QList<int>      positions;
     QList<QString>  substrings;
     QList<bool>     underline;
 
     int width = 0;
     int oldPos = 0;
-    int currentPos;
-    QFont fontNormal(painter->font());
-    QFontMetrics fontMetrics(painter->fontMetrics());
+    int currentPos = 0;
+    int endPos = 0;
+    int textSize = text.size();
 
     QFont fontUnderline(painter->font());
     fontUnderline.setBold(true);
@@ -180,51 +245,54 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     bool endByEliding = false;
 
     // Find matches and non matches, populate list of substrings
-    while ((currentPos = text.indexOf(query, oldPos, Qt::CaseInsensitive)) != -1 && width < maxWidth) {
-        if (currentPos - oldPos > 0) {
+    while (nextPosition(text, query, currentPos, oldPos, endPos) && width < maxWidth) {
+        // Add the text before the match, if any
+        if (currentPos > oldPos) {
             underline.append(false);
             positions.append(width);
 
             //elide text
-            QString tempString = text.mid(oldPos, (currentPos - oldPos));
+            QString tempString = text.mid(oldPos, currentPos - oldPos);
             int delta = maxWidth - width;
             QString substring = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, delta);
             substrings.append(substring);
             width += fontMetrics.width(substring);
             // If text elided finish
-            if (tempString != tempString) {
+            if (substring.size() != tempString.size()) {
                 endByEliding = true;
                 break;
             }
         }
 
+        // Now add the matched text
         underline.append(true);
         positions.append(width);
 
-        //elide text
-        QString tempString = text.mid(currentPos, query.size());
+        // elide text
+        QString tempString = text.mid(currentPos, endPos - currentPos);
         int delta = maxWidth - width;
         QString substring = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, delta);
         substrings.append(substring);
         width += fontMetricsUnderline.width(substring);
         // If text elided finish
-        if (tempString != substring) {
+        if (tempString.size() != substring.size()) {
             endByEliding = true;
             break;
         }
         oldPos = currentPos + substring.size();
     }
 
-    if (!endByEliding && oldPos < text.size()) {
+    // "Special" case: adding also the unmatched text of the end of the string
+    if (!endByEliding && oldPos < textSize) {
         underline.append(false);
         positions.append(width);
 
         //elide text
-        QString tempString = text.mid(oldPos, (text.size() - oldPos));
+        QString tempString = text.mid(oldPos, textSize - oldPos);
         int delta = maxWidth - width;
-        QString substring = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, delta);
-        substrings.append(substring);
-        width += fontMetrics.width(substring);
+        tempString = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, delta);
+        substrings.append(tempString);
+        width += fontMetrics.width(tempString);
     }
 
     int startX;

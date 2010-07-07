@@ -56,11 +56,13 @@ public:
 
     void slotReturnPressed(const QString &text);
     void slotCompletionActivated(const QModelIndex &index);
+    void updateWords(const QString &text);
 
     LocationBar *q;
     PlacesProxyModel *m_unsortedModel;
     LocationBarCompletionModel *m_model;
     QAbstractItemView *m_view;
+    QStringList m_words;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -72,6 +74,17 @@ LocationBar::Private::~Private()
 {
 
 }
+
+void LocationBar::Private::updateWords(const QString& text)
+{
+    m_words = text.split(" ", QString::SkipEmptyParts);
+}
+
+QStringList LocationBar::words() const
+{
+    return d->m_words;
+}
+
 
 void LocationBar::Private::slotReturnPressed(const QString &text)
 {
@@ -86,33 +99,43 @@ void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 }
 
 LocationBar::LocationBar(QWidget *parent)
-    : KLineEditView(parent), d(new Private(this))
+    : KLineEdit(parent), d(new Private(this))
 {
-    init();
+    QTimer::singleShot(0, this, SLOT(init()));
 }
 
 void LocationBar::init()
 {
     setCompletionMode(KGlobalSettings::CompletionPopup);
     setClearButtonShown(true);
+
+    // insert decoded URLs
+    setUrlDropsEnabled(true);
+    
     setClickMessage(i18n("Search Bookmarks and History"));
-    completionView()->setItemDelegate(new LocationBarDelegate(this));
 
     // Setting up models
     d->m_unsortedModel = new PlacesProxyModel(this);
     d->m_model = new LocationBarCompletionModel(d->m_unsortedModel, this);
     connect(this, SIGNAL(textChanged(const QString &)),
+        this, SLOT(updateWords(QString)));
+    connect(this, SIGNAL(textChanged(const QString &)),
         d->m_unsortedModel, SLOT(setQuery(const QString &)));
 
 
-    completionView()->setModel(d->m_model);
-    connect(completionView(), SIGNAL(activated(QModelIndex)), this,
+    QCompleter *completer = new QCompleter(this);
+    setCompleter(completer);
+    completer->setModel(d->m_model);
+    completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
+//     completer->setPopup(new QTreeView(this));
+    completer->popup()->setItemDelegate(new LocationBarDelegate(this));
+    connect(completer, SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));
 
     connect(this, SIGNAL(returnPressed(const QString &)),
         this, SLOT(slotReturnPressed(const QString &)));
 
-    addWidget(new LocationBarFaviconWidget(this), LeftSide);
+//     addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
 
 LocationBar::~LocationBar()

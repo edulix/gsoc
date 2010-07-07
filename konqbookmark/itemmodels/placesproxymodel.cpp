@@ -75,6 +75,7 @@ public:
     KCompletionModel *m_urlCompletionModel;
     QString m_strQuery;
     QHash<const QPersistentModelIndex, qreal> m_relevance;
+    QStringList m_strQueryWords;
 };
 
 PlacesProxyModel::Private::Private(PlacesProxyModel *parent)
@@ -102,11 +103,23 @@ Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex &index)
 int PlacesProxyModel::Private::matches(Place *place)
 {
     int matches = 0;
-    matches += place->title().count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->url().toString().count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->tags().join(",").count(m_strQuery, Qt::CaseInsensitive);
-    matches += place->description().count(m_strQuery, Qt::CaseInsensitive);
-    return matches;
+    int prevMatches = 0;
+    bool allHaveMatches = true;
+    Q_FOREACH (QString strQuery, m_strQueryWords) {
+        prevMatches = matches;
+        matches += place->title().count(strQuery, Qt::CaseInsensitive);
+        matches += place->url().toString().count(strQuery, Qt::CaseInsensitive);
+        matches += place->tags().join(",").count(strQuery, Qt::CaseInsensitive);
+        matches += place->description().count(strQuery, Qt::CaseInsensitive);
+        if (prevMatches == matches) {
+            allHaveMatches = false;
+        }
+    }
+    if (allHaveMatches) {
+        return matches;
+    } else {
+        return 0;
+    }
 }
 
 bool PlacesProxyModel::Private::updateRelevance(const QModelIndex &index)
@@ -210,6 +223,7 @@ void PlacesProxyModel::setQuery(QString query)
 
     d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
     d->m_strQuery = query;
+    d->m_strQueryWords = query.split(" ", QString::SkipEmptyParts);
     d->m_relevance.clear();
     invalidate();
 }

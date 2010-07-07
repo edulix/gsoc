@@ -21,7 +21,7 @@
 #define KONQUEROR_LOCATION_BAR_H
 
 #include "konqbookmark_export.h"
-#include "klineeditview.h"
+#include <KLineEdit>
 
 #include <QtCore/QObject>
 
@@ -44,12 +44,17 @@ namespace Konqueror
      *             |
      *      PlacesManager
      */
-    class KONQBOOKMARK_EXPORT LocationBar : public KLineEditView
+    class KONQBOOKMARK_EXPORT LocationBar : public KLineEdit
     {
         Q_OBJECT
     public:
         LocationBar(QWidget *parent = 0);
         virtual ~LocationBar();
+
+        /**
+         * Returns the text inside the lineedit split in words
+         */
+        QStringList words() const;
 
     public Q_SLOTS:
         void setURL(const QString &url);
@@ -61,7 +66,7 @@ namespace Konqueror
          */
         void returnPressed(const QString &, Qt::KeyboardModifiers);
 
-    protected:
+    protected Q_SLOTS:
         void init();
 
     private:
@@ -70,6 +75,7 @@ namespace Konqueror
 
         Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
+        Q_PRIVATE_SLOT(d, void updateWords(const QString &));
     };
 }
 
