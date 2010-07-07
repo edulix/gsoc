@@ -38,6 +38,7 @@ using namespace Konqueror;
 
 
 static const int relevanceMatchBonus  = 10;
+static const int completionItemBonus  = 3000;
 
 static const int firstBucketDays      = 4;
 static const int secondBucketDays     = 14;
@@ -135,6 +136,10 @@ bool PlacesProxyModel::Private::updateRelevance(const QModelIndex &index)
 
     if (m_relevance.contains(index) && m_relevance[index] == relevance) {
         return false;
+    }
+
+    if (place->isCompletedItem()) {
+        relevance += completionItemBonus;
     }
 
     m_relevance[index] = relevance;

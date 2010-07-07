@@ -141,6 +141,8 @@ namespace Konqueror
         Akonadi::Item item() const;
         void setItem(const Akonadi::Item& item);
 
+        bool isCompletedItem() const;
+
     Q_SIGNALS:
         /**
          * This signal is fired when this place is updated by calling to a setter function of

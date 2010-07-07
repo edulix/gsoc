@@ -21,6 +21,8 @@
 #include "place.h"
 #include "konqbookmark.h"
 #include <konq_historyentry.h> // libkonq
+#include <Nepomuk/Resource>
+#include <Nepomuk/Tag>
 
 using namespace Konqueror;
 
@@ -112,6 +114,11 @@ QString Place::title() const
         return d->m_konqBookmark->title();
     }
 
+    if (!d->m_url.isEmpty() && d->m_url.isValid()) {
+        KUrl url(d->m_url.path());
+        return url.fileName();
+    }
+
     return QString();
 }
 
@@ -131,6 +138,12 @@ QUrl Place::url() const
 
     return QUrl();
 }
+
+bool Place::isCompletedItem() const
+{
+    return !d->m_historyEntry && !d->m_konqBookmark;
+}
+
 
 QString Place::description() const
 {
