@@ -90,7 +90,7 @@ void PlacesManager::registerUrlCompletionModel(KCompletionModel *urlCompletionMo
     connect(urlCompletionModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
         this, SLOT(slotUrlsInserted(const QModelIndex &, int, int)));
 
-    connect(urlCompletionModel, SIGNAL(rowsRemoved(const QModelIndex &, int, int)),
+    connect(urlCompletionModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex &, int, int)),
         this, SLOT(slotUrlsRemoved(const QModelIndex &, int, int)));
 }
 
