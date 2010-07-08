@@ -69,6 +69,9 @@ namespace Konqueror
     protected Q_SLOTS:
         void init();
 
+    protected:
+        virtual void paintEvent(QPaintEvent* ev);
+
     private:
         class Private;
         Private* const d;

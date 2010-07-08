@@ -285,7 +285,6 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     }
 
     // "Special" case: adding also the unmatched text of the end of the string
-    kDebug() << endByEliding << oldPos << textSize;
     if (!endByEliding && oldPos < textSize) {
         underline.append(false);
         positions.append(width);

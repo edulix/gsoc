@@ -37,6 +37,7 @@
 #include <QtGui/QSortFilterProxyModel>
 #include <QtGui/QCompleter>
 #include <QtGui/QApplication>
+#include <QtGui/QPainter>
 
 #include <KUrlCompletion>
 #include <KUrl>
@@ -60,11 +61,12 @@ public:
     void slotCurrentCompletionChanged(const QModelIndex &index);
 
     LocationBar *q;
+    QString m_currentCompletion;
+    bool italicizePlaceholder;
     PlacesProxyModel *m_unsortedModel;
     LocationBarCompletionModel *m_model;
     QAbstractItemView *m_view;
     QStringList m_words;
-    QString m_currentCompletionText;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -90,21 +92,22 @@ QStringList LocationBar::words() const
 
 void LocationBar::Private::slotReturnPressed(const QString &text)
 {
-    kDebug() << m_currentCompletionText;
-    emit q->returnPressed(m_currentCompletionText, qApp->keyboardModifiers());
+    kDebug() << text;
+    q->setText(text);
+    emit q->returnPressed(text, qApp->keyboardModifiers());
 }
 
 
 void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index)
 {
-    m_currentCompletionText = index.data().toString();
     kDebug() << index.data().toString();
 }
 
 void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 {
-    kDebug() << index.data().toString() << m_currentCompletionText;
-    emit q->returnPressed(m_currentCompletionText, qApp->keyboardModifiers());
+    kDebug() << index.data().toString();
+    q->setText(index.data().toString());
+    emit q->returnPressed(index.data().toString(), qApp->keyboardModifiers());
 }
 
 LocationBar::LocationBar(QWidget *parent)
@@ -115,12 +118,21 @@ LocationBar::LocationBar(QWidget *parent)
 
 void LocationBar::init()
 {
+    // i18n: Placeholder text in line edit widgets is the text appearing
+    // before any user input, briefly explaining to the user what to type
+    // (e.g. "Enter search pattern").
+    // By default the text is set in italic, which may not be appropriate
+    // for some languages and scripts (e.g. for CJK ideographs).
+    QString metaMsg = i18nc("Italic placeholder text in line edits: 0 no, 1 yes", "1");
+    d->italicizePlaceholder = (metaMsg.trimmed() != QString('0'));
+
     setCompletionMode(KGlobalSettings::CompletionPopup);
     setClearButtonShown(true);
+    setTrapReturnKey(true);
 
     // insert decoded URLs
     setUrlDropsEnabled(true);
-    
+
     setClickMessage(i18n("Search Bookmarks and History"));
 
     // Setting up models
@@ -130,7 +142,6 @@ void LocationBar::init()
         this, SLOT(updateWords(QString)));
     connect(this, SIGNAL(textChanged(const QString &)),
         d->m_unsortedModel, SLOT(setQuery(const QString &)));
-
 
     QCompleter *completer = new QCompleter(this);
     setCompleter(completer);
@@ -153,6 +164,64 @@ void LocationBar::init()
 LocationBar::~LocationBar()
 {
 
+}
+
+void LocationBar::paintEvent(QPaintEvent* ev)
+{
+    QLineEdit::paintEvent(ev);
+    QString text = this->text();
+
+    // this is copied/adapted from KLineEdit::paintEvent
+    QFontMetrics fm = fontMetrics();
+    QString clickMessage = this->clickMessage();
+
+    QPainter p(this);
+    QFont f = font();
+    f.setItalic(d->italicizePlaceholder);
+    p.setFont(f);
+
+    QStyleOptionFrame opt;
+    initStyleOption(&opt);
+    QRect cr = style()->subElementRect(QStyle::SE_LineEditContents, &opt, this);
+
+    // this is copied/adapted from QLineEdit::paintEvent
+    const int verticalMargin(1);
+    const int horizontalMargin(2);
+
+    int left, top, right, bottom;
+    getTextMargins( &left, &top, &right, &bottom );
+    cr.adjust( left, top, -right, -bottom );
+
+    p.setClipRect(cr);
+    Qt::Alignment va = alignment() & Qt::AlignVertical_Mask;
+    int vscroll;
+    switch (va & Qt::AlignVertical_Mask)
+    {
+        case Qt::AlignBottom:
+        vscroll = cr.y() + cr.height() - fm.height() - verticalMargin;
+        break;
+
+        case Qt::AlignTop:
+        vscroll = cr.y() + verticalMargin;
+        break;
+
+        default:
+        vscroll = cr.y() + (cr.height() - fm.height() + 1) / 2;
+        break;
+
+    }
+
+    QRect lineRect(cr.x() + horizontalMargin, vscroll, cr.width() - 2*horizontalMargin, fm.height());
+
+    // Show click message only if it's not empty and space is available
+    if (!clickMessage.isEmpty() &&
+        fm.width(text) + fm.width(clickMessage) <= lineRect.width()) {
+        QColor color(palette().color(foregroundRole()));
+        color.setAlphaF(0.5);
+        p.setPen(color);
+
+        p.drawText(lineRect, Qt::AlignRight|Qt::AlignVCenter, clickMessage);
+    }
 }
 
 void LocationBar::setURL(const QString &url)
