@@ -153,7 +153,7 @@ bool nextPosition(const QString &haystack, const QStringList &needles, int &star
         int pos = haystack.indexOf(needle, oldPos, Qt::CaseInsensitive);
 
         // First appearance
-        if (!foundMatch && pos > startPos) {
+        if (!foundMatch && pos >= startPos) {
             startPos = pos;
             foundMatch = true;
             endPos = pos + needle.size();
@@ -197,8 +197,10 @@ bool nextPosition(const QString &haystack, const QStringList &needles, int &star
 
 int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QString text, TextAlignment textAlignment, int maxWidth) const
 {
+    // maxWidth == -1 means there's no maxWidth, so we need to set a really high maxwidth.
+    // We don't directly use INT_MAX because QFontMetrics thinks it's too much, apparently
     if (maxWidth == -1) {
-        maxWidth = INT_MAX;
+        maxWidth = INT_MAX / 100;
     }
 
     // In this function we iterate the text for each match of the location bar
@@ -283,6 +285,7 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
     }
 
     // "Special" case: adding also the unmatched text of the end of the string
+    kDebug() << endByEliding << oldPos << textSize;
     if (!endByEliding && oldPos < textSize) {
         underline.append(false);
         positions.append(width);
@@ -290,7 +293,7 @@ int LocationBarDelegate::paintText(QPainter *painter, int x, int bottomY, QStrin
         //elide text
         QString tempString = text.mid(oldPos, textSize - oldPos);
         int delta = maxWidth - width;
-        tempString = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, delta);
+        tempString = painter->fontMetrics().elidedText(tempString, Qt::ElideRight, maxWidth);
         substrings.append(tempString);
         width += fontMetrics.width(tempString);
     }

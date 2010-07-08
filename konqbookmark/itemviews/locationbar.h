@@ -75,6 +75,7 @@ namespace Konqueror
 
         Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
+        Q_PRIVATE_SLOT(d, void slotCurrentCompletionChanged(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void updateWords(const QString &));
     };
 }

@@ -57,12 +57,14 @@ public:
     void slotReturnPressed(const QString &text);
     void slotCompletionActivated(const QModelIndex &index);
     void updateWords(const QString &text);
+    void slotCurrentCompletionChanged(const QModelIndex &index);
 
     LocationBar *q;
     PlacesProxyModel *m_unsortedModel;
     LocationBarCompletionModel *m_model;
     QAbstractItemView *m_view;
     QStringList m_words;
+    QString m_currentCompletionText;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -88,14 +90,21 @@ QStringList LocationBar::words() const
 
 void LocationBar::Private::slotReturnPressed(const QString &text)
 {
-    kDebug() << text;
-    emit q->returnPressed(text, qApp->keyboardModifiers());
+    kDebug() << m_currentCompletionText;
+    emit q->returnPressed(m_currentCompletionText, qApp->keyboardModifiers());
+}
+
+
+void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index)
+{
+    m_currentCompletionText = index.data().toString();
+    kDebug() << index.data().toString();
 }
 
 void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 {
-    kDebug() << index.data().toString();
-    emit q->returnPressed(index.data().toString(), qApp->keyboardModifiers());
+    kDebug() << index.data().toString() << m_currentCompletionText;
+    emit q->returnPressed(m_currentCompletionText, qApp->keyboardModifiers());
 }
 
 LocationBar::LocationBar(QWidget *parent)
@@ -127,9 +136,12 @@ void LocationBar::init()
     setCompleter(completer);
     completer->setModel(d->m_model);
     completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
-//     completer->setPopup(new QTreeView(this));
     completer->popup()->setItemDelegate(new LocationBarDelegate(this));
-    connect(completer, SIGNAL(activated(QModelIndex)), this,
+    connect(completer->popup()->selectionModel(),
+        SIGNAL(currentChanged(QModelIndex,QModelIndex)), this,
+        SLOT(slotCurrentCompletionChanged(QModelIndex)));
+
+    connect(completer->popup(), SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));
 
     connect(this, SIGNAL(returnPressed(const QString &)),
