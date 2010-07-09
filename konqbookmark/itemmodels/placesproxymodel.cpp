@@ -213,8 +213,6 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
-    kDebug() << query << rowCount() << hasChildren();
-
     query = query.trimmed();
 
     if (query.isEmpty()) {
