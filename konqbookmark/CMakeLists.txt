@@ -60,8 +60,8 @@ set(konqbookmark_LIB_SRCS
     itemviews/ktreeviewsearchline.cpp
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
-    itemviews/locationbarfaviconwidget.cpp
-    itemviews/locationbarbookmarkwidget.cpp
+    #itemviews/locationbarfaviconwidget.cpp
+    #itemviews/locationbarbookmarkwidget.cpp
     itemviews/locationbardelegate.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
