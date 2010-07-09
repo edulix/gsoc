@@ -213,7 +213,7 @@ PlacesProxyModel::~PlacesProxyModel()
 
 void PlacesProxyModel::setQuery(QString query)
 {
-    kDebug() << rowCount() << hasChildren();
+    kDebug() << query << rowCount() << hasChildren();
 
     query = query.trimmed();
 
@@ -221,9 +221,9 @@ void PlacesProxyModel::setQuery(QString query)
         return;
     }
 
-    d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
     d->m_strQuery = query;
     d->m_strQueryWords = query.split(" ", QString::SkipEmptyParts);
+    d->m_urlCompletionModel->completion()->slotMakeCompletion(d->m_strQueryWords.first());
     d->m_relevance.clear();
     invalidate();
 }

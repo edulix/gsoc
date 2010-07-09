@@ -27,7 +27,6 @@
 #include <QStringListIterator>
 #include <QModelIndexList>
 #include <QPersistentModelIndex>
-#include <kdebug.h>
 
 /**
  * Private class that helps to provide binary compatibility between releases.
@@ -92,9 +91,7 @@ void KCompletionModel::Private::slotMatches()
 }
 
 void KCompletionModel::Private::slotMatches(const QStringList &matches)
-{
-    kDebug() << matches;
-    
+{   
     QModelIndexList indexesToRemove;
     QHashIterator<QString, QPersistentModelIndex> it(m_reverseIndexes);
     
@@ -102,7 +99,6 @@ void KCompletionModel::Private::slotMatches(const QStringList &matches)
         it.next();
         if (!matches.contains(it.key())) {
             indexesToRemove.append(it.value());
-            kDebug() << "removing " << it.key() << "with row =" << it.value().row();
         }
     }
     
@@ -120,15 +116,12 @@ void KCompletionModel::Private::slotMatches(const QStringList &matches)
             indexPair.second = *strIt;
             
             indexesToAppend.append(indexPair);
-            kDebug() << "appending " << *strIt << "with row =" << indexPair.first.row();
         }
     }
 
     if (!indexesToAppend.empty()) {
         insertRows(indexesToAppend);
     }
-    
-    kDebug() << "rowCount = " << q->rowCount();
 }
 
 void KCompletionModel::Private::insertRows(const QList<QPair<QModelIndex, QVariant> >& indexes)
@@ -157,7 +150,6 @@ void KCompletionModel::Private::insertRows(const QList<QPair<QModelIndex, QVaria
     
     for (it = indexes.constBegin(); it != indexes.constEnd(); ++it) {
         const QModelIndex &index = (*it).first;
-        kDebug() << index.data() << index.row() << index.column();
     }
 }
 
