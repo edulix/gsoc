@@ -35,10 +35,11 @@
 #include <QtCore/QStringList>
 #include <QtGui/QWidget>
 #include <QtGui/QSortFilterProxyModel>
-#include <QtGui/QCompleter>
 #include <QtGui/QApplication>
 #include <QtGui/QPainter>
+#include <QtGui/QKeyEvent>
 
+#include <KStandardShortcut>
 #include <KUrlCompletion>
 #include <KUrl>
 #include <KLocale>
@@ -46,6 +47,26 @@
 
 using namespace Konqueror;
 using namespace Akonadi;
+
+bool KCompleter::eventFilter(QObject* o, QEvent* e)
+{
+    if (e->type() != QEvent::KeyPress) {
+        return QCompleter::eventFilter(o, e);
+    }
+
+    QKeyEvent *ke = static_cast<QKeyEvent *>(e);
+    const int key = ke->key();
+
+    kDebug() << "keypress event" << ke->text();
+    if (key != Qt::Key_Up && key != Qt::Key_Down) {
+        return QCompleter::eventFilter(o, e);
+    }
+    kDebug() << "up or down event, emit ignoreNextTextChanged()";
+    emit ignoreNextTextChanged();
+
+    return QCompleter::eventFilter(o, e);
+}
+
 
 class LocationBar::Private
 {
@@ -57,8 +78,9 @@ public:
 
     void slotReturnPressed(const QString &text);
     void slotCompletionActivated(const QModelIndex &index);
-    void updateWords(const QString &text);
+    void slotTextChanged(const QString &text);
     void slotCurrentCompletionChanged(const QModelIndex &index);
+    void slotIgnoreNextTextChanged();
 
     LocationBar *q;
     QString m_currentCompletion;
@@ -67,6 +89,7 @@ public:
     LocationBarCompletionModel *m_model;
     QAbstractItemView *m_view;
     QStringList m_words;
+    bool ignoreNextTextChanged;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -79,9 +102,20 @@ LocationBar::Private::~Private()
 
 }
 
-void LocationBar::Private::updateWords(const QString& text)
+void LocationBar::Private::slotIgnoreNextTextChanged()
 {
+    ignoreNextTextChanged = true;
+}
+
+void LocationBar::Private::slotTextChanged(const QString& text)
+{
+    if (ignoreNextTextChanged) {
+        ignoreNextTextChanged = false;
+        return;
+    }
+
     m_words = text.split(" ", QString::SkipEmptyParts);
+    m_unsortedModel->setQuery(text);
 }
 
 QStringList LocationBar::words() const
@@ -139,13 +173,12 @@ void LocationBar::init()
     d->m_unsortedModel = new PlacesProxyModel(this);
     d->m_model = new LocationBarCompletionModel(d->m_unsortedModel, this);
     connect(this, SIGNAL(textChanged(const QString &)),
-        this, SLOT(updateWords(QString)));
-    connect(this, SIGNAL(textChanged(const QString &)),
-        d->m_unsortedModel, SLOT(setQuery(const QString &)));
+        this, SLOT(slotTextChanged(QString)));
 
-    QCompleter *completer = new QCompleter(this);
+    KCompleter *completer = new KCompleter(this);
     setCompleter(completer);
     completer->setModel(d->m_model);
+    completer->setCompletionRole(Place::PlaceUrlRole);
     completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
     completer->popup()->setItemDelegate(new LocationBarDelegate(this));
     connect(completer->popup()->selectionModel(),
@@ -154,6 +187,8 @@ void LocationBar::init()
 
     connect(completer->popup(), SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));
+    connect(completer, SIGNAL(ignoreNextTextChanged()), this,
+        SLOT(slotIgnoreNextTextChanged()));
 
     connect(this, SIGNAL(returnPressed(const QString &)),
         this, SLOT(slotReturnPressed(const QString &)));
@@ -228,6 +263,9 @@ void LocationBar::setURL(const QString &url)
 {
     //TODO: see konqcombo.cpp KonqCombo::setURL() for ideas
     setText(url);
+    // important security consideration: always display the beginning
+    // of the url rather than its end to prevent spoofing attempts.
+    setCursorPosition(0);
 }
 
 #include "locationbar.moc"

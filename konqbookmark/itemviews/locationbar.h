@@ -23,6 +23,7 @@
 #include "konqbookmark_export.h"
 #include <KLineEdit>
 
+#include <QCompleter>
 #include <QtCore/QObject>
 
 namespace Konqueror
@@ -79,8 +80,44 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotCurrentCompletionChanged(const QModelIndex &));
-        Q_PRIVATE_SLOT(d, void updateWords(const QString &));
+        Q_PRIVATE_SLOT(d, void slotTextChanged(const QString &));
+        Q_PRIVATE_SLOT(d, void slotIgnoreNextTextChanged());
     };
+
+    /**
+     * HACK
+     * The purpose of this class is to be able to create a QCompleter which emits
+     * ignoreNextTextChanged() signal when text of the completed widget changed but it was
+     * only because the user selected using up & down a new item in the completion list.
+     *
+     * THis is necessary because basically the completion model of the location bar is non 
+     * trivial and thus the completion is used in QCompleter::UnfilteredPopupCompletion mode, 
+     * but then the model itself is a QSortFilterProxyModel that gets updated, filtered and 
+     * resorted each time the user enters a new query. Normally this is done automatically by 
+     * QCompleter, which uses an internal QCompleterModel proxy model, but in our case we need 
+     * to do ourselves, and the problem is that QCompleter does not emit a prefixTextChanged() 
+     * signal so we use KLineEdit textChanged() signal instead for user input query updates. 
+     * Problem is, this text gets also always updated:
+     *
+     *  1. when the user types in.
+     *  2. when the user selects a new option in the popup completion box using key up/down.
+     *
+     * We are only insterested in type 1. text changes. This class detects them.
+     */
+    class KCompleter : public QCompleter
+    {
+        Q_OBJECT
+
+    public:
+        KCompleter(QObject *parent = 0) : QCompleter(parent) {}
+
+    protected:
+        virtual bool eventFilter(QObject* o, QEvent* e);
+
+    Q_SIGNALS:
+        void ignoreNextTextChanged();
+    };
+
 }
 
 #endif // KONQUEROR_LOCATION_BAR_H
