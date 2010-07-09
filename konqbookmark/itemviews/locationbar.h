@@ -114,6 +114,13 @@ namespace Konqueror
     protected:
         virtual bool eventFilter(QObject* o, QEvent* e);
 
+        /**
+         * When the widget loses focus QLineEdit unexpectadly disconnects all signals from
+         * the completer to the QLineEdit, so here we reimplement disconnectNotify() to
+         * reconnect the slotIgnoreNextTextChanged() in that case.
+         */
+        void disconnectNotify(const char *signal);
+
     Q_SIGNALS:
         void ignoreNextTextChanged();
     };

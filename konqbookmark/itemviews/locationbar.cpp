@@ -48,6 +48,12 @@
 using namespace Konqueror;
 using namespace Akonadi;
 
+void KCompleter::disconnectNotify(const char *signal)
+{
+    connect(this, SIGNAL(ignoreNextTextChanged()), parent(),
+        SLOT(slotIgnoreNextTextChanged()));
+}
+
 bool KCompleter::eventFilter(QObject* o, QEvent* e)
 {
     if (e->type() != QEvent::KeyPress) {
