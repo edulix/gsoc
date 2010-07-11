@@ -21,7 +21,7 @@
 #define KONQUEROR_LOCATION_BAR_H
 
 #include "konqbookmark_export.h"
-#include <KLineEdit>
+#include <QPlainTextEdit>
 
 #include <QCompleter>
 #include <QtCore/QObject>
@@ -45,9 +45,13 @@ namespace Konqueror
      *             |
      *      PlacesManager
      */
-    class KONQBOOKMARK_EXPORT LocationBar : public KLineEdit
+    class KONQBOOKMARK_EXPORT LocationBar : public QPlainTextEdit
     {
         Q_OBJECT
+        Q_PROPERTY(QString clickMessage READ clickMessage WRITE setClickMessage
+            NOTIFY clickMessageChanged)
+        Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
+
     public:
         LocationBar(QWidget *parent = 0);
         virtual ~LocationBar();
@@ -56,9 +60,13 @@ namespace Konqueror
          * Returns the text inside the lineedit split in words
          */
         QStringList words() const;
+        QString clickMessage() const;
+        QString text() const;
 
     public Q_SLOTS:
         void setURL(const QString &url);
+        void setClickMessage(const QString &clickMessage);
+        void setText(const QString &text);
 
     Q_SIGNALS:
         /**
@@ -66,6 +74,7 @@ namespace Konqueror
          * keys along with the actual activated text.
          */
         void returnPressed(const QString &, Qt::KeyboardModifiers);
+        void textChanged(const QString &);
 
     protected Q_SLOTS:
         void init();
@@ -80,7 +89,7 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotReturnPressed(const QString &));
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotCurrentCompletionChanged(const QModelIndex &));
-        Q_PRIVATE_SLOT(d, void slotTextChanged(const QString &));
+        Q_PRIVATE_SLOT(d, void slotTextChanged());
         Q_PRIVATE_SLOT(d, void slotIgnoreNextTextChanged());
     };
 
