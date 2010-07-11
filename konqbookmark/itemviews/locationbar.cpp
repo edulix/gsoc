@@ -46,34 +46,11 @@
 #include <KUrl>
 #include <KLocale>
 #include <KIconLoader>
+#include <kacceleratormanager.h>
 
 using namespace Konqueror;
 using namespace Akonadi;
 
-void KCompleter::disconnectNotify(const char *signal)
-{
-    connect(this, SIGNAL(ignoreNextTextChanged()), parent(),
-        SLOT(slotIgnoreNextTextChanged()));
-}
-
-bool KCompleter::eventFilter(QObject* o, QEvent* e)
-{
-    if (e->type() != QEvent::KeyPress) {
-        return QCompleter::eventFilter(o, e);
-    }
-
-    QKeyEvent *ke = static_cast<QKeyEvent *>(e);
-    const int key = ke->key();
-
-    kDebug() << "keypress event" << ke->text();
-    if (key != Qt::Key_Up && key != Qt::Key_Down) {
-        return QCompleter::eventFilter(o, e);
-    }
-    kDebug() << "up or down event, emit ignoreNextTextChanged()";
-    emit ignoreNextTextChanged();
-
-    return QCompleter::eventFilter(o, e);
-}
 
 
 class LocationBar::Private
@@ -82,13 +59,9 @@ public:
     Private(LocationBar *parent);
     ~Private();
 
-    void sort();
-
-    void slotReturnPressed(const QString &text);
     void slotCompletionActivated(const QModelIndex &index);
     void slotTextChanged();
     void slotCurrentCompletionChanged(const QModelIndex &index);
-    void slotIgnoreNextTextChanged();
 
     LocationBar *q;
     QString currentCompletion;
@@ -97,8 +70,8 @@ public:
     LocationBarCompletionModel *model;
     QAbstractItemView *view;
     QStringList words;
-    bool ignoreNextTextChanged;
     QString clickMessage;
+	QCompleter *completer;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -111,18 +84,8 @@ LocationBar::Private::~Private()
 
 }
 
-void LocationBar::Private::slotIgnoreNextTextChanged()
-{
-    ignoreNextTextChanged = true;
-}
-
 void LocationBar::Private::slotTextChanged()
 {
-    if (ignoreNextTextChanged) {
-        ignoreNextTextChanged = false;
-        return;
-    }
-
     QString text = q->text();
     words = text.split(" ", QString::SkipEmptyParts);
     unsortedModel->setQuery(text);
@@ -131,14 +94,6 @@ void LocationBar::Private::slotTextChanged()
 QStringList LocationBar::words() const
 {
     return d->words;
-}
-
-
-void LocationBar::Private::slotReturnPressed(const QString &text)
-{
-    kDebug() << text;
-    q->setText(text);
-    emit q->returnPressed(text, qApp->keyboardModifiers());
 }
 
 
@@ -157,6 +112,7 @@ void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 LocationBar::LocationBar(QWidget *parent)
     : QPlainTextEdit(parent), d(new Private(this))
 {
+    setMaximumHeight(25);
     QTimer::singleShot(0, this, SLOT(init()));
 }
 
@@ -168,6 +124,7 @@ void LocationBar::init()
     setLineWrapMode(NoWrap);
     setViewportMargins(30, 0, 0, 0);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    document()->setDocumentMargin(1);
  
     // i18n: Placeholder text in line edit widgets is the text appearing
     // before any user input, briefly explaining to the user what to type
@@ -192,24 +149,21 @@ void LocationBar::init()
     connect(this, SIGNAL(textChanged()),
         this, SLOT(slotTextChanged()));
 
-    KCompleter *completer = new KCompleter(this);
-    completer->setWidget(this);
-    completer->setModel(d->model);
-    completer->setCompletionRole(Place::PlaceUrlRole);
-    completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
-    completer->popup()->setItemDelegate(new LocationBarDelegate(this));
-    connect(completer->popup()->selectionModel(),
+    d->completer = new QCompleter(this);
+    d->completer->setWidget(this);
+    d->completer->setModel(d->model);
+    d->completer->setCompletionRole(Place::PlaceUrlRole);
+    d->completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
+    d->completer->popup()->setItemDelegate(new LocationBarDelegate(this));
+    connect(d->completer->popup()->selectionModel(),
         SIGNAL(currentChanged(QModelIndex,QModelIndex)), this,
         SLOT(slotCurrentCompletionChanged(QModelIndex)));
 
-    connect(completer->popup(), SIGNAL(activated(QModelIndex)), this,
+    connect(d->completer->popup(), SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));
-    connect(completer, SIGNAL(ignoreNextTextChanged()), this,
-        SLOT(slotIgnoreNextTextChanged()));
 
-    connect(this, SIGNAL(returnPressed(const QString &)),
-        this, SLOT(slotReturnPressed(const QString &)));
-
+    // TODO: Why is this needed? who is setting the accels?
+    KAcceleratorManager::setNoAccel(this);
     setFixedHeight(QFontMetrics(currentCharFormat().font()).height() + 8);
 //     addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
@@ -242,7 +196,6 @@ void LocationBar::paintEvent(QPaintEvent *e)
     Q_ASSERT(qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout()));
 
     QPointF offset(contentOffset());
-    offset.ry() -= 3;
 
     QRect er = e->rect();
     QRect viewportRect = viewport()->rect();
@@ -355,7 +308,6 @@ void LocationBar::paintEvent(QPaintEvent *e)
     f.setItalic(d->italicizePlaceholder);
     painter.setFont(f);
     // Show click message only if it's not empty and space is available
-    kDebug() << maximumWidth << fm.width(clickMessage) << viewportRect.width();
     if (!clickMessage.isEmpty()
         && maximumWidth + fm.width(clickMessage) + 10 < viewportRect.width()) {
         QColor color(palette().color(foregroundRole()));
@@ -369,6 +321,34 @@ void LocationBar::paintEvent(QPaintEvent *e)
     if (backgroundVisible() && !block.isValid() && offset.y() <= er.bottom()
         && (centerOnScroll() || verticalScrollBar()->maximum() == verticalScrollBar()->minimum())) {
         painter.fillRect(QRect(QPoint((int)er.left(), (int)offset.y()), er.bottomRight()), palette().background());
+    }
+}
+
+void LocationBar::keyPressEvent(QKeyEvent * e)
+{   
+    switch(e->key()){
+        case Qt::Key_Escape:
+            if(d->completer->popup()->isVisible()) {
+                d->completer->popup()->hide();
+            } else {
+                selectAll();
+            }
+            break;
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            if(d->completer->popup()->isVisible() && !static_cast<QListView*>(d->completer->popup())->selectionModel()->selectedRows().isEmpty()) { 
+                setText(d->completer->currentCompletion());
+                emit returnPressed(text(), qApp->keyboardModifiers());
+            }
+            d->completer->popup()->hide();
+            break;
+        default:
+            QPlainTextEdit::keyPressEvent(e);
+            if (e->modifiers() == Qt::NoModifier) {
+                d->completer->setCompletionPrefix(text());
+                d->completer->complete();
+            }
+            break;
     }
 }
 
@@ -393,6 +373,10 @@ void LocationBar::setClickMessage(const QString& clickMessage)
 
 void LocationBar::setText(const QString& text)
 {
+    kDebug() << text;
+    if (text.contains("&")) {
+        kDebug() << "trap";
+    }
     setPlainText(text);
 }
 QString LocationBar::text() const
