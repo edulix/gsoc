@@ -51,6 +51,8 @@ namespace Konqueror
         Q_PROPERTY(QString clickMessage READ clickMessage WRITE setClickMessage
             NOTIFY clickMessageChanged)
         Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
+        Q_PROPERTY(int completionDelay READ completionDelay WRITE setCompletionDelay
+            NOTIFY completionDelayChanged)
 
     public:
         LocationBar(QWidget *parent = 0);
@@ -62,6 +64,20 @@ namespace Konqueror
         QStringList words() const;
         QString clickMessage() const;
         QString text() const;
+
+        /**
+         * Minimum time between key strokes needed before a completion ievent is triggered.
+         * This is used for making completion feel faster by creating less completion events.
+         * 200 miliseconds by default.
+         *
+         * @returns delay in miliseconds
+         */
+        int completionDelay() const;
+
+        /**
+         *  Set the completion delay in miliseconds.
+         */
+        void setCompletionDelay(int miliseconds);
 
     public Q_SLOTS:
         void setURL(const QString &url);
@@ -90,6 +106,7 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotCurrentCompletionChanged(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotTextChanged());
+        Q_PRIVATE_SLOT(d, void slotComplete());
     };
 }
 

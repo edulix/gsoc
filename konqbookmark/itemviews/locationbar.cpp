@@ -61,6 +61,7 @@ public:
 
     void slotCompletionActivated(const QModelIndex &index);
     void slotTextChanged();
+    void slotComplete();
     void slotCurrentCompletionChanged(const QModelIndex &index);
 
     LocationBar *q;
@@ -72,6 +73,7 @@ public:
     QStringList words;
     QString clickMessage;
 	QCompleter *completer;
+    QTimer completionTimer;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -112,7 +114,7 @@ void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 LocationBar::LocationBar(QWidget *parent)
     : QPlainTextEdit(parent), d(new Private(this))
 {
-    setMaximumHeight(25);
+    setFixedHeight(QFontMetrics(currentCharFormat().font()).height() + 8);
     QTimer::singleShot(0, this, SLOT(init()));
 }
 
@@ -155,16 +157,21 @@ void LocationBar::init()
     d->completer->setCompletionRole(Place::PlaceUrlRole);
     d->completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
     d->completer->popup()->setItemDelegate(new LocationBarDelegate(this));
+    d->completer->popup()->setFrameShape(Box);
+    d->completer->popup()->setFrameShadow(Raised);
     connect(d->completer->popup()->selectionModel(),
         SIGNAL(currentChanged(QModelIndex,QModelIndex)), this,
         SLOT(slotCurrentCompletionChanged(QModelIndex)));
-
     connect(d->completer->popup(), SIGNAL(activated(QModelIndex)), this,
         SLOT(slotCompletionActivated(QModelIndex)));
 
+    d->completionTimer.setInterval(200);
+    d->completionTimer.setSingleShot(true);
+    connect(&d->completionTimer, SIGNAL(timeout()), this, SLOT(slotComplete()));
+
     // TODO: Why is this needed? who is setting the accels?
     KAcceleratorManager::setNoAccel(this);
-    setFixedHeight(QFontMetrics(currentCharFormat().font()).height() + 8);
+
 //     addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
 
@@ -344,13 +351,23 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
             break;
         default:
             QPlainTextEdit::keyPressEvent(e);
+            if (text().isEmpty()) {
+                d->completer->popup()->hide();
+                break;
+            }
             if (e->modifiers() == Qt::NoModifier) {
-                d->completer->setCompletionPrefix(text());
-                d->completer->complete();
+                d->completionTimer.start();
             }
             break;
     }
 }
+
+void LocationBar::Private::slotComplete()
+{
+    completer->setCompletionPrefix(q->text());
+    completer->complete();
+}
+
 
 void LocationBar::setURL(const QString &url)
 {
@@ -360,6 +377,17 @@ void LocationBar::setURL(const QString &url)
     // of the url rather than its end to prevent spoofing attempts.
     moveCursor(QTextCursor::Start);
 }
+
+int LocationBar::completionDelay() const
+{
+    return d->completionTimer.interval();
+}
+
+void LocationBar::setCompletionDelay(int miliseconds)
+{
+    d->completionTimer.setInterval(miliseconds);
+}
+
 
 QString LocationBar::clickMessage() const
 {
@@ -373,10 +401,6 @@ void LocationBar::setClickMessage(const QString& clickMessage)
 
 void LocationBar::setText(const QString& text)
 {
-    kDebug() << text;
-    if (text.contains("&")) {
-        kDebug() << "trap";
-    }
     setPlainText(text);
 }
 QString LocationBar::text() const
