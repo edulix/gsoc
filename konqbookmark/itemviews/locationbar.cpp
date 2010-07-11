@@ -23,6 +23,7 @@
 #include "kcompletionview.h"
 #include "placesmanager.h"
 #include "klineeditviewbutton.h"
+#include "locationbarhighlighter.h"
 #include "itemmodels/kcompletionmodel.h"
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kaggregatedmodel.h"
@@ -65,6 +66,7 @@ public:
     void slotCurrentCompletionChanged(const QModelIndex &index);
 
     LocationBar *q;
+    LocationBarHighlighter *highlighter;
     QString currentCompletion;
     bool italicizePlaceholder;
     PlacesProxyModel *unsortedModel;
@@ -152,6 +154,7 @@ void LocationBar::init()
         this, SLOT(slotTextChanged()));
 
     d->completer = new QCompleter(this);
+    d->highlighter = new LocationBarHighlighter(document());
     d->completer->setWidget(this);
     d->completer->setModel(d->model);
     d->completer->setCompletionRole(Place::PlaceUrlRole);

@@ -63,6 +63,7 @@ set(konqbookmark_LIB_SRCS
     #itemviews/locationbarfaviconwidget.cpp
     #itemviews/locationbarbookmarkwidget.cpp
     itemviews/locationbardelegate.cpp
+    itemviews/locationbarhighlighter.cpp
     itemviews/kcompletionview.cpp
     itemviews/klineeditview.cpp
     itemviews/klineeditviewbutton.cpp
