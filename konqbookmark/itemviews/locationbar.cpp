@@ -98,6 +98,7 @@ void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index
     if(completer->popup()->selectionModel()->selectedIndexes().isEmpty()) {
         if (q->text() != completer->completionPrefix()) {
             q->setText(completer->completionPrefix());
+            q->moveCursor(QTextCursor::End);
         }
         return;
     }
