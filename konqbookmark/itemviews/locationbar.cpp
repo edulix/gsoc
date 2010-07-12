@@ -95,8 +95,14 @@ QStringList LocationBar::words() const
 
 void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index)
 {
-    kDebug() << index.data().toString();
-//     q->setText(index.data().toString());
+    if(completer->popup()->selectionModel()->selectedIndexes().isEmpty()) {
+        if (q->text() != completer->completionPrefix()) {
+            q->setText(completer->completionPrefix());
+        }
+        return;
+    }
+    q->setText(index.data().toString());
+    q->moveCursor(QTextCursor::End);
 }
 
 void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
@@ -131,7 +137,6 @@ void LocationBar::init()
     QString metaMsg = i18nc("Italic placeholder text in line edits: 0 no, 1 yes", "1");
     d->italicizePlaceholder = (metaMsg.trimmed() != QString('0'));
 
-//     setCompletionMode(KGlobalSettings::CompletionPopup);
 //     setClearButtonShown(true);
 //     setTrapReturnKey(true);
 
@@ -326,11 +331,13 @@ void LocationBar::paintEvent(QPaintEvent *e)
 }
 
 void LocationBar::keyPressEvent(QKeyEvent * e)
-{   
-    switch(e->key()){
+{
+    int key = e->key();
+    switch(key){
         case Qt::Key_Escape:
             if(d->completer->popup()->isVisible()) {
-//                 setText(d->completer->currentCompletion());
+                setText(d->completer->completionPrefix());
+                moveCursor(QTextCursor::End);
                 d->completer->popup()->hide();
             } else {
                 selectAll();
@@ -338,15 +345,8 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
             break;
         case Qt::Key_Return:
         case Qt::Key_Enter:
-            if(d->completer->popup()->isVisible() && !static_cast<QListView*>(d->completer->popup())->selectionModel()->selectedRows().isEmpty()) { 
-                setText(d->completer->currentCompletion());
-                emit returnPressed(text(), qApp->keyboardModifiers());
-            }
+            emit returnPressed(text(), qApp->keyboardModifiers());
             d->completer->popup()->hide();
-            break;
-        case Qt::Key_Up:
-        case Qt::Key_Down:
-            QPlainTextEdit::keyPressEvent(e);
             break;
         default:
             QString s1 = text();
