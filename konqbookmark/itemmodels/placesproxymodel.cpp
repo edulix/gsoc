@@ -33,6 +33,7 @@
 #include <QMap>
 #include <QDateTime>
 #include <QPersistentModelIndex>
+#include <QtCore/QFile>
 
 using namespace Konqueror;
 
@@ -221,7 +222,31 @@ void PlacesProxyModel::setQuery(QString query)
 
     d->m_strQuery = query;
     d->m_strQueryWords = query.split(" ", QString::SkipEmptyParts);
-    d->m_urlCompletionModel->completion()->slotMakeCompletion(d->m_strQueryWords.first());
+
+    // Now set the correct query for the url completion model. If query is
+    // "/home/edulix/downloads/ bz2" and there's no file called " bz2" in downloads dir,
+    // then the url completion model query will be "/home/edulix/downloads/", and the
+    // proxy model will take the job of filtering items that contains bz2. However if
+    // file " bz2" exists, then the url completion model query will be as the normal query:
+    // "/home/edulix/downloads/ bz2".
+    //
+    // We do this by checking space by space, starting from the end, if the file exists. So
+    // we check first if "/home/edulix/downloads/ bz2" exists, then "/home/edulix/downloads/",
+    // and so on.
+    int i = -1;
+    QString urlCompletionQuery = query;
+    while((i = query.lastIndexOf(' ')) != -1) {
+        urlCompletionQuery.truncate(i);
+        if (QFile::exists(urlCompletionQuery)) {
+            d->m_urlCompletionModel->completion()->slotMakeCompletion(urlCompletionQuery);
+            break;
+        }
+    }
+    // If file not found, use the whole query for url completion model query
+    if (i == -1) {
+        d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
+    }
+
     d->m_relevance.clear();
     invalidate();
 }
