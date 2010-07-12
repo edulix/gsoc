@@ -61,7 +61,6 @@ public:
     ~Private();
 
     void slotCompletionActivated(const QModelIndex &index);
-    void slotTextChanged();
     void slotComplete();
     void slotCurrentCompletionChanged(const QModelIndex &index);
 
@@ -88,13 +87,6 @@ LocationBar::Private::~Private()
 
 }
 
-void LocationBar::Private::slotTextChanged()
-{
-    QString text = q->text();
-    words = text.split(" ", QString::SkipEmptyParts);
-    unsortedModel->setQuery(text);
-}
-
 QStringList LocationBar::words() const
 {
     return d->words;
@@ -104,6 +96,7 @@ QStringList LocationBar::words() const
 void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index)
 {
     kDebug() << index.data().toString();
+//     q->setText(index.data().toString());
 }
 
 void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
@@ -150,8 +143,6 @@ void LocationBar::init()
     // Setting up models
     d->unsortedModel = new PlacesProxyModel(this);
     d->model = new LocationBarCompletionModel(d->unsortedModel, this);
-    connect(this, SIGNAL(textChanged()),
-        this, SLOT(slotTextChanged()));
 
     d->completer = new QCompleter(this);
     d->highlighter = new LocationBarHighlighter(document());
@@ -339,6 +330,7 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
     switch(e->key()){
         case Qt::Key_Escape:
             if(d->completer->popup()->isVisible()) {
+//                 setText(d->completer->currentCompletion());
                 d->completer->popup()->hide();
             } else {
                 selectAll();
@@ -352,13 +344,18 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
             }
             d->completer->popup()->hide();
             break;
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+            QPlainTextEdit::keyPressEvent(e);
+            break;
         default:
+            QString s1 = text();
             QPlainTextEdit::keyPressEvent(e);
             if (text().isEmpty()) {
                 d->completer->popup()->hide();
                 break;
             }
-            if (e->modifiers() == Qt::NoModifier) {
+            if (s1 != text()) {
                 d->completionTimer.start();
             }
             break;
@@ -368,6 +365,9 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
 void LocationBar::Private::slotComplete()
 {
     completer->setCompletionPrefix(q->text());
+    QString text = q->text();
+    words = text.split(" ", QString::SkipEmptyParts);
+    unsortedModel->setQuery(text);
     completer->complete();
 }
 
