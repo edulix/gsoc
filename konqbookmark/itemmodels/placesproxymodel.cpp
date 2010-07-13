@@ -235,13 +235,17 @@ void PlacesProxyModel::setQuery(QString query)
     // and so on.
     int i = -1;
     QString urlCompletionQuery = query;
-    while((i = query.lastIndexOf(' ')) != -1) {
-        urlCompletionQuery.truncate(i);
-        if (QFile::exists(urlCompletionQuery)) {
-            d->m_urlCompletionModel->completion()->slotMakeCompletion(urlCompletionQuery);
-            break;
+    if (QFile::exists(query)) {
+        urlCompletionQuery = query;
+    } else {
+        while((i = urlCompletionQuery.lastIndexOf(' ')) != -1) {
+            urlCompletionQuery.truncate(i);
+            if (QFile::exists(urlCompletionQuery)) {
+                break;
+            }
         }
     }
+    d->m_urlCompletionModel->completion()->slotMakeCompletion(urlCompletionQuery);
     // If file not found, use the whole query for url completion model query
     if (i == -1) {
         d->m_urlCompletionModel->completion()->slotMakeCompletion(query);
