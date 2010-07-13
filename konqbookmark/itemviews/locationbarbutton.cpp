@@ -21,13 +21,15 @@
    Boston, MA 02110-1301, USA.
 */
 
-#include "klineeditviewbutton.h"
+#include "locationbarbutton.h"
 
 #include <QPainter>
 #include <QTimeLine>
 #include <KGlobalSettings>
 
-KLineEditViewButton::KLineEditViewButton(QWidget *parent)
+using namespace Konqueror;
+
+LocationBarButton::LocationBarButton(QWidget *parent)
     : QWidget(parent)
 {
     m_timeline = new QTimeLine(200, this);
@@ -38,12 +40,12 @@ KLineEditViewButton::KLineEditViewButton(QWidget *parent)
     connect(m_timeline, SIGNAL(frameChanged(int)), this, SLOT(update()));
 }
 
-QSize KLineEditViewButton::sizeHint() const
+QSize LocationBarButton::sizeHint() const
 {
     return m_pixmap.size();
 }
 
-void KLineEditViewButton::animateVisible(bool visible)
+void LocationBarButton::animateVisible(bool visible)
 {
     if (visible) {
         if (m_timeline->direction() == QTimeLine::Forward) {
@@ -70,18 +72,18 @@ void KLineEditViewButton::animateVisible(bool visible)
     }
 }
 
-void KLineEditViewButton::setPixmap(const QPixmap& p)
+void LocationBarButton::setPixmap(const QPixmap& p)
 {
     m_pixmap = p;
     update();
 }
 
-QPixmap KLineEditViewButton::pixmap()
+QPixmap LocationBarButton::pixmap()
 {
     return m_pixmap;
 }
 
-void KLineEditViewButton::setAnimationsEnabled(bool animationsEnabled)
+void LocationBarButton::setAnimationsEnabled(bool animationsEnabled)
 {
     // We need to set the current time in the case that we had the clear
     // button shown, for it being painted on the paintEvent(). Otherwise
@@ -93,7 +95,7 @@ void KLineEditViewButton::setAnimationsEnabled(bool animationsEnabled)
     }
 }
 
-void KLineEditViewButton::paintEvent(QPaintEvent *event)
+void LocationBarButton::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
 
@@ -116,7 +118,7 @@ void KLineEditViewButton::paintEvent(QPaintEvent *event)
     }
 }
 
-void KLineEditViewButton::animationFinished()
+void LocationBarButton::animationFinished()
 {
     if (m_timeline->direction() == QTimeLine::Forward) {
         update();
@@ -124,4 +126,3 @@ void KLineEditViewButton::animationFinished()
         hide();
     }
 }
-    

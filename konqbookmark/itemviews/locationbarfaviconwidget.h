@@ -20,7 +20,7 @@
 #ifndef LOCATIONBARFAVICONWIDGET_H
 #define LOCATIONBARFAVICONWIDGET_H
 
-#include "klineeditviewbutton.h"
+#include "locationbarbutton.h"
 #include "locationbar.h"
 #include "faviconupdater.h"
 #include "konqbookmark_export.h"
@@ -34,7 +34,7 @@ class Private;
 /**
  * Shows the favicon for current url.
  */
-class KONQBOOKMARK_EXPORT LocationBarFaviconWidget : public KLineEditViewButton
+class KONQBOOKMARK_EXPORT LocationBarFaviconWidget : public LocationBarButton
 {
     Q_OBJECT
 

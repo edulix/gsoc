@@ -21,9 +21,9 @@
 #define KONQUEROR_LOCATION_BAR_H
 
 #include "konqbookmark_export.h"
-#include <QPlainTextEdit>
 
-#include <QCompleter>
+#include <QPlainTextEdit>
+#include <QtGui/QCompleter>
 #include <QtCore/QObject>
 
 namespace Konqueror
@@ -55,6 +55,11 @@ namespace Konqueror
             NOTIFY completionDelayChanged)
 
     public:
+        enum WidgetPosition {
+            LeftSide,
+            RightSide
+        };
+
         LocationBar(QWidget *parent = 0);
         virtual ~LocationBar();
 
@@ -79,6 +84,12 @@ namespace Konqueror
          */
         void setCompletionDelay(int miliseconds);
 
+        void addWidget(QWidget *widget, WidgetPosition position);
+        void removeWidget(QWidget *widget);
+        int textMargin(WidgetPosition position) const;
+        void setWidgetSpacing(int spacing);
+        int widgetSpacing() const;
+
     public Q_SLOTS:
         void setURL(const QString &url);
         void setClickMessage(const QString &clickMessage);
@@ -99,6 +110,12 @@ namespace Konqueror
         void paintEvent(QPaintEvent* ev);
         void keyPressEvent(QKeyEvent * e);
 
+        /**
+         * Re-implemented for internal reasons.  API not affected.
+         *
+         * See QLineEdit::resizeEvent().
+         */
+        virtual void resizeEvent(QResizeEvent *);
     private:
         class Private;
         Private* const d;
@@ -106,6 +123,21 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotCompletionActivated(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotCurrentCompletionChanged(const QModelIndex &));
         Q_PRIVATE_SLOT(d, void slotComplete());
+        Q_PRIVATE_SLOT(d, void updateSideWidgetLocations());
+        Q_PRIVATE_SLOT(d, void updateTextMargins());
+    };
+
+    class SideWidget : public QWidget
+    {
+        Q_OBJECT
+    public:
+        SideWidget(QWidget *parent = 0);
+
+    protected:
+        bool event(QEvent *event);
+
+    Q_SIGNALS:
+        void sizeHintChanged();
     };
 }
 

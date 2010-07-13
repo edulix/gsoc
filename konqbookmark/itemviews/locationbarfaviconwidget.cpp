@@ -58,7 +58,7 @@ LocationBarFaviconWidget::Private::Private(LocationBarFaviconWidget *parent)
 }
 
 LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
-    : KLineEditViewButton(locationBar), d(new Private(this))
+    : LocationBarButton(locationBar), d(new Private(this))
 {
     d->m_locationBar = locationBar;
     connect(&d->m_wait, SIGNAL(timeout()), this, SLOT(updateCurrentUrl()));

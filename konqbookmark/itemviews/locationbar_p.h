@@ -21,53 +21,26 @@
    Boston, MA 02110-1301, USA.
 */
 
-#ifndef KLINEEDITVIEWBUTTON_H
-#define KLINEEDITVIEWBUTTON_H
+#ifndef KONQUEROR_LOCATION_BAR_P_H
+#define KONQUEROR_LOCATION_BAR_P_H
 
-#include "konqbookmark_export.h"
-#include "favicon_interface.h"
-
-#include <QObject>
 #include <QWidget>
-#include <QPixmap>
-#include <QSize>
+#include <QEvent>
 
-class QTimeLine;
-
-/**
- * Icon Button to be shown inside a KLineEditView.
- * 
- * It can be animated with fade in/out when it appears and disappears. It
- * displays a given icon.
- * 
- * @author Eduardo Robles Elvira <edulix@gmail.com>
- */
-class KONQBOOKMARK_EXPORT KLineEditViewButton : public QWidget
+namespace Konqueror
 {
-    Q_OBJECT
+    class SideWidget : public QWidget
+    {
+        Q_OBJECT
+    public:
+        SideWidget(QWidget *parent = 0);
 
-public:
-    KLineEditViewButton(QWidget *parent);
+    protected:
+        bool event(QEvent *event);
 
-    QSize sizeHint() const;
+    Q_SIGNALS:
+        void sizeHintChanged();
+    };
+}
 
-    void animateVisible(bool visible);
-
-    void setPixmap(const QPixmap& p);
-
-    QPixmap pixmap();
-    
-    void setAnimationsEnabled(bool animationsEnabled);
-
-protected:
-    void paintEvent(QPaintEvent *event);
-
-protected Q_SLOTS:
-    void animationFinished();
-
-private:
-    QTimeLine *m_timeline;
-    QPixmap m_pixmap;
-};
-
-#endif // KLINEEDITVIEWBUTTON_H
+#endif // KONQUEROR_LOCATION_BAR_P_H

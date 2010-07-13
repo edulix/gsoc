@@ -22,7 +22,7 @@
 #include "locationbardelegate.h"
 #include "kcompletionview.h"
 #include "placesmanager.h"
-#include "klineeditviewbutton.h"
+#include "locationbarbutton.h"
 #include "locationbarhighlighter.h"
 #include "itemmodels/kcompletionmodel.h"
 #include "itemmodels/konqbookmarkmodel.h"
@@ -41,18 +41,30 @@
 #include <QtGui/QKeyEvent>
 #include <QtGui/QTextBlock>
 #include <QtGui/QScrollBar>
+#include <QtGui/QHBoxLayout>
 
 #include <KStandardShortcut>
 #include <KUrlCompletion>
 #include <KUrl>
 #include <KLocale>
 #include <KIconLoader>
-#include <kacceleratormanager.h>
+#include <KAcceleratorManager>
 
 using namespace Konqueror;
 using namespace Akonadi;
 
+SideWidget::SideWidget(QWidget *parent)
+    : QWidget(parent)
+{
+}
 
+bool SideWidget::event(QEvent *event)
+{
+    if (event->type() == QEvent::LayoutRequest) {
+        emit sizeHintChanged();
+    }
+    return QWidget::event(event);
+}
 
 class LocationBar::Private
 {
@@ -63,6 +75,9 @@ public:
     void slotCompletionActivated(const QModelIndex &index);
     void slotComplete();
     void slotCurrentCompletionChanged(const QModelIndex &index);
+
+    void updateSideWidgetLocations();
+    void updateTextMargins();
 
     LocationBar *q;
     LocationBarHighlighter *highlighter;
@@ -75,6 +90,11 @@ public:
     QString clickMessage;
 	QCompleter *completer;
     QTimer completionTimer;
+
+    SideWidget *m_leftWidget;
+    SideWidget *m_rightWidget;
+    QHBoxLayout *m_leftLayout;
+    QHBoxLayout *m_rightLayout;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -116,19 +136,18 @@ void LocationBar::Private::slotCompletionActivated(const QModelIndex& index)
 LocationBar::LocationBar(QWidget *parent)
     : QPlainTextEdit(parent), d(new Private(this))
 {
-    setFixedHeight(QFontMetrics(currentCharFormat().font()).height() + 8);
-    QTimer::singleShot(0, this, SLOT(init()));
+    init();
 }
 
 void LocationBar::init()
 {
+    setFixedHeight(QFontMetrics(currentCharFormat().font()).height() + 8);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setTabChangesFocus(true);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setLineWrapMode(NoWrap);
-    setViewportMargins(30, 0, 0, 0);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    document()->setDocumentMargin(1);
+    document()->setDocumentMargin(2);
  
     // i18n: Placeholder text in line edit widgets is the text appearing
     // before any user input, briefly explaining to the user what to type
@@ -172,12 +191,138 @@ void LocationBar::init()
     // TODO: Why is this needed? who is setting the accels?
     KAcceleratorManager::setNoAccel(this);
 
-//     addWidget(new LocationBarFaviconWidget(this), LeftSide);
+    // Initialize code related to the subwidgets lineedit support
+    d->m_leftWidget = new SideWidget(this);
+    d->m_leftWidget->resize(0, 0);
+    d->m_leftLayout = new QHBoxLayout(d->m_leftWidget);
+    d->m_leftLayout->setContentsMargins(0, 0, 0, 0);
+    d->m_leftLayout->setSizeConstraint(QLayout::SetFixedSize);
+
+    d->m_rightWidget = new SideWidget(this);
+    d->m_rightWidget->resize(0, 0);
+    d->m_rightLayout = new QHBoxLayout(d->m_rightWidget);
+    d->m_rightLayout->setContentsMargins(0, 0, 0, 0);
+
+    if (isRightToLeft()) {
+        d->m_leftLayout->setDirection(QBoxLayout::RightToLeft);
+        d->m_rightLayout->setDirection(QBoxLayout::RightToLeft);
+    } else {
+        d->m_leftLayout->setDirection(QBoxLayout::LeftToRight);
+        d->m_rightLayout->setDirection(QBoxLayout::LeftToRight);
+    }
+
+    QSpacerItem *horizontalSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    d->m_rightLayout->addItem(horizontalSpacer);
+
+    connect(d->m_leftWidget, SIGNAL(sizeHintChanged()),
+        this, SLOT(updateTextMargins()));
+    connect(d->m_rightWidget, SIGNAL(sizeHintChanged()),
+        this, SLOT(updateTextMargins()));
+
+    addWidget(new LocationBarFaviconWidget(this), LeftSide);
 }
 
 LocationBar::~LocationBar()
 {
 
+}
+
+void LocationBar::addWidget(QWidget *widget, WidgetPosition position)
+{
+    if (!widget) {
+        return;
+    }
+
+    bool rtl = isRightToLeft();
+    if (rtl) {
+        position = (position == LeftSide) ? RightSide : LeftSide;
+    }
+    if (position == LeftSide) {
+        d->m_leftLayout->addWidget(widget);
+    } else {
+        d->m_rightLayout->insertWidget(1, widget);
+    }
+}
+
+void LocationBar::removeWidget(QWidget *widget)
+{
+    if (!widget) {
+        return;
+    }
+
+    d->m_leftLayout->removeWidget(widget);
+    d->m_rightLayout->removeWidget(widget);
+    widget->hide();
+}
+
+int LocationBar::textMargin(WidgetPosition position) const
+{
+    int spacing = d->m_rightLayout->spacing();
+    int w = 0;
+
+    if (position == LeftSide) {
+        w = d->m_leftWidget->sizeHint().width();
+    } else {
+        w = d->m_rightWidget->sizeHint().width();
+    }
+
+    if (w == 0) {
+        return 0;
+    }
+    return w + spacing * 2 + 5;
+}
+
+void LocationBar::Private::updateTextMargins()
+{
+    int left = q->textMargin(LeftSide);
+    int right = q->textMargin(RightSide);
+    int top = 0;
+    int bottom = 0;
+    q->setViewportMargins(left, top, right, bottom);
+    kDebug()  << left << top << right << bottom;
+    updateSideWidgetLocations();
+}
+
+void LocationBar::Private::updateSideWidgetLocations()
+{
+    QRect textRect = q->rect();
+    int spacing = m_rightLayout->spacing();
+    textRect.adjust(spacing, 0, -spacing, 0);
+
+    int left = q->textMargin(LeftSide);
+    int midHeight = textRect.center().y() + 1;
+
+    if (m_leftLayout->count() > 0) {
+        int leftHeight = midHeight - m_leftWidget->height() / 2;
+        int leftWidth = m_leftWidget->width();
+        if (leftWidth == 0) {
+            leftHeight = midHeight - m_leftWidget->sizeHint().height() / 2;
+        }
+        m_leftWidget->move(textRect.x() + 5, leftHeight);
+    }
+    textRect.setX(left);
+    textRect.setY(midHeight - m_rightWidget->sizeHint().height() / 2);
+    textRect.setHeight(m_rightWidget->sizeHint().height());
+    m_rightWidget->setGeometry(textRect);
+}
+
+void LocationBar::resizeEvent(QResizeEvent * ev)
+{
+    d->updateSideWidgetLocations();
+
+    QPlainTextEdit::resizeEvent(ev);
+}
+
+void LocationBar::setWidgetSpacing(int spacing)
+{
+    d->m_leftLayout->setSpacing(spacing);
+    d->m_rightLayout->setSpacing(spacing);
+    d->updateTextMargins();
+}
+
+int LocationBar::widgetSpacing() const
+{
+    return d->m_leftLayout->spacing();
 }
 
 static void fillBackground(QPainter *p, const QRectF &rect, QBrush brush, QRectF gradientRect = QRectF())

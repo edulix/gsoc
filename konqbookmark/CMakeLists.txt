@@ -60,13 +60,12 @@ set(konqbookmark_LIB_SRCS
     itemviews/ktreeviewsearchline.cpp
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
-    #itemviews/locationbarfaviconwidget.cpp
+    itemviews/locationbarfaviconwidget.cpp
     #itemviews/locationbarbookmarkwidget.cpp
     itemviews/locationbardelegate.cpp
     itemviews/locationbarhighlighter.cpp
     itemviews/kcompletionview.cpp
-    itemviews/klineeditview.cpp
-    itemviews/klineeditviewbutton.cpp
+    itemviews/locationbarbutton.cpp
     itemviews/faviconupdater.cpp
     kbookmark/kbookmark_bridge.cpp
 )
@@ -119,12 +118,11 @@ set(konqbookmark_LIB_HDRS
     itemviews/konqbookmarkmodelmenu.h
     itemviews/modelmenusearchline.h
     itemviews/locationbar.h
+    itemviews/locationbarbutton.h
     itemviews/locationbarfaviconwidget.h
     itemviews/locationbarbookmarkwidget.h
     itemviews/locationbardelegate.h
     itemviews/kcompletionview.h
-    itemviews/klineeditview.h
-    itemviews/klineeditviewbutton.h
     itemviews/faviconupdater.h
     kbookmark/kbookmark_bridge.h
 )
