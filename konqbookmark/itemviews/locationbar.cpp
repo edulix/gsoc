@@ -608,7 +608,6 @@ void LocationBar::Private::updateClearButtonIcon(const QString& text)
     }
 
     kDebug() << text << text.length();
-    clearButton->setVisible(text.length());
 }
 
 void LocationBar::setReadOnly(bool ro)
