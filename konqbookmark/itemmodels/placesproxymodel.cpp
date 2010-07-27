@@ -76,6 +76,7 @@ public:
     KCompletionModel *m_urlCompletionModel;
     QString m_strQuery;
     QHash<const QPersistentModelIndex, qreal> m_relevance;
+    QHash<const Place *, int> m_matches;
     QStringList m_strQueryWords;
 };
 
@@ -103,24 +104,26 @@ Place* PlacesProxyModel::Private::placeFromIndex(const QModelIndex &index)
 
 int PlacesProxyModel::Private::matches(Place *place)
 {
+    if (m_matches.contains(place)) {
+        return m_matches[place];
+    }
+
     int matches = 0;
     int prevMatches = 0;
-    bool allHaveMatches = true;
     Q_FOREACH (QString strQuery, m_strQueryWords) {
         prevMatches = matches;
         matches += place->title().count(strQuery, Qt::CaseInsensitive);
         matches += place->url().toString().count(strQuery, Qt::CaseInsensitive);
         matches += place->tags().join(",").count(strQuery, Qt::CaseInsensitive);
         matches += place->description().count(strQuery, Qt::CaseInsensitive);
+
+        // Matching requirest all matching of all the query words
         if (prevMatches == matches) {
-            allHaveMatches = false;
+            return 0;
         }
     }
-    if (allHaveMatches) {
-        return matches;
-    } else {
-        return 0;
-    }
+    m_matches[place] = matches;
+    return matches;
 }
 
 bool PlacesProxyModel::Private::updateRelevance(const QModelIndex &index)
@@ -175,12 +178,14 @@ void PlacesProxyModel::Private::slotRowsRemoved(const QModelIndex &parent, int s
     for (int i = start; i <= end; i++) {
         QModelIndex index = q->index(i, 0);
         m_relevance.remove(index);
+        m_matches.remove(placeFromIndex(index));
     }
 }
 
 void PlacesProxyModel::Private::slotModelReset()
 {
     m_relevance.clear();
+    m_matches.clear();
 
     QModelIndexList persistentIndexList = q->persistentIndexList();
     foreach(const QModelIndex &index, persistentIndexList) {
@@ -199,7 +204,7 @@ PlacesProxyModel::PlacesProxyModel(QObject *parent)
     QSortFilterProxyModel::setSourceModel(PlacesManager::self());
     connect(this, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
         this, SLOT(slotRowsInserted(const QModelIndex &, int, int)));
-    connect(this, SIGNAL(rowsRemoved(const QModelIndex &, int, int)),
+    connect(this, SIGNAL(rowsAboutToBeRemoved(const QModelIndex &, int, int)),
         this, SLOT(slotRowsRemoved(const QModelIndex &, int, int)));
     connect(this, SIGNAL(modelReset()),
         this, SLOT(slotModelReset()));
@@ -252,6 +257,7 @@ void PlacesProxyModel::setQuery(QString query)
     }
 
     d->m_relevance.clear();
+    d->m_matches.clear();
     invalidate();
 }
 
