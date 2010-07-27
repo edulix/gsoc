@@ -34,16 +34,16 @@ class LocationBarFaviconWidget::Private
 {
 public:
     Private(LocationBarFaviconWidget *parent);
-    
+
     void urlChanged();
-    
+
     void updateCurrentUrl();
-    
+
     void updateFavicon(bool succeed, const KUrl &favicon);
-    
+
 public:
     LocationBarFaviconWidget *q;
-    
+
     QString m_currentUrl;
     QString m_nextUrl;
     QTimer m_wait;
@@ -54,7 +54,7 @@ public:
 LocationBarFaviconWidget::Private::Private(LocationBarFaviconWidget *parent)
     : q(parent), m_faviconUpdater(0)
 {
-    
+
 }
 
 LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
@@ -64,12 +64,12 @@ LocationBarFaviconWidget::LocationBarFaviconWidget(LocationBar *locationBar)
     connect(&d->m_wait, SIGNAL(timeout()), this, SLOT(updateCurrentUrl()));
     connect(locationBar, SIGNAL(textChanged(const QString &)),
         this, SLOT(urlChanged()));
-    connect(locationBar, SIGNAL(returnPressed(const QString &)),
+    connect(locationBar, SIGNAL(returnPressed(const QString &, Qt::KeyboardModifiers)),
         this, SLOT(urlChanged()));
-        
+
     connect(&d->m_faviconUpdater, SIGNAL(done(bool, KUrl)),
         this, SLOT(updateFavicon(bool,KUrl)));
-    
+
     setCursor(Qt::ArrowCursor);
     setToolTip(i18nc("@action:button Favicon", "Favicon"));
     setPixmap(SmallIcon("folder"));
@@ -92,9 +92,9 @@ void LocationBarFaviconWidget::Private::updateCurrentUrl()
 {
     kDebug() << m_nextUrl;
     m_wait.stop();
-    
+
     m_currentUrl = m_nextUrl;
-    
+
     m_faviconUpdater.downloadIcon(m_currentUrl);
 }
 
@@ -104,7 +104,7 @@ void LocationBarFaviconWidget::Private::updateFavicon(bool succeed, const KUrl &
     if (!succeed) {
         return;
     }
-    
+
     if (favicon.isValid()) {
         q->setPixmap(SmallIcon(favicon.url()));
     }
