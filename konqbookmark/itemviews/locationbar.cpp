@@ -66,6 +66,14 @@ bool SideWidget::event(QEvent *event)
     return QWidget::event(event);
 }
 
+void SideWidget::paintEvent(QPaintEvent* event)
+{
+    QPainter painter(this);
+    painter.fillRect(rect(), Qt::white);
+    QWidget::paintEvent(event);
+}
+
+
 class LocationBar::Private
 {
 public:
@@ -199,13 +207,14 @@ void LocationBar::init()
     d->m_leftWidget = new SideWidget(this);
     d->m_leftWidget->resize(0, 0);
     d->m_leftLayout = new QHBoxLayout(d->m_leftWidget);
-    d->m_leftLayout->setContentsMargins(0, 0, 0, 0);
+    d->m_leftLayout->setContentsMargins(2, 2, 2, 2);
     d->m_leftLayout->setSizeConstraint(QLayout::SetFixedSize);
 
     d->m_rightWidget = new SideWidget(this);
     d->m_rightWidget->resize(0, 0);
     d->m_rightLayout = new QHBoxLayout(d->m_rightWidget);
-    d->m_rightLayout->setContentsMargins(0, 0, 0, 0);
+    d->m_rightLayout->setContentsMargins(2, 2, 2, 2);
+    d->m_rightLayout->setSizeConstraint(QLayout::SetFixedSize);
 
     if (isRightToLeft()) {
         d->m_leftLayout->setDirection(QBoxLayout::RightToLeft);
@@ -277,7 +286,7 @@ int LocationBar::textMargin(WidgetPosition position) const
     if (w == 0) {
         return 0;
     }
-    return w + spacing * 2 + 5;
+    return w + spacing * 2;
 }
 
 void LocationBar::Private::updateTextMargins()
@@ -292,26 +301,15 @@ void LocationBar::Private::updateTextMargins()
 
 void LocationBar::Private::updateSideWidgetLocations()
 {
-    QRect textRect = q->rect();
-    int spacing = m_rightLayout->spacing();
-    textRect.adjust(spacing, 0, -spacing, 0);
-
-//     int left = q->textMargin(LeftSide);
-    int midHeight = textRect.center().y() + 1;
+    QRect cr = q->contentsRect();
 
     if (m_leftLayout->count() > 0) {
-        int leftHeight = midHeight - m_leftWidget->height() / 2;
-        int leftWidth = m_leftWidget->width();
-        if (leftWidth == 0) {
-            leftHeight = midHeight - m_leftWidget->sizeHint().height() / 2;
-        }
-        m_leftWidget->move(textRect.x() + 5, leftHeight);
+        m_leftWidget->setGeometry(QRect(cr.left(), cr.top(), q->textMargin(LeftSide),
+            cr.height()));
     }
-    textRect.setX(textRect.right() - q->textMargin(RightSide) - 1);
-    textRect.setY(midHeight - m_rightWidget->sizeHint().height() / 2);
-    textRect.setHeight(m_rightWidget->sizeHint().height());
-    textRect.setWidth(m_rightWidget->sizeHint().width());
-    m_rightWidget->setGeometry(textRect);
+
+    int right = q->textMargin(RightSide);
+    m_rightWidget->setGeometry(QRect(cr.right() - right, cr.top(), right, cr.height()));
 }
 
 void LocationBar::resizeEvent(QResizeEvent * ev)

@@ -157,6 +157,7 @@ namespace Konqueror
 
     protected:
         bool event(QEvent *event);
+        void paintEvent(QPaintEvent* event);
 
     Q_SIGNALS:
         void sizeHintChanged();
