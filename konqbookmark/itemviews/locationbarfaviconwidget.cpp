@@ -85,7 +85,7 @@ void LocationBarFaviconWidget::Private::urlChanged()
 {
     kDebug();
     m_nextUrl = m_locationBar->text();
-    m_wait.start(500);
+    m_wait.start(10);
 }
 
 void LocationBarFaviconWidget::Private::updateCurrentUrl()

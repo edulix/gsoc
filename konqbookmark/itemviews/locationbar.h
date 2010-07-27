@@ -94,6 +94,7 @@ namespace Konqueror
         void setURL(const QString &url);
         void setClickMessage(const QString &clickMessage);
         void setText(const QString &text);
+        void slotTextChanged();
 
     Q_SIGNALS:
         /**
@@ -101,7 +102,18 @@ namespace Konqueror
          * keys along with the actual activated text.
          */
         void returnPressed(const QString &, Qt::KeyboardModifiers);
+
+        /**
+         * Emitted everytime the location bar text changes, even if it was because of
+         * a completion event.
+         */
         void textChanged(const QString &);
+
+        /**
+         * Emitted only when the location bar text changes because the user wrote something.
+         * Not emitted when location bar text changes because of a completion event.
+         */
+        void userTextChanged(const QString &);
 
     protected Q_SLOTS:
         void init();
@@ -115,7 +127,17 @@ namespace Konqueror
          *
          * See QLineEdit::resizeEvent().
          */
-        virtual void resizeEvent(QResizeEvent *);
+        void resizeEvent(QResizeEvent *);
+
+        /**
+         * Reimplemented so that text selection is emptied on focus out
+         */
+        void focusOutEvent(QFocusEvent *e);
+
+        /**
+         * Reimplemented so that all text gets selected on focus in
+         */
+        void focusInEvent(QFocusEvent *e);
     private:
         class Private;
         Private* const d;

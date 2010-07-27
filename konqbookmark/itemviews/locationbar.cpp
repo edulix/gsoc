@@ -148,7 +148,7 @@ void LocationBar::init()
     setLineWrapMode(NoWrap);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     document()->setDocumentMargin(2);
- 
+
     // i18n: Placeholder text in line edit widgets is the text appearing
     // before any user input, briefly explaining to the user what to type
     // (e.g. "Enter search pattern").
@@ -186,7 +186,11 @@ void LocationBar::init()
 
     d->completionTimer.setInterval(200);
     d->completionTimer.setSingleShot(true);
+
+    connect(this, SIGNAL(userTextChanged(QString)), &d->completionTimer, SLOT(start()));
     connect(&d->completionTimer, SIGNAL(timeout()), this, SLOT(slotComplete()));
+
+    connect(this, SIGNAL(textChanged()), this, SLOT(slotTextChanged()));
 
     // TODO: Why is this needed? who is setting the accels?
     KAcceleratorManager::setNoAccel(this);
@@ -211,9 +215,6 @@ void LocationBar::init()
         d->m_rightLayout->setDirection(QBoxLayout::LeftToRight);
     }
 
-    QSpacerItem *horizontalSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    d->m_rightLayout->addItem(horizontalSpacer);
-
     connect(d->m_leftWidget, SIGNAL(sizeHintChanged()),
         this, SLOT(updateTextMargins()));
     connect(d->m_rightWidget, SIGNAL(sizeHintChanged()),
@@ -226,6 +227,13 @@ LocationBar::~LocationBar()
 {
 
 }
+
+void LocationBar::slotTextChanged()
+{
+    kDebug() << text();
+    emit textChanged(text());
+}
+
 
 void LocationBar::addWidget(QWidget *widget, WidgetPosition position)
 {
@@ -279,7 +287,6 @@ void LocationBar::Private::updateTextMargins()
     int top = 0;
     int bottom = 0;
     q->setViewportMargins(left, top, right, bottom);
-    kDebug()  << left << top << right << bottom;
     updateSideWidgetLocations();
 }
 
@@ -289,7 +296,7 @@ void LocationBar::Private::updateSideWidgetLocations()
     int spacing = m_rightLayout->spacing();
     textRect.adjust(spacing, 0, -spacing, 0);
 
-    int left = q->textMargin(LeftSide);
+//     int left = q->textMargin(LeftSide);
     int midHeight = textRect.center().y() + 1;
 
     if (m_leftLayout->count() > 0) {
@@ -300,9 +307,10 @@ void LocationBar::Private::updateSideWidgetLocations()
         }
         m_leftWidget->move(textRect.x() + 5, leftHeight);
     }
-    textRect.setX(left);
+    textRect.setX(textRect.right() - q->textMargin(RightSide) - 1);
     textRect.setY(midHeight - m_rightWidget->sizeHint().height() / 2);
     textRect.setHeight(m_rightWidget->sizeHint().height());
+    textRect.setWidth(m_rightWidget->sizeHint().width());
     m_rightWidget->setGeometry(textRect);
 }
 
@@ -344,6 +352,8 @@ static void fillBackground(QPainter *p, const QRectF &rect, QBrush brush, QRectF
 
 void LocationBar::paintEvent(QPaintEvent *e)
 {
+    // Most of this code comes directly from QPlainTextEdit::paintEvent, but it's been modified
+    // to display the click Message
     QPainter painter(viewport());
     Q_ASSERT(qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout()));
 
@@ -469,11 +479,6 @@ void LocationBar::paintEvent(QPaintEvent *e)
 
         painter.drawText(viewportRect, Qt::AlignRight|Qt::AlignVCenter, clickMessage);
     }
-
-    if (backgroundVisible() && !block.isValid() && offset.y() <= er.bottom()
-        && (centerOnScroll() || verticalScrollBar()->maximum() == verticalScrollBar()->minimum())) {
-        painter.fillRect(QRect(QPoint((int)er.left(), (int)offset.y()), er.bottomRight()), palette().background());
-    }
 }
 
 void LocationBar::keyPressEvent(QKeyEvent * e)
@@ -502,7 +507,7 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
                 break;
             }
             if (s1 != text()) {
-                d->completionTimer.start();
+                emit userTextChanged(text());
             }
             break;
     }
@@ -552,9 +557,26 @@ void LocationBar::setText(const QString& text)
 {
     setPlainText(text);
 }
+
 QString LocationBar::text() const
 {
     return toPlainText();
 }
+
+void LocationBar::focusInEvent(QFocusEvent* e)
+{
+    QPlainTextEdit::focusInEvent(e);
+    if (e->reason() & (Qt::TabFocusReason | Qt::BacktabFocusReason)) {
+        selectAll();
+    }
+}
+
+void LocationBar::focusOutEvent(QFocusEvent* e)
+{
+    setTextCursor(QTextCursor(document()));
+    QPlainTextEdit::focusOutEvent(e);
+}
+
+
 
 #include "locationbar.moc"
