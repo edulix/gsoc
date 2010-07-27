@@ -53,6 +53,7 @@ namespace Konqueror
         Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
         Q_PROPERTY(int completionDelay READ completionDelay WRITE setCompletionDelay
             NOTIFY completionDelayChanged)
+        Q_PROPERTY(bool showClearButton READ isClearButtonShown WRITE setClearButtonShown)
 
     public:
         enum WidgetPosition {
@@ -90,6 +91,25 @@ namespace Konqueror
         void setWidgetSpacing(int spacing);
         int widgetSpacing() const;
 
+
+        /**
+         * This makes the line edit display an icon on one side of the line edit
+         * which, when clicked, clears the contents of the line edit.
+         * This is useful for such things as location or search bars.
+         **/
+        void setClearButtonShown(bool show);
+
+        /**
+         * @return whether or not the clear button is shown
+         **/
+        bool isClearButtonShown() const;
+
+        /**
+         * Reimplemented to know when readonly property changes as there's no signal we
+         * can attachto.
+         */
+        void setReadOnly(bool ro);
+
     public Q_SLOTS:
         void setURL(const QString &url);
         void setClickMessage(const QString &clickMessage);
@@ -115,6 +135,8 @@ namespace Konqueror
          */
         void userTextChanged(const QString &);
 
+        void clearButtonClicked();
+
     protected Q_SLOTS:
         void init();
 
@@ -138,6 +160,12 @@ namespace Konqueror
          * Reimplemented so that all text gets selected on focus in
          */
         void focusInEvent(QFocusEvent *e);
+
+        /**
+         * Reimplemented to know if the clear button was clicked
+         */
+        void mousePressEvent(QMouseEvent *e);
+        void mouseReleaseEvent(QMouseEvent *e);
     private:
         class Private;
         Private* const d;
@@ -147,6 +175,11 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotComplete());
         Q_PRIVATE_SLOT(d, void updateSideWidgetLocations());
         Q_PRIVATE_SLOT(d, void updateTextMargins());
+
+        /**
+        * updates the icon of the clear button on text change
+        **/
+        Q_PRIVATE_SLOT(d, void updateClearButtonIcon(const QString &));
     };
 
     class SideWidget : public QWidget

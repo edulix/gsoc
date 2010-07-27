@@ -87,6 +87,9 @@ public:
     void updateSideWidgetLocations();
     void updateTextMargins();
 
+    void updateClearButtonIcon(const QString& text);
+    void updateClearButton();
+
     LocationBar *q;
     LocationBarHighlighter *highlighter;
     QString currentCompletion;
@@ -103,6 +106,9 @@ public:
     SideWidget *m_rightWidget;
     QHBoxLayout *m_leftLayout;
     QHBoxLayout *m_rightLayout;
+    LocationBarFaviconWidget* clearButton;
+    bool wideEnoughForClear:1;
+    bool clickInClear:1;
 };
 
 LocationBar::Private::Private(LocationBar *parent)
@@ -230,6 +236,8 @@ void LocationBar::init()
         this, SLOT(updateTextMargins()));
 
     addWidget(new LocationBarFaviconWidget(this), LeftSide);
+    d->clearButton = 0;
+    setClearButtonShown(true);
 }
 
 LocationBar::~LocationBar()
@@ -314,6 +322,7 @@ void LocationBar::Private::updateSideWidgetLocations()
 
 void LocationBar::resizeEvent(QResizeEvent * ev)
 {
+    d->updateClearButton();
     d->updateSideWidgetLocations();
 
     QPlainTextEdit::resizeEvent(ev);
@@ -549,6 +558,114 @@ QString LocationBar::clickMessage() const
 void LocationBar::setClickMessage(const QString& clickMessage)
 {
     d->clickMessage = clickMessage;
+}
+
+void LocationBar::setClearButtonShown(bool show)
+{
+    if (show) {
+        if (d->clearButton) {
+            return;
+        }
+
+        d->clearButton = new LocationBarFaviconWidget(this);
+        d->clearButton->setCursor(Qt::ArrowCursor);
+        d->clearButton->setToolTip(i18nc("@action:button Clear current text in the location bar", "Clear text"));
+        addWidget(d->clearButton, RightSide);
+
+        d->updateClearButtonIcon(text());
+        d->updateClearButton();
+        connect(this, SIGNAL(textChanged(QString)), this, SLOT(updateClearButtonIcon(QString)));
+    } else {
+        disconnect(this, SIGNAL(textChanged(QString)), this, SLOT(updateClearButtonIcon(QString)));
+        delete d->clearButton;
+        d->clearButton = 0;
+    }
+}
+
+bool LocationBar::isClearButtonShown() const
+{
+    return d->clearButton != 0;
+}
+
+void LocationBar::Private::updateClearButtonIcon(const QString& text)
+{
+    if (!clearButton || q->isReadOnly()) {
+        return;
+    }
+
+    int clearButtonState = KIconLoader::DefaultState;
+
+    if (wideEnoughForClear && text.length() > 0) {
+        clearButton->animateVisible(true);
+    } else {
+        clearButton->animateVisible(false);
+    }
+
+    if (q->layoutDirection() == Qt::LeftToRight) {
+        clearButton->setPixmap(SmallIcon("edit-clear-locationbar-rtl", 0, clearButtonState));
+    } else {
+        clearButton->setPixmap(SmallIcon("edit-clear-locationbar-ltr", 0, clearButtonState));
+    }
+
+    kDebug() << text << text.length();
+    clearButton->setVisible(text.length());
+}
+
+void LocationBar::setReadOnly(bool ro)
+{
+    d->updateClearButton();
+    QPlainTextEdit::setReadOnly(ro);
+}
+
+
+void LocationBar::Private::updateClearButton()
+{
+    if (!clearButton || q->isReadOnly()) {
+        return;
+    }
+
+    const QSize geom = q->size();
+    const QFontMetrics fm(q->font());
+    const int em = fm.width("m");
+
+    // make sure we have enough room for the clear button
+    // no point in showing it if we can't also see a few characters as well
+    const bool wideEnough = q->viewport()->width() > 4 * em;
+
+    if (wideEnough != wideEnoughForClear) {
+        // we may (or may not) have been showing the button, but now our
+        // positiong on that matter has shifted, so let's ensure that it
+        // is properly visible (or not)
+        wideEnoughForClear = wideEnough;
+        updateClearButtonIcon(q->text());
+    }
+}
+
+/* TODO: clicking on the clear button not working yet, most probably becuase clearButton
+ * is not the child at e->pos(), but d->m_rightWidget instead. Anyway, this is not finished:
+ * we need to move as much code as possible out of here to a LocationBarClearButton class,
+ * and there we will fix the click problem.
+ */
+void LocationBar::mousePressEvent(QMouseEvent* e)
+{
+    if ((e->button() == Qt::LeftButton || e->button() == Qt::MidButton ) &&
+        d->clearButton) {
+        d->clickInClear = d->clearButton == childAt(e->pos());
+    }
+    QPlainTextEdit::mousePressEvent(e);
+}
+
+void LocationBar::mouseReleaseEvent(QMouseEvent* e)
+{
+    if (d->clickInClear && e->button() != Qt::MidButton &&
+        d->clearButton == childAt(e->pos())) {
+        setText("");
+        d->clickInClear = false;
+        e->accept();
+        emit clearButtonClicked();
+        return;
+    }
+    QPlainTextEdit::mouseReleaseEvent(e);
 }
 
 void LocationBar::setText(const QString& text)
