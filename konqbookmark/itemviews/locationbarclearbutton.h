@@ -17,41 +17,39 @@
     02110-1301, USA.
 */
 
-#ifndef LOCATIONBARFAVICONWIDGET_H
-#define LOCATIONBARFAVICONWIDGET_H
+
+#ifndef KONQUEROR_LOCATIONBARCLEARBUTTON_H
+#define KONQUEROR_LOCATIONBARCLEARBUTTON_H
 
 #include "locationbarbutton.h"
 #include "locationbar.h"
-#include "faviconupdater.h"
 #include "konqbookmark_export.h"
-
-#include <QtCore/QString>
-#include <QtCore/QTimer>
 
 namespace Konqueror
 {
-class Private;
-/**
- * Shows the favicon for current url.
- */
-class KONQBOOKMARK_EXPORT LocationBarFaviconWidget : public LocationBarButton
+
+class KONQBOOKMARK_EXPORT LocationBarClearButton : public LocationBarButton
 {
     Q_OBJECT
-
 public:
-    LocationBarFaviconWidget(LocationBar *locationBar);
+    LocationBarClearButton(LocationBar *parent);
+    virtual ~LocationBarClearButton();
 
-    virtual ~LocationBarFaviconWidget();
+public Q_SLOTS:
+    void updateIcon(const QString &);
+    void updateNeeded();
+
+Q_SIGNALS:
+    void clicked();
+
+protected:
+    void mousePressEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
 
 private:
     class Private;
     Private * const d;
-
-    Q_PRIVATE_SLOT(d, void urlChanged())
-    Q_PRIVATE_SLOT(d, void updateCurrentUrl())
-    Q_PRIVATE_SLOT(d, void updateFavicon(bool, const KUrl &))
 };
-
 }
 
-#endif
+#endif // KONQUEROR_LOCATIONBARCLEARBUTTON_H

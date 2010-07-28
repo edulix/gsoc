@@ -135,7 +135,7 @@ namespace Konqueror
          */
         void userTextChanged(const QString &);
 
-        void clearButtonClicked();
+        void readOnlyChanged(bool);
 
     protected Q_SLOTS:
         void init();
@@ -161,11 +161,9 @@ namespace Konqueror
          */
         void focusInEvent(QFocusEvent *e);
 
-        /**
-         * Reimplemented to know if the clear button was clicked
-         */
-        void mousePressEvent(QMouseEvent *e);
-        void mouseReleaseEvent(QMouseEvent *e);
+        // TODO: Do not filter events inside the sidebars when completion view is shown.
+        // Maybe this can be accomplished by adding mousePressEvent and mouseReleaseEvents
+        // and childAt(e->pos()), or clicking in there and debugging.
     private:
         class Private;
         Private* const d;
@@ -175,11 +173,6 @@ namespace Konqueror
         Q_PRIVATE_SLOT(d, void slotComplete());
         Q_PRIVATE_SLOT(d, void updateSideWidgetLocations());
         Q_PRIVATE_SLOT(d, void updateTextMargins());
-
-        /**
-        * updates the icon of the clear button on text change
-        **/
-        Q_PRIVATE_SLOT(d, void updateClearButtonIcon(const QString &));
     };
 
     class SideWidget : public QWidget

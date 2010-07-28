@@ -61,6 +61,8 @@ set(konqbookmark_LIB_SRCS
     itemviews/modelmenusearchline.cpp
     itemviews/locationbar.cpp
     itemviews/locationbarfaviconwidget.cpp
+    itemviews/locationbarclearbutton.cpp
+    itemviews/locationbarenterbutton.cpp
     #itemviews/locationbarbookmarkwidget.cpp
     itemviews/locationbardelegate.cpp
     itemviews/locationbarhighlighter.cpp
@@ -119,6 +121,8 @@ set(konqbookmark_LIB_HDRS
     itemviews/modelmenusearchline.h
     itemviews/locationbar.h
     itemviews/locationbarbutton.h
+    itemviews/locationbarclearbutton.h
+    itemviews/locationbarenterbutton.h
     itemviews/locationbarfaviconwidget.h
     itemviews/locationbarbookmarkwidget.h
     itemviews/locationbardelegate.h
