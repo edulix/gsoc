@@ -28,6 +28,8 @@
 #include "itemmodels/konqbookmarkmodel.h"
 #include "itemmodels/kaggregatedmodel.h"
 #include "itemmodels/placesproxymodel.h"
+#include "locationbarclearbutton.h"
+#include "locationbarenterbutton.h"
 
 #include <QtGui/QAbstractItemView>
 #include <QtCore/QAbstractItemModel>
@@ -49,7 +51,6 @@
 #include <KLocale>
 #include <KIconLoader>
 #include <KAcceleratorManager>
-#include "locationbarclearbutton.h"
 
 using namespace Konqueror;
 using namespace Akonadi;
@@ -121,7 +122,6 @@ QStringList LocationBar::words() const
 {
     return d->words;
 }
-
 
 void LocationBar::Private::slotCurrentCompletionChanged(const QModelIndex &index)
 {
@@ -233,6 +233,7 @@ void LocationBar::init()
     addWidget(new LocationBarFaviconWidget(this), LeftSide);
     d->clearButton = 0;
     setClearButtonShown(true);
+    addWidget(new LocationBarEnterButton(this), RightSide);
 }
 
 LocationBar::~LocationBar()
@@ -500,6 +501,11 @@ void LocationBar::keyPressEvent(QKeyEvent * e)
             emit returnPressed(text(), qApp->keyboardModifiers());
             d->completer->popup()->hide();
             break;
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+            if(!d->completer->popup()->isVisible()) {
+                d->completer->popup()->show();
+            }
         default:
             QString s1 = text();
             QPlainTextEdit::keyPressEvent(e);
@@ -531,6 +537,7 @@ void LocationBar::setURL(const QString &url)
     // important security consideration: always display the beginning
     // of the url rather than its end to prevent spoofing attempts.
     moveCursor(QTextCursor::Start);
+    emit urlChanged(url);
 }
 
 int LocationBar::completionDelay() const
@@ -603,7 +610,5 @@ void LocationBar::focusOutEvent(QFocusEvent* e)
     setTextCursor(QTextCursor(document()));
     QPlainTextEdit::focusOutEvent(e);
 }
-
-
 
 #include "locationbar.moc"

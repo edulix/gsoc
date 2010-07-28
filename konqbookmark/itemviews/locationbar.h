@@ -135,6 +135,12 @@ namespace Konqueror
          */
         void userTextChanged(const QString &);
 
+        /**
+         * The LocationBar keeps a string with current url. It might be different from
+         * text(). Emitted only when setURL() is called.
+         */
+        void urlChanged(const QString &);
+
         void readOnlyChanged(bool);
 
     protected Q_SLOTS:
